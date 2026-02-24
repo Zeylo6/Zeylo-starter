@@ -1,0 +1,117 @@
+/// User entity representing a user in the Zeylo application
+class UserEntity {
+  /// Unique identifier for the user
+  final String uid;
+
+  /// User's email address
+  final String email;
+
+  /// User's full display name
+  final String displayName;
+
+  /// URL to user's profile photo
+  final String? photoUrl;
+
+  /// User's phone number
+  final String? phoneNumber;
+
+  /// User's bio/description
+  final String? bio;
+
+  /// User's location (city, country)
+  final Map<String, String>? location;
+
+  /// Whether the user is a host
+  final bool isHost;
+
+  /// Whether the user's email is verified
+  final bool isVerified;
+
+  /// Account creation timestamp
+  final DateTime createdAt;
+
+  /// Number of followers
+  final int followersCount;
+
+  /// Number of users this user follows
+  final int followingCount;
+
+  /// Number of posts created by the user
+  final int postsCount;
+
+  /// Firebase Cloud Messaging token for push notifications
+  final String? fcmToken;
+
+  /// List of favorite experience IDs
+  final List<String> favorites;
+
+  /// User settings/preferences
+  final Map<String, dynamic> settings;
+
+  const UserEntity({
+    required this.uid,
+    required this.email,
+    required this.displayName,
+    this.photoUrl,
+    this.phoneNumber,
+    this.bio,
+    this.location,
+    this.isHost = false,
+    this.isVerified = false,
+    required this.createdAt,
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.postsCount = 0,
+    this.fcmToken,
+    this.favorites = const [],
+    this.settings = const {},
+  });
+
+  /// Create a copy of this user entity with some fields replaced
+  UserEntity copyWith({
+    String? uid,
+    String? email,
+    String? displayName,
+    String? photoUrl,
+    String? phoneNumber,
+    String? bio,
+    Map<String, String>? location,
+    bool? isHost,
+    bool? isVerified,
+    DateTime? createdAt,
+    int? followersCount,
+    int? followingCount,
+    int? postsCount,
+    String? fcmToken,
+    List<String>? favorites,
+    Map<String, dynamic>? settings,
+  }) {
+    return UserEntity(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      photoUrl: photoUrl ?? this.photoUrl,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      bio: bio ?? this.bio,
+      location: location ?? this.location,
+      isHost: isHost ?? this.isHost,
+      isVerified: isVerified ?? this.isVerified,
+      createdAt: createdAt ?? this.createdAt,
+      followersCount: followersCount ?? this.followersCount,
+      followingCount: followingCount ?? this.followingCount,
+      postsCount: postsCount ?? this.postsCount,
+      fcmToken: fcmToken ?? this.fcmToken,
+      favorites: favorites ?? this.favorites,
+      settings: settings ?? this.settings,
+    );
+  }
+
+  @override
+  String toString() => 'UserEntity('
+      'uid: $uid, '
+      'email: $email, '
+      'displayName: $displayName, '
+      'isVerified: $isVerified, '
+      'isHost: $isHost'
+      ')';
+}

@@ -1,0 +1,242 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/user_profile_entity.dart';
+import '../providers/profile_provider.dart';
+import '../widgets/past_experience_tile.dart';
+import '../widgets/photo_grid.dart';
+import '../widgets/profile_header.dart';
+
+/// User profile screen
+class ProfileScreen extends ConsumerWidget {
+  final String userId;
+  final bool isCurrentUser;
+  final VoidCallback? onEditPressed;
+  final VoidCallback? onLogoutPressed;
+
+  const ProfileScreen({
+    required this.userId,
+    this.isCurrentUser = false,
+    this.onEditPressed,
+    this.onLogoutPressed,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider(userId));
+
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.background,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.textPrimary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            color: AppColors.textPrimary,
+            onPressed: () => _showMoreMenu(context),
+          ),
+        ],
+      ),
+      body: profileAsync.when(
+        data: (profile) => _buildContent(context, ref, profile),
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stack) => Center(
+          child: Text('Error: $error'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfileEntity profile,
+  ) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Profile header
+          ProfileHeader(
+            profile: profile,
+            onEditPressed: isCurrentUser ? onEditPressed : null,
+          ),
+          const Divider(height: 1),
+
+          // Posts section
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.grid_on, color: AppColors.textPrimary),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Posts',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Photo grid
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: PhotoGrid(
+              photoUrls: const [], // Load from backend
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+          const Divider(height: 1),
+
+          // Past experiences section
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Past Experiences',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_outline,
+                            size: 12,
+                            color: AppColors.success,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            'Private',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.success,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Past experiences list
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Column(
+              children: [
+                PastExperienceTile(
+                  experienceId: '1',
+                  title: 'Traditional Cooking Adventure',
+                  rating: 4.9,
+                  ratingCount: 234,
+                  price: 45,
+                ),
+                PastExperienceTile(
+                  experienceId: '2',
+                  title: 'Sunrise watching',
+                  rating: 4.8,
+                  ratingCount: 156,
+                  price: 35,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Logout button (if current user)
+          if (isCurrentUser && onLogoutPressed != null)
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: onLogoutPressed,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                      color: AppColors.error,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                  ),
+                  child: Text(
+                    'Log out',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ),
+    );
+  }
+
+  void _showMoreMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SizedBox(
+        height: 150,
+        child: Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.report_problem),
+              title: const Text('Report'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.block),
+              title: const Text('Block'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

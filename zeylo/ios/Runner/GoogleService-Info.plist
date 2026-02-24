@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBtfjrr0vF17cAielcEXIr6Sq47U9adxpw</string>
+	<key>GCM_SENDER_ID</key>
+	<string>808246523710</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.zeylo.zeylo</string>
+	<key>PROJECT_ID</key>
+	<string>zeylo-327c9</string>
+	<key>STORAGE_BUCKET</key>
+	<string>zeylo-327c9.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:808246523710:ios:c1be7e814cfed1fe9f9e6f</string>
+</dict>
+</plist>
