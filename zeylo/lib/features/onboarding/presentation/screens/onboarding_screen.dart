@@ -64,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/login');
+      context.push('/login');
     }
   }
 
@@ -120,14 +120,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   // Sign Up button
                   ZeyloButton(
-                    onPressed: () => context.go('/signup'),
+                    onPressed: () => context.push('/signup'),
                     label: 'Sign Up',
                     variant: ButtonVariant.filled,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   // Log In button
                   ZeyloButton(
-                    onPressed: () => context.go('/login'),
+                    onPressed: () => context.push('/login'),
                     label: 'Log In',
                     variant: ButtonVariant.outlined,
                   ),

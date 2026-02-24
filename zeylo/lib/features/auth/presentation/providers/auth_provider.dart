@@ -79,7 +79,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
   final AuthRepository _repository;
 
   /// Creates a new AuthNotifier instance
-  AuthNotifier(this._repository) : super(const AsyncValue.loading());
+  AuthNotifier(this._repository) : super(const AsyncValue.data(null));
 
   /// Sign in with email and password
   Future<void> signInWithEmail({
