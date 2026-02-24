@@ -1,0 +1,402 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/phone_input_field.dart';
+import '../providers/booking_provider.dart';
+import '../widgets/date_time_picker.dart';
+import '../widgets/guest_selector.dart';
+import '../widgets/payment_card_input.dart';
+
+/// Booking screen for completing a booking reservation
+/// Based on Figma design "booking page"
+class BookingScreen extends ConsumerStatefulWidget {
+  /// Experience ID being booked
+  final String experienceId;
+
+  /// Experience title
+  final String experienceTitle;
+
+  /// Experience cover image URL
+  final String experienceCoverImage;
+
+  /// Host ID of the experience owner
+  final String hostId;
+
+  /// Total price for the booking
+  final double totalPrice;
+
+  const BookingScreen({
+    required this.experienceId,
+    required this.experienceTitle,
+    required this.experienceCoverImage,
+    required this.hostId,
+    required this.totalPrice,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  ConsumerState<BookingScreen> createState() => _BookingScreenState();
+}
+
+class _BookingScreenState extends ConsumerState<BookingScreen> {
+  late TextEditingController _fullNameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+
+  String? _fullNameError;
+  String? _emailError;
+  String? _phoneError;
+  String? _dateError;
+  String? _cardNumberError;
+  String? _expiryError;
+  String? _cvcError;
+  String? _cardholderError;
+
+  @override
+  void initState() {
+    super.initState();
+    _fullNameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _validateForm() {
+    final formState = ref.read(bookingFormProvider);
+
+    setState(() {
+      _fullNameError = Validators.validateName(formState.fullName);
+      _emailError = Validators.validateEmail(formState.email);
+      _phoneError = Validators.validatePhone(formState.phoneNumber);
+      _dateError = formState.date.isEmpty ? 'Date is required' : null;
+      _cardNumberError = Validators.validateCardNumber(formState.cardNumber);
+      _expiryError = Validators.validateExpiry(formState.expiry);
+      _cvcError = Validators.validateCVC(formState.cvc);
+      _cardholderError = Validators.validateRequired(formState.cardholderName);
+    });
+
+    // Check if all validations passed
+    if (_fullNameError == null &&
+        _emailError == null &&
+        _phoneError == null &&
+        _dateError == null &&
+        _cardNumberError == null &&
+        _expiryError == null &&
+        _cvcError == null &&
+        _cardholderError == null) {
+      _submitBooking();
+    }
+  }
+
+  void _submitBooking() {
+    // Implementation for submitting booking
+    // This would typically call the createBooking use case
+    final formNotifier = ref.read(bookingFormProvider.notifier);
+    formNotifier.setLoading(true);
+
+    // Simulate API call
+    Future.delayed(const Duration(seconds: 2), () {
+      formNotifier.setLoading(false);
+      if (mounted) {
+        // Navigate to confirmation screen
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Booking completed successfully!')),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formState = ref.watch(bookingFormProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+          ),
+          child: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(
+              Icons.arrow_back,
+              color: AppColors.textInverse,
+              size: 24,
+            ),
+          ),
+        ),
+        title: Text(
+          'Complete Your Booking',
+          style: AppTypography.headlineSmall.copyWith(
+            color: AppColors.primary,
+          ),
+        ),
+        centerTitle: false,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Guest Information Section
+            _buildSectionHeader('Guest Information'),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Full Name
+            ZeyloTextField(
+              label: 'Full Name',
+              hint: 'Enter your full name',
+              controller: _fullNameController,
+              errorText: _fullNameError,
+              onChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateFullName(value);
+                if (_fullNameError != null) {
+                  setState(() {
+                    _fullNameError =
+                        Validators.validateName(value);
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Email Address
+            ZeyloTextField(
+              label: 'Email Address',
+              hint: 'Enter your email',
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              errorText: _emailError,
+              onChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateEmail(value);
+                if (_emailError != null) {
+                  setState(() {
+                    _emailError = Validators.validateEmail(value);
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Phone Number
+            PhoneInputField(
+              label: 'Phone Number',
+              controller: _phoneController,
+              errorText: _phoneError,
+              onChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updatePhoneNumber(value);
+                if (_phoneError != null) {
+                  setState(() {
+                    _phoneError = Validators.validatePhone(value);
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Number of Guests
+            GuestSelector(
+              label: 'Number of Guests',
+              selectedGuests: formState.guests,
+              onChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateGuests(value);
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Date and Time Section
+            _buildSectionHeader('Select Date & Time'),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Date Picker
+            DatePicker(
+              label: 'Date',
+              selectedDate: formState.date,
+              onChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateDate(value);
+                if (_dateError != null) {
+                  setState(() {
+                    _dateError = value.isEmpty ? 'Date is required' : null;
+                  });
+                }
+              },
+            ),
+            if (_dateError != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                _dateError!,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+
+            // Time Picker
+            TimePicker(
+              label: 'Time',
+              selectedTime: formState.time,
+              onChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateTime(value);
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Payment Information Section
+            _buildSectionHeader('Payment Information'),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Payment Card Input
+            PaymentCardInput(
+              cardNumber: formState.cardNumber,
+              expiry: formState.expiry,
+              cvc: formState.cvc,
+              cardholderName: formState.cardholderName,
+              onCardNumberChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateCardNumber(value);
+                if (_cardNumberError != null) {
+                  setState(() {
+                    _cardNumberError = Validators.validateCardNumber(value);
+                  });
+                }
+              },
+              onExpiryChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateExpiry(value);
+                if (_expiryError != null) {
+                  setState(() {
+                    _expiryError = Validators.validateExpiry(value);
+                  });
+                }
+              },
+              onCVCChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateCVC(value);
+                if (_cvcError != null) {
+                  setState(() {
+                    _cvcError = Validators.validateCVC(value);
+                  });
+                }
+              },
+              onCardholderNameChanged: (value) {
+                ref.read(bookingFormProvider.notifier).updateCardholderName(value);
+                if (_cardholderError != null) {
+                  setState(() {
+                    _cardholderError = Validators.validateRequired(value);
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Summary Card
+            _buildSummaryCard(),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Complete Booking Button
+            ZeyloButton(
+              onPressed: _validateForm,
+              label: 'Complete Booking',
+              variant: ButtonVariant.filled,
+              isLoading: formState.isLoading,
+              height: 52,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: AppTypography.labelLarge.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    final formState = ref.watch(bookingFormProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Booking Summary',
+            style: AppTypography.labelLarge.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _summaryRow('Experience', widget.experienceTitle),
+          const SizedBox(height: AppSpacing.sm),
+          _summaryRow('Guests', '${formState.guests} ${formState.guests == 1 ? 'guest' : 'guests'}'),
+          const SizedBox(height: AppSpacing.sm),
+          _summaryRow('Date', formState.date),
+          const SizedBox(height: AppSpacing.sm),
+          _summaryRow('Time', formState.time),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Divider(color: AppColors.divider, height: 1),
+          ),
+          _summaryRow(
+            'Total Price',
+            '\$${widget.totalPrice.toStringAsFixed(2)}',
+            isBold: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryRow(String label, String value, {bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: isBold
+              ? AppTypography.labelLarge.copyWith(
+                  color: AppColors.primary,
+                )
+              : AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+        ),
+      ],
+    );
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "808246523710",
+    "project_id": "zeylo-327c9",
+    "storage_bucket": "zeylo-327c9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:808246523710:android:aef907866a32b0d29f9e6f",
+        "android_client_info": {
+          "package_name": "com.zeylo.zeylo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrB8E8bY4R1Bls_t9XBk9xDMh-aNnyJxM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
