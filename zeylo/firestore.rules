@@ -1,0 +1,72 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Experiences collection
+    match /experiences/{experienceId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+
+    // Bookings collection
+    match /bookings/{bookingId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
+    // Messages collection
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null;
+
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Reviews collection
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
+
+    // Communities collection
+    match /communities/{communityId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Chains collection
+    match /chains/{chainId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Mystery experiences
+    match /mysteries/{mysteryId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Activity/notifications
+    match /activities/{activityId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}

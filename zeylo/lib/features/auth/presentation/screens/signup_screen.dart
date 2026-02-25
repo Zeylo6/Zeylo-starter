@@ -129,7 +129,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               const SizedBox(height: AppSpacing.lg),
               // Back arrow
               GestureDetector(
-                onTap: () => context.pop(),
+                onTap: () {
+                  if (Navigator.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/onboarding');
+                  }
+                },
                 child: const Icon(
                   Icons.arrow_back,
                   color: AppColors.textPrimary,

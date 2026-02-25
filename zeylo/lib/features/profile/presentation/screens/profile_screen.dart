@@ -33,11 +33,14 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.textPrimary,
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: !isCurrentUser,
+        leading: isCurrentUser
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                color: AppColors.textPrimary,
+                onPressed: () => Navigator.pop(context),
+              ),
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),

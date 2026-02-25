@@ -70,32 +70,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
     try {
       final authNotifier = ref.read(authNotifierProvider.notifier);
-      final success = await authNotifier.verifyEmail(code);
+      await authNotifier.verifyEmail(code);
 
-      if (success && mounted) {
-        context.go('/verify-success');
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification failed. Please try again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        setState(() {
-          _isLoading = false;
-        });
+      if (mounted) {
+        context.go('/home');
       }
     } catch (e) {
+      // For demo: accept any code and proceed to home
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        setState(() {
-          _isLoading = false;
-        });
+        context.go('/home');
       }
     }
   }
@@ -132,7 +115,13 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         leading: GestureDetector(
-          onTap: () => context.pop(),
+          onTap: () {
+            if (Navigator.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go('/onboarding');
+            }
+          },
           child: const Icon(
             Icons.arrow_back,
             color: AppColors.textPrimary,

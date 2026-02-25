@@ -151,7 +151,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: AppSpacing.lg),
               // Back arrow
               GestureDetector(
-                onTap: () => context.pop(),
+                onTap: () {
+                  if (Navigator.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/onboarding');
+                  }
+                },
                 child: const Icon(
                   Icons.arrow_back,
                   color: AppColors.textPrimary,
@@ -269,10 +275,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // Google login button
               SocialLoginButton(
                 label: 'Login with Google',
-                icon: Image.asset(
-                  'assets/icons/google.png',
-                  width: 20,
-                  height: 20,
+                icon: const Icon(
+                  Icons.g_mobiledata,
+                  color: AppColors.textPrimary,
+                  size: 24,
                 ),
                 onTap: isLoading ? null : _signInWithGoogle,
                 isLoading: isLoading,

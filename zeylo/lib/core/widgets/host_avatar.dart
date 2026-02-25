@@ -180,10 +180,11 @@ class HostAvatar extends StatelessWidget {
   }
 
   Widget _buildInitialsAvatar() {
-    final names = hostName.split(' ');
-    final initials = (names.isNotEmpty ? names[0][0] : '')
-        .toUpperCase() +
-        (names.length > 1 ? names[1][0].toUpperCase() : '');
+    final names = hostName.trim().split(' ').where((n) => n.isNotEmpty).toList();
+    final initials = names.isEmpty
+        ? '?'
+        : (names[0][0]).toUpperCase() +
+            (names.length > 1 ? names[1][0].toUpperCase() : '');
 
     return Container(
       color: AppColors.primary.withOpacity(0.1),

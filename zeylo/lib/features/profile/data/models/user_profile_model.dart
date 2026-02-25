@@ -28,14 +28,14 @@ class UserProfileModel extends UserProfileEntity {
     final data = doc.data()!;
     return UserProfileModel(
       id: doc.id,
-      name: data['name'] as String? ?? '',
+      name: data['name'] as String? ?? data['displayName'] as String? ?? '',
       email: data['email'] as String?,
-      phone: data['phone'] as String?,
+      phone: data['phone'] as String? ?? data['phoneNumber'] as String?,
       photoUrl: data['photoUrl'] as String?,
       bio: data['bio'] as String?,
-      followerCount: data['followerCount'] as int? ?? 0,
+      followerCount: data['followerCount'] as int? ?? data['followersCount'] as int? ?? 0,
       followingCount: data['followingCount'] as int? ?? 0,
-      postCount: data['postCount'] as int? ?? 0,
+      postCount: data['postCount'] as int? ?? data['postsCount'] as int? ?? 0,
       isVerified: data['isVerified'] as bool? ?? false,
       isSuperhost: data['isSuperhost'] as bool? ?? false,
       averageRating: (data['averageRating'] as num?)?.toDouble(),
