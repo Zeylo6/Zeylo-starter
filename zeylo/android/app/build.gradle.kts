@@ -14,12 +14,13 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
@@ -45,3 +46,29 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+// #region agent log
+afterEvaluate {
+    val logFile = rootProject.file("../../debug-348ac8.log")
+    logFile.parentFile.mkdirs()
+    logFile.appendText(
+        """{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H1","location":"zeylo/android/app/build.gradle.kts","message":"compileOptions","data":{"coreLibraryDesugaringEnabled":"${android.compileOptions.isCoreLibraryDesugaringEnabled}","minSdk":"${android.defaultConfig.minSdk}"},"timestamp":${System.currentTimeMillis()}}""" + "\n"
+    )
+}
+// #endregion
+
+// #region agent log
+tasks.matching { it.name == "checkDebugAarMetadata" }.configureEach {
+    doFirst {
+        val logFile = rootProject.file("../../debug-348ac8.log")
+        logFile.parentFile.mkdirs()
+        logFile.appendText(
+            """{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H2","location":"zeylo/android/app/build.gradle.kts","message":"checkDebugAarMetadataTask","data":{"taskClass":"${this::class.qualifiedName}","coreLibraryDesugaringEnabled":"${android.compileOptions.isCoreLibraryDesugaringEnabled}","minSdk":"${android.defaultConfig.minSdk}"},"timestamp":${System.currentTimeMillis()}}""" + "\n"
+        )
+    }
+}
+// #endregion
