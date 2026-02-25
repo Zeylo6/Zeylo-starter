@@ -50,25 +50,3 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
-
-// #region agent log
-afterEvaluate {
-    val logFile = rootProject.file("../../debug-348ac8.log")
-    logFile.parentFile.mkdirs()
-    logFile.appendText(
-        """{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H1","location":"zeylo/android/app/build.gradle.kts","message":"compileOptions","data":{"coreLibraryDesugaringEnabled":"${android.compileOptions.isCoreLibraryDesugaringEnabled}","minSdk":"${android.defaultConfig.minSdk}"},"timestamp":${System.currentTimeMillis()}}""" + "\n"
-    )
-}
-// #endregion
-
-// #region agent log
-tasks.matching { it.name == "checkDebugAarMetadata" }.configureEach {
-    doFirst {
-        val logFile = rootProject.file("../../debug-348ac8.log")
-        logFile.parentFile.mkdirs()
-        logFile.appendText(
-            """{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H2","location":"zeylo/android/app/build.gradle.kts","message":"checkDebugAarMetadataTask","data":{"taskClass":"${this::class.qualifiedName}","coreLibraryDesugaringEnabled":"${android.compileOptions.isCoreLibraryDesugaringEnabled}","minSdk":"${android.defaultConfig.minSdk}"},"timestamp":${System.currentTimeMillis()}}""" + "\n"
-        )
-    }
-}
-// #endregion

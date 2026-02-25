@@ -1,3 +1,0 @@
-{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H1","location":"zeylo/android/app/build.gradle.kts","message":"compileOptions","data":{"coreLibraryDesugaringEnabled":"true","minSdk":"24"},"timestamp":1772023885742}
-{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H1","location":"zeylo/android/app/build.gradle.kts","message":"compileOptions","data":{"coreLibraryDesugaringEnabled":"true","minSdk":"24"},"timestamp":1772023949646}
-{"sessionId":"348ac8","runId":"pre-fix","hypothesisId":"H2","location":"zeylo/android/app/build.gradle.kts","message":"checkDebugAarMetadataTask","data":{"taskClass":"com.android.build.gradle.internal.tasks.CheckAarMetadataTask_Decorated","coreLibraryDesugaringEnabled":"true","minSdk":"24"},"timestamp":1772023968132}
