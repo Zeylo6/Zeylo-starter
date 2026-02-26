@@ -28,41 +28,63 @@ class MoodResultsScreen extends ConsumerStatefulWidget {
 class _MoodResultsScreenState extends ConsumerState<MoodResultsScreen> {
   int _selectedFilterIndex = 0;
 
-  final List<String> _filterTabs = ['All', 'Events', 'People', 'Business'];
+  final List<String> _filterTabs = ['All', 'Events', 'People', 'Businesses'];
 
   // Mock data for demonstration
   final List<MoodExperienceResult> _mockResults = [
     MoodExperienceResult(
       id: '1',
       title: 'Surfing Lessons',
-      category: 'Adventure',
+      category: 'Events',
       location: 'Mirissa',
       description: 'Learn to surf with experienced instructors',
       matchPercentage: 98,
       imageUrl: 'https://via.placeholder.com/300x200?text=Surfing',
       price: '25-50',
+      type: MoodResultType.event,
     ),
     MoodExperienceResult(
       id: '2',
-      title: 'Mountain Hiking',
-      category: 'Adventure',
-      location: 'Colorado',
-      description: 'Exciting mountain trail adventure',
+      title: 'Alex is looking for a hiking buddy',
+      category: 'People',
+      location: 'Kandy',
+      description: 'Join a friendly morning hike with a local group',
       matchPercentage: 95,
-      imageUrl: 'https://via.placeholder.com/300x200?text=Hiking',
-      price: '30-60',
+      imageUrl: 'https://via.placeholder.com/300x200?text=People',
+      price: 'Free',
+      type: MoodResultType.people,
     ),
     MoodExperienceResult(
       id: '3',
-      title: 'Rock Climbing',
-      category: 'Adventure',
-      location: 'Utah',
-      description: 'Challenge yourself on the rocks',
+      title: 'Luna Coffee Roasters',
+      category: 'Businesses',
+      location: 'Colombo',
+      description: 'Relaxing coffee tasting and live acoustic evening',
       matchPercentage: 92,
-      imageUrl: 'https://via.placeholder.com/300x200?text=Climbing',
-      price: '40-75',
+      imageUrl: 'https://via.placeholder.com/300x200?text=Business',
+      price: '10-20',
+      type: MoodResultType.business,
     ),
   ];
+
+  List<MoodExperienceResult> get _filteredResults {
+    switch (_selectedFilterIndex) {
+      case 1:
+        return _mockResults
+            .where((result) => result.type == MoodResultType.event)
+            .toList();
+      case 2:
+        return _mockResults
+            .where((result) => result.type == MoodResultType.people)
+            .toList();
+      case 3:
+        return _mockResults
+            .where((result) => result.type == MoodResultType.business)
+            .toList();
+      default:
+        return List<MoodExperienceResult>.from(_mockResults);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,14 +226,27 @@ class _MoodResultsScreenState extends ConsumerState<MoodResultsScreen> {
               const SizedBox(height: AppSpacing.md),
 
               // Experience cards
-              Column(
-                children: _mockResults.map((result) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    child: _buildExperienceCard(result),
-                  );
-                }).toList(),
-              ),
+              if (_filteredResults.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                  child: Center(
+                    child: Text(
+                      'No results for this filter',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Column(
+                  children: _filteredResults.map((result) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                      child: _buildExperienceCard(result),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
         ),
@@ -357,6 +392,7 @@ class MoodExperienceResult {
   final int matchPercentage;
   final String imageUrl;
   final String price;
+  final MoodResultType type;
 
   MoodExperienceResult({
     required this.id,
@@ -367,5 +403,12 @@ class MoodExperienceResult {
     required this.matchPercentage,
     required this.imageUrl,
     required this.price,
+    required this.type,
   });
+}
+
+enum MoodResultType {
+  event,
+  people,
+  business,
 }

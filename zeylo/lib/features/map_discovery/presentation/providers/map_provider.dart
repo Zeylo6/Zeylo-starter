@@ -62,6 +62,7 @@ extension MapFilterTypeX on MapFilterType {
 /// Map state
 class MapState {
   final String location;
+  final List<NearbyItem> allNearbyItems;
   final List<NearbyItem> nearbyItems;
   final MapFilterType activeFilter;
   final bool isLoading;
@@ -71,6 +72,7 @@ class MapState {
 
   const MapState({
     this.location = 'Colombo 05, Sri Lanka',
+    this.allNearbyItems = const [],
     this.nearbyItems = const [],
     this.activeFilter = MapFilterType.all,
     this.isLoading = false,
@@ -81,6 +83,7 @@ class MapState {
 
   MapState copyWith({
     String? location,
+    List<NearbyItem>? allNearbyItems,
     List<NearbyItem>? nearbyItems,
     MapFilterType? activeFilter,
     bool? isLoading,
@@ -90,6 +93,7 @@ class MapState {
   }) {
     return MapState(
       location: location ?? this.location,
+      allNearbyItems: allNearbyItems ?? this.allNearbyItems,
       nearbyItems: nearbyItems ?? this.nearbyItems,
       activeFilter: activeFilter ?? this.activeFilter,
       isLoading: isLoading ?? this.isLoading,
@@ -158,9 +162,11 @@ class MapNotifier extends StateNotifier<MapState> {
       ];
 
       state = state.copyWith(
+        allNearbyItems: mockItems,
         nearbyItems: mockItems,
         isLoading: false,
       );
+      _filterItems();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -172,10 +178,11 @@ class MapNotifier extends StateNotifier<MapState> {
   /// Filter items by type
   void _filterItems() {
     if (state.activeFilter == MapFilterType.all) {
+      state = state.copyWith(nearbyItems: state.allNearbyItems);
       return;
     }
 
-    final filteredItems = state.nearbyItems.where((item) {
+    final filteredItems = state.allNearbyItems.where((item) {
       switch (state.activeFilter) {
         case MapFilterType.events:
           return item.type == NearbyItemType.event;
