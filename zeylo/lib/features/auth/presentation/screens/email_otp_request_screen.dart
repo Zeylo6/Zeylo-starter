@@ -28,27 +28,45 @@ class _EmailOtpRequestScreenState extends ConsumerState<EmailOtpRequestScreen> {
   void initState() {
     super.initState();
     final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please sign in first.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        context.go('/login');
-      });
-    }
     _emailController = TextEditingController(
       text: currentUser?.email ?? '',
     );
+    _ensureSignedIn();
   }
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _ensureSignedIn() async {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      try {
+        user = await FirebaseAuth.instance.authStateChanges().first.timeout(
+          const Duration(seconds: 5),
+        );
+      } catch (_) {
+        user = null;
+      }
+    }
+
+    if (!mounted) return;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in first.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      context.go('/login');
+      return;
+    }
+
+    if (_emailController.text.trim().isEmpty && (user.email ?? '').isNotEmpty) {
+      _emailController.text = user.email!;
+    }
   }
 
   Future<void> _sendOtp() async {

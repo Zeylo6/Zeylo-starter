@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:math';
 
 import '../models/user_model.dart';
@@ -110,19 +111,26 @@ class FirebaseAuthDataSource {
   /// Sign in with Google
   Future<UserModel> signInWithGoogle() async {
     try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw Exception('Google sign in cancelled');
+      late final fb_auth.UserCredential userCredential;
+      if (kIsWeb) {
+        final provider = fb_auth.GoogleAuthProvider()
+          ..addScope('email')
+          ..addScope('profile');
+        userCredential = await _firebaseAuth.signInWithPopup(provider);
+      } else {
+        final googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          throw Exception('Google sign in cancelled');
+        }
+
+        final googleAuth = await googleUser.authentication;
+        final credential = fb_auth.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        userCredential = await _firebaseAuth.signInWithCredential(credential);
       }
 
-      final googleAuth = await googleUser.authentication;
-      final credential = fb_auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
       final user = userCredential.user;
 
       if (user == null) {
@@ -150,6 +158,12 @@ class FirebaseAuthDataSource {
 
       return userModel;
     } on fb_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'popup-closed-by-user') {
+        throw Exception('Google sign in cancelled');
+      }
+      if (e.code == 'popup-blocked') {
+        throw Exception('Popup blocked. Allow popups for this site and try again.');
+      }
       throw _handleFirebaseAuthException(e);
     } catch (e) {
       throw Exception('Google sign in failed: ${e.toString()}');

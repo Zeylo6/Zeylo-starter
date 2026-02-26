@@ -34,20 +34,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     super.initState();
     _focusNodes = List.generate(5, (_) => FocusNode());
     _controllers = List.generate(5, (_) => TextEditingController());
-
-    if (widget.email.trim().isEmpty ||
-        FirebaseAuth.instance.currentUser == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please complete sign-in and request OTP first.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        context.go('/login');
-      });
-    }
+    _validateSessionAndEmail();
   }
 
   @override
@@ -68,6 +55,42 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     } else if (value.isEmpty && index > 0) {
       // Move to previous field on backspace
       FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
+    }
+  }
+
+  Future<void> _validateSessionAndEmail() async {
+    if (widget.email.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete sign-in and request OTP first.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      context.go('/login');
+      return;
+    }
+
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      try {
+        user = await FirebaseAuth.instance.authStateChanges().first.timeout(
+          const Duration(seconds: 5),
+        );
+      } catch (_) {
+        user = null;
+      }
+    }
+
+    if (!mounted) return;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete sign-in and request OTP first.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      context.go('/login');
     }
   }
 
