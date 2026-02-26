@@ -22,8 +22,8 @@ class ExperienceGalleryScreen extends StatefulWidget {
   const ExperienceGalleryScreen({
     required this.images,
     this.initialPage = 0,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ExperienceGalleryScreen> createState() =>

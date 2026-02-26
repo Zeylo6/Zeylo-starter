@@ -20,8 +20,8 @@ class NearbyItemTile extends StatelessWidget {
     required this.item,
     this.onTap,
     this.onActionTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

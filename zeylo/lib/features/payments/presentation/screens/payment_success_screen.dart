@@ -34,8 +34,8 @@ class PaymentSuccessScreen extends StatefulWidget {
     required this.cardType,
     required this.hostName,
     this.onContinue,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<PaymentSuccessScreen> createState() => _PaymentSuccessScreenState();

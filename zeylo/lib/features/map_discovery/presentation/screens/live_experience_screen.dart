@@ -20,8 +20,8 @@ class LiveExperienceScreen extends StatefulWidget {
     required this.experienceId,
     this.title = 'Sunset Kayaking',
     this.participants,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<LiveExperienceScreen> createState() => _LiveExperienceScreenState();

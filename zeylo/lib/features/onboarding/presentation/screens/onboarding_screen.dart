@@ -11,7 +11,7 @@ import '../widgets/onboarding_page.dart';
 ///
 /// Displays a PageView with onboarding pages and navigation buttons
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();

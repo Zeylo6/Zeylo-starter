@@ -29,8 +29,8 @@ class PostFeedItem extends StatefulWidget {
     required this.post,
     this.onTap,
     this.onLikeTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<PostFeedItem> createState() => _PostFeedItemState();

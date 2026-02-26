@@ -24,8 +24,8 @@ class EditChainScreen extends ConsumerStatefulWidget {
 
   const EditChainScreen({
     required this.chain,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<EditChainScreen> createState() => _EditChainScreenState();

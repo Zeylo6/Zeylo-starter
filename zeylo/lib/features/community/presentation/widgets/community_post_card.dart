@@ -32,8 +32,8 @@ class CommunityPostCard extends StatefulWidget {
     this.onLikeTap,
     this.onCommentTap,
     this.onShareTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<CommunityPostCard> createState() => _CommunityPostCardState();
@@ -293,8 +293,8 @@ class _ActionButton extends StatelessWidget {
     this.label,
     this.iconColor,
     this.onTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

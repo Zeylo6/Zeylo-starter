@@ -34,8 +34,8 @@ class FABOverlay extends StatefulWidget {
     this.onVoice,
     this.onMapSearch,
     this.onMystery,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<FABOverlay> createState() => _FABOverlayState();
@@ -246,8 +246,8 @@ class FABOverlayContainer extends StatefulWidget {
   const FABOverlayContainer({
     required this.child,
     this.showBottomNav = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<FABOverlayContainer> createState() => _FABOverlayContainerState();

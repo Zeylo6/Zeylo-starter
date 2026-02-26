@@ -14,8 +14,8 @@ class PerformanceSection extends StatelessWidget {
     required this.responseRate,
     required this.acceptanceRate,
     required this.totalBookings,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

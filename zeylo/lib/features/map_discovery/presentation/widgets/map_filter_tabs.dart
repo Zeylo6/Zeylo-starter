@@ -20,8 +20,8 @@ class MapFilterTabs extends StatelessWidget {
     required this.filters,
     required this.activeFilter,
     required this.onFilterChanged,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -25,8 +25,8 @@ class MoodSelectorScreen extends ConsumerStatefulWidget {
 
   const MoodSelectorScreen({
     this.onMoodSelected,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<MoodSelectorScreen> createState() =>

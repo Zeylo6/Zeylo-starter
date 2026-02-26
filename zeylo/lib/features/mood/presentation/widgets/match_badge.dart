@@ -25,8 +25,8 @@ class MatchBadgeWidget extends StatelessWidget {
   const MatchBadgeWidget({
     required this.matchPercentage,
     this.customText,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

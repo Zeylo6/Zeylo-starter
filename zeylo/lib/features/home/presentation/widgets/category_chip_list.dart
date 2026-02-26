@@ -12,7 +12,7 @@ import '../providers/home_provider.dart';
 ///
 /// Displays all available categories with icons and allows selection
 class CategoryChipList extends ConsumerWidget {
-  const CategoryChipList({Key? key}) : super(key: key);
+  const CategoryChipList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,8 +86,8 @@ class _CategoryChip extends ConsumerWidget {
     required this.category,
     required this.imageUrl,
     required this.onTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

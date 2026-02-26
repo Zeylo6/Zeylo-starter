@@ -32,8 +32,8 @@ class CreditCardWidget extends StatelessWidget {
     required this.cardType,
     this.isRevealed = false,
     this.backgroundColor = AppColors.cardDark,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   String _getCardTypeIcon() {
     switch (cardType.toLowerCase()) {

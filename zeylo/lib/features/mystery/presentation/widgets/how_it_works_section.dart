@@ -16,7 +16,7 @@ import '../../../../core/theme/app_typography.dart';
 /// HowItWorksSection()
 /// ```
 class HowItWorksSection extends StatelessWidget {
-  const HowItWorksSection({Key? key}) : super(key: key);
+  const HowItWorksSection({super.key});
 
   static const List<String> _steps = [
     "We'll find the perfect experience based on your preferences",

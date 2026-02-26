@@ -9,7 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 /// Displayed after successful email verification
 /// Auto-navigates to home after 2 seconds
 class VerifySuccessScreen extends StatefulWidget {
-  const VerifySuccessScreen({Key? key}) : super(key: key);
+  const VerifySuccessScreen({super.key});
 
   @override
   State<VerifySuccessScreen> createState() => _VerifySuccessScreenState();

@@ -96,8 +96,8 @@ class MoodChip extends StatefulWidget {
     this.borderRadius = AppRadius.full,
     this.borderWidth = 1.5,
     this.iconGap = AppSpacing.sm,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<MoodChip> createState() => _MoodChipState();
@@ -199,8 +199,8 @@ class SelectableMoodChip extends StatelessWidget {
     ),
     this.iconSize = 18,
     this.iconGap = AppSpacing.sm,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

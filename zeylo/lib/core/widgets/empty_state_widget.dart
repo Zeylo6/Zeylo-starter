@@ -65,8 +65,8 @@ class EmptyStateWidget extends StatelessWidget {
     this.centered = true,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
     this.backgroundColor,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -162,8 +162,8 @@ class EmptyFavoritesWidget extends StatelessWidget {
   const EmptyFavoritesWidget({
     this.onExplore,
     this.centered = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -193,8 +193,8 @@ class EmptySearchResultsWidget extends StatelessWidget {
     required this.searchQuery,
     this.onClearSearch,
     this.centered = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -216,8 +216,8 @@ class EmptyNotificationsWidget extends StatelessWidget {
 
   const EmptyNotificationsWidget({
     this.centered = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -241,8 +241,8 @@ class EmptyChatsWidget extends StatelessWidget {
   const EmptyChatsWidget({
     this.onBrowse,
     this.centered = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

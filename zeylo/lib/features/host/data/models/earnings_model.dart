@@ -43,6 +43,7 @@ class EarningsModel extends EarningsEntity {
     };
   }
 
+  @override
   EarningsModel copyWith({
     String? hostId,
     double? totalBalance,
@@ -99,6 +100,7 @@ class PayoutModel extends PayoutEntity {
     };
   }
 
+  @override
   PayoutModel copyWith({
     String? id,
     double? amount,

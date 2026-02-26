@@ -21,8 +21,8 @@ class OnboardingPage extends StatelessWidget {
     required this.imagePath,
     required this.title,
     required this.subtitle,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   IconData _getIconForPage() {
     if (imagePath.contains('1')) return Icons.explore_outlined;

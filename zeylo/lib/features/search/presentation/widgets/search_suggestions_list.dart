@@ -14,8 +14,8 @@ class SearchSuggestionsList extends ConsumerWidget {
 
   const SearchSuggestionsList({
     required this.query,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

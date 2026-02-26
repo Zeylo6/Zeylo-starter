@@ -10,7 +10,7 @@ import '../providers/favorites_provider.dart';
 
 /// Screen displaying user's favorite experiences
 class FavoritesScreen extends ConsumerStatefulWidget {
-  const FavoritesScreen({Key? key}) : super(key: key);
+  const FavoritesScreen({super.key});
 
   @override
   ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();

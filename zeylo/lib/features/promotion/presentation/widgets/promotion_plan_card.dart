@@ -36,8 +36,8 @@ class PromotionPlanCard extends StatelessWidget {
     required this.plan,
     this.isSelected = false,
     this.onTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

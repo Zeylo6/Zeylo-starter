@@ -19,7 +19,7 @@ import '../widgets/category_chip_list.dart';
 /// - Featured experiences in a vertical list
 /// - Pull-to-refresh support
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -230,7 +230,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 /// Top bar widget with logo and action icons
 class _TopBar extends StatelessWidget {
-  const _TopBar({Key? key}) : super(key: key);
+  const _TopBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +279,7 @@ class _TopBar extends StatelessWidget {
 
 /// Category section widget
 class _CategorySection extends ConsumerWidget {
-  const _CategorySection({Key? key}) : super(key: key);
+  const _CategorySection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

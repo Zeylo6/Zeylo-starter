@@ -17,7 +17,7 @@ import '../widgets/community_post_card.dart';
 /// - Pull-to-refresh support
 /// - Bottom navigation visible
 class CommunityScreen extends ConsumerStatefulWidget {
-  const CommunityScreen({Key? key}) : super(key: key);
+  const CommunityScreen({super.key});
 
   @override
   ConsumerState<CommunityScreen> createState() => _CommunityScreenState();
@@ -206,7 +206,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
 
 /// Top bar widget
 class _TopBar extends StatelessWidget {
-  const _TopBar({Key? key}) : super(key: key);
+  const _TopBar({super.key});
 
   @override
   Widget build(BuildContext context) {

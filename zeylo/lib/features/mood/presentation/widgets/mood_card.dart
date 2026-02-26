@@ -44,8 +44,8 @@ class MoodCard extends StatelessWidget {
     this.onTap,
     this.unselectedColor = AppColors.surface,
     this.selectedColor = const Color(0xFFF3E8FF),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -41,8 +41,8 @@ class RateHostScreen extends ConsumerStatefulWidget {
     required this.userId,
     required this.userName,
     this.onReviewSubmitted,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<RateHostScreen> createState() => _RateHostScreenState();

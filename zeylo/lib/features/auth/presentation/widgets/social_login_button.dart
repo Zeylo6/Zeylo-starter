@@ -46,8 +46,8 @@ class SocialLoginButton extends StatelessWidget {
     this.isLoading = false,
     this.height = 52,
     this.borderRadius = AppRadius.lg,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

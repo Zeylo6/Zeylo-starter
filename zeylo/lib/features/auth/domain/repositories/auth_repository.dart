@@ -45,12 +45,18 @@ abstract class AuthRepository {
   ///
   /// Verifies the user's email address using a sent verification code
   /// Returns true if verification succeeds
-  Future<bool> verifyEmail(String code);
+  Future<bool> verifyEmail({
+    required String code,
+    required String email,
+  });
+
+  /// Send OTP to email for verification
+  Future<void> sendOtpToEmail(String email);
 
   /// Resend verification email
   ///
   /// Sends a new verification email to the user
-  Future<void> resendVerificationEmail();
+  Future<void> resendVerificationEmail(String email);
 
   /// Reset password for email
   ///

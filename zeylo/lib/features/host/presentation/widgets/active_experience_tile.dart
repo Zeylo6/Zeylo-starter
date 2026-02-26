@@ -17,8 +17,8 @@ class ActiveExperienceTile extends StatelessWidget {
     required this.title,
     this.thumbnailUrl,
     this.onEditPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

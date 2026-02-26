@@ -32,8 +32,8 @@ class MysteryTypeSelector extends StatelessWidget {
   const MysteryTypeSelector({
     required this.selectedType,
     required this.onTypeSelected,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

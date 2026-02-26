@@ -15,8 +15,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 
   const EditProfileScreen({
     required this.userId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -176,7 +176,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     try {
       final profileAsync = ref.watch(profileProvider(widget.userId));
-      await profileAsync.whenData((profile) async {
+      profileAsync.whenData((profile) async {
         final updatedProfile = profile.copyWith(
           name: _nameController.text,
           email: _emailController.text,

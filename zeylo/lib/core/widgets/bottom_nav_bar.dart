@@ -40,8 +40,8 @@ class ZeyloBottomNavBar extends StatelessWidget {
     required this.onTap,
     this.bottomPadding = 0,
     this.iconSize = 24,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

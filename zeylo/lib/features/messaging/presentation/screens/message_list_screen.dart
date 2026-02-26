@@ -17,8 +17,8 @@ class MessageListScreen extends ConsumerStatefulWidget {
     required this.userId,
     required this.userName,
     this.onConversationSelected,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<MessageListScreen> createState() => _MessageListScreenState();

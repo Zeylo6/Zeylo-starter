@@ -15,7 +15,7 @@ import '../../../home/presentation/providers/home_provider.dart';
 /// - Distance filter
 /// - Apply and Reset buttons
 class FilterSheet extends ConsumerStatefulWidget {
-  const FilterSheet({Key? key}) : super(key: key);
+  const FilterSheet({super.key});
 
   @override
   ConsumerState<FilterSheet> createState() => _FilterSheetState();
@@ -23,7 +23,7 @@ class FilterSheet extends ConsumerStatefulWidget {
 
 class _FilterSheetState extends ConsumerState<FilterSheet> {
   late RangeValues _priceRange;
-  double _minRating = 0;
+  final double _minRating = 0;
   double _maxDistance = 50;
 
   @override

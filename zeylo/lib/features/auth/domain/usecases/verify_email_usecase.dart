@@ -15,7 +15,10 @@ class VerifyEmailUseCase {
   ///
   /// Returns: true if verification succeeds, false otherwise
   /// Throws: [Exception] if verification fails
-  Future<bool> call(String code) async {
-    return repository.verifyEmail(code);
+  Future<bool> call({
+    required String code,
+    required String email,
+  }) async {
+    return repository.verifyEmail(code: code, email: email);
   }
 }

@@ -11,8 +11,8 @@ class ShimmerExperienceCard extends StatelessWidget {
 
   const ShimmerExperienceCard({
     this.height = 320,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -88,8 +88,8 @@ class ShimmerProfileHeader extends StatelessWidget {
 
   const ShimmerProfileHeader({
     this.height = 200,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,8 +185,8 @@ class ShimmerListTile extends StatelessWidget {
   const ShimmerListTile({
     this.height = 72,
     this.showAvatar = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -260,8 +260,8 @@ class ShimmerText extends StatelessWidget {
     this.height = 14,
     this.lineCount = 3,
     this.spacing = AppSpacing.md,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -311,8 +311,8 @@ class ShimmerGrid extends StatelessWidget {
     this.crossAxisSpacing = AppSpacing.md,
     this.mainAxisSpacing = AppSpacing.md,
     this.itemHeight = 250,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -31,8 +31,8 @@ class TimeSelector extends StatelessWidget {
   const TimeSelector({
     required this.selectedDuration,
     required this.onDurationSelected,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -62,8 +62,8 @@ class RatingWidget extends StatefulWidget {
     this.onRatingChanged,
     this.showRatingText = true,
     this.axis = Axis.horizontal,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<RatingWidget> createState() => _RatingWidgetState();

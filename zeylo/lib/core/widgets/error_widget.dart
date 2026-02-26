@@ -63,8 +63,8 @@ class ZeyloErrorWidget extends StatelessWidget {
     this.tryAgainLabel = 'Try Again',
     this.centered = true,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -161,8 +161,8 @@ class ZeyloNoDataWidget extends StatelessWidget {
     this.message = 'There is no data available at the moment.',
     this.centered = true,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -193,8 +193,8 @@ class ZeyloNetworkErrorWidget extends StatelessWidget {
     this.onTryAgain,
     this.centered = true,
     this.padding = const EdgeInsets.all(AppSpacing.lg),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

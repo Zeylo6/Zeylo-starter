@@ -48,8 +48,8 @@ class InterestChipList extends StatelessWidget {
       'Museums',
       'Nature',
     ],
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

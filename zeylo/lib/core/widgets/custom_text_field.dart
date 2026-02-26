@@ -105,8 +105,8 @@ class ZeyloTextField extends StatefulWidget {
     this.readOnly = false,
     this.onTap,
     this.borderRadius = AppRadius.md,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ZeyloTextField> createState() => _ZeyloTextFieldState();

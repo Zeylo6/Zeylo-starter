@@ -16,8 +16,8 @@ class JoinExperienceScreen extends StatefulWidget {
   const JoinExperienceScreen({
     required this.experienceId,
     this.title,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<JoinExperienceScreen> createState() => _JoinExperienceScreenState();

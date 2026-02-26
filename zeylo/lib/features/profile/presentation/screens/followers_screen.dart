@@ -16,8 +16,8 @@ class FollowersScreen extends ConsumerStatefulWidget {
   const FollowersScreen({
     required this.userId,
     required this.userName,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<FollowersScreen> createState() => _FollowersScreenState();

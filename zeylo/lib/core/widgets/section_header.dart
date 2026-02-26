@@ -60,8 +60,8 @@ class SectionHeader extends StatelessWidget {
     ),
     this.iconGap = AppSpacing.sm,
     this.mainAxisAlignment = MainAxisAlignment.spaceBetween,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -145,8 +145,8 @@ class SectionHeaderWithIcon extends StatelessWidget {
       horizontal: AppSpacing.lg,
       vertical: AppSpacing.md,
     ),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

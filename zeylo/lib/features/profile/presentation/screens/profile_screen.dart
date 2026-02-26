@@ -22,8 +22,8 @@ class ProfileScreen extends ConsumerWidget {
     this.isCurrentUser = false,
     this.onEditPressed,
     this.onLogoutPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

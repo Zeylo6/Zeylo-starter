@@ -30,8 +30,8 @@ class UserPostsScreen extends ConsumerWidget {
     required this.userId,
     this.userName,
     this.userAvatarUrl,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

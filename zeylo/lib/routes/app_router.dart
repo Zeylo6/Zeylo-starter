@@ -10,6 +10,7 @@ import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
+import '../features/auth/presentation/screens/email_otp_request_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../features/auth/presentation/screens/verify_success_screen.dart';
 
@@ -87,7 +88,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      final isLoggedIn = authState.whenData((user) => user != null).value ?? false;
+      final isLoggedIn =
+          authState.whenData((user) => user != null).value ?? false;
       final location = state.matchedLocation;
 
       // Auth-related routes that unauthenticated users can access
@@ -105,7 +107,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect authenticated users away from welcome/onboarding/splash
-      if (isLoggedIn && (location == '/welcome' || location == '/onboarding' || location == '/')) {
+      if (isLoggedIn &&
+          (location == '/welcome' ||
+              location == '/onboarding' ||
+              location == '/')) {
         return '/home';
       }
 
@@ -137,7 +142,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/verify-email',
-        builder: (context, state) => const VerifyEmailScreen(),
+        builder: (context, state) => VerifyEmailScreen(
+          email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/email-otp-request',
+        builder: (context, state) => const EmailOtpRequestScreen(),
       ),
       GoRoute(
         path: '/verify-success',
@@ -457,9 +468,9 @@ class MainScaffold extends StatefulWidget {
   final Widget child;
 
   const MainScaffold({
-    Key? key,
+    super.key,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
@@ -470,7 +481,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
 
-    int _getSelectedIndex() {
+    int getSelectedIndex() {
       if (location.startsWith('/home')) return 0;
       if (location.startsWith('/discover')) return 1;
       if (location.startsWith('/explore')) return 2;
@@ -478,7 +489,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       return 0;
     }
 
-    void _onNavTap(int index) {
+    void onNavTap(int index) {
       switch (index) {
         case 0:
           context.go('/home');
@@ -498,8 +509,8 @@ class _MainScaffoldState extends State<MainScaffold> {
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _getSelectedIndex(),
-        onTap: _onNavTap,
+        currentIndex: getSelectedIndex(),
+        onTap: onNavTap,
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
@@ -534,17 +545,18 @@ class _MainScaffoldState extends State<MainScaffold> {
 
 /// WelcomeScreen - No implementation file found yet
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({Key? key}) : super(key: key);
+  const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Welcome')));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('Welcome')));
 }
 
 /// ExploreScreen - No implementation file found yet
 class ExploreScreen extends StatelessWidget {
-  const ExploreScreen({Key? key}) : super(key: key);
+  const ExploreScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Explore')));
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('Explore')));
 }
-

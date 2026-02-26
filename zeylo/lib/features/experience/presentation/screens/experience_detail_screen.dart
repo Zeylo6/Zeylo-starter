@@ -27,8 +27,8 @@ class ExperienceDetailScreen extends ConsumerStatefulWidget {
 
   const ExperienceDetailScreen({
     required this.experienceId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<ExperienceDetailScreen> createState() =>

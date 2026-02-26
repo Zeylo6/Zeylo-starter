@@ -19,8 +19,8 @@ class ProfileStatsRow extends StatelessWidget {
     this.onFollowersPressed,
     this.onFollowingPressed,
     this.onPostsPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

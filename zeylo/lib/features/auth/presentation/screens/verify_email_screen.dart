@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -12,7 +13,12 @@ import '../providers/auth_provider.dart';
 ///
 /// Allows users to enter a 5-digit verification code sent to their email
 class VerifyEmailScreen extends ConsumerStatefulWidget {
-  const VerifyEmailScreen({Key? key}) : super(key: key);
+  final String email;
+
+  const VerifyEmailScreen({
+    super.key,
+    required this.email,
+  });
 
   @override
   ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
@@ -28,6 +34,20 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     super.initState();
     _focusNodes = List.generate(5, (_) => FocusNode());
     _controllers = List.generate(5, (_) => TextEditingController());
+
+    if (widget.email.trim().isEmpty ||
+        FirebaseAuth.instance.currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please complete sign-in and request OTP first.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        context.go('/login');
+      });
+    }
   }
 
   @override
@@ -70,15 +90,25 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
     try {
       final authNotifier = ref.read(authNotifierProvider.notifier);
-      await authNotifier.verifyEmail(code);
+      await authNotifier.verifyEmail(code: code, email: widget.email);
 
       if (mounted) {
         context.go('/home');
       }
     } catch (e) {
-      // For demo: accept any code and proceed to home
       if (mounted) {
-        context.go('/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -86,7 +116,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   Future<void> _resendEmail() async {
     try {
       final authNotifier = ref.read(authNotifierProvider.notifier);
-      await authNotifier.resendVerificationEmail();
+      await authNotifier.resendVerificationEmail(widget.email);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +176,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               const SizedBox(height: AppSpacing.md),
               // Subtitle
               Text(
-                'We sent a Verify link to contact@dscode.com',
+                'We sent an OTP to ${widget.email}',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),

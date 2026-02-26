@@ -37,8 +37,8 @@ class BookingScreen extends ConsumerStatefulWidget {
     required this.experienceCoverImage,
     required this.hostId,
     required this.totalPrice,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<BookingScreen> createState() => _BookingScreenState();

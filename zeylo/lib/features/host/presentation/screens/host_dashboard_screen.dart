@@ -21,8 +21,8 @@ class HostDashboardScreen extends ConsumerWidget {
     required this.hostName,
     this.hostPhotoUrl,
     this.isSuperhost = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

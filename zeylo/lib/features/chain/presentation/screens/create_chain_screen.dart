@@ -26,8 +26,8 @@ class CreateChainScreen extends ConsumerStatefulWidget {
 
   const CreateChainScreen({
     required this.userId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<CreateChainScreen> createState() =>

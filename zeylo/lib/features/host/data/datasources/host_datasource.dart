@@ -38,7 +38,7 @@ class HostFirestoreDatasource implements HostDatasource {
     }
 
     return HostStatsModel.fromFirestore(
-      doc as DocumentSnapshot<Map<String, dynamic>>,
+      doc,
     );
   }
 
@@ -64,7 +64,7 @@ class HostFirestoreDatasource implements HostDatasource {
     }
 
     return EarningsModel.fromFirestore(
-      doc as DocumentSnapshot<Map<String, dynamic>>,
+      doc,
     );
   }
 

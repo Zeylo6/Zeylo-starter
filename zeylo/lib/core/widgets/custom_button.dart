@@ -60,8 +60,8 @@ class ZeyloButton extends StatelessWidget {
     this.width,
     this.height = 52,
     this.borderRadius = AppRadius.lg,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

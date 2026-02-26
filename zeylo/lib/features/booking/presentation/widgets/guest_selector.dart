@@ -28,8 +28,8 @@ class GuestSelector extends StatefulWidget {
     required this.onChanged,
     this.minGuests = 1,
     this.maxGuests = 10,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<GuestSelector> createState() => _GuestSelectorState();

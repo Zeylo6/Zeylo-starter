@@ -16,8 +16,8 @@ class AddPaymentScreen extends StatefulWidget {
 
   const AddPaymentScreen({
     this.onPaymentConfirmed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AddPaymentScreen> createState() => _AddPaymentScreenState();

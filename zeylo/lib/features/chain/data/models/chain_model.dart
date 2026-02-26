@@ -138,6 +138,7 @@ class ChainModel extends ChainEntity {
   }
 
   /// Create a copy of this model with some fields replaced
+  @override
   ChainModel copyWith({
     String? id,
     String? name,

@@ -9,7 +9,7 @@ import '../widgets/nearby_item_tile.dart';
 
 /// Screen displaying nearby locations and activities on a map
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({Key? key}) : super(key: key);
+  const MapScreen({super.key});
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();

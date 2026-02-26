@@ -42,8 +42,8 @@ class PaymentCardInput extends StatefulWidget {
     this.expiry = '',
     this.cvc = '',
     this.cardholderName = '',
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<PaymentCardInput> createState() => _PaymentCardInputState();

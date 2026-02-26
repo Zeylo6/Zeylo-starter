@@ -14,8 +14,8 @@ class EarningsScreen extends ConsumerWidget {
 
   const EarningsScreen({
     required this.hostId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

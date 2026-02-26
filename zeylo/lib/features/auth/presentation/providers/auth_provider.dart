@@ -139,9 +139,22 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
   }
 
   /// Verify email
-  Future<bool> verifyEmail(String code) async {
+  Future<void> sendOtpToEmail(String email) async {
     try {
-      return await _repository.verifyEmail(code);
+      await _repository.sendOtpToEmail(email);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  /// Verify email
+  Future<bool> verifyEmail({
+    required String code,
+    required String email,
+  }) async {
+    try {
+      return await _repository.verifyEmail(code: code, email: email);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
@@ -149,9 +162,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
   }
 
   /// Resend verification email
-  Future<void> resendVerificationEmail() async {
+  Future<void> resendVerificationEmail(String email) async {
     try {
-      await _repository.resendVerificationEmail();
+      await _repository.resendVerificationEmail(email);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;

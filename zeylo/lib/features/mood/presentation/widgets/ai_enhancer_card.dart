@@ -36,8 +36,8 @@ class AIEnhancerCard extends StatelessWidget {
     required this.onToggle,
     required this.originalText,
     required this.enhancedText,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +83,7 @@ class AIEnhancerCard extends StatelessWidget {
               Switch(
                 value: isEnabled,
                 onChanged: (_) => onToggle?.call(),
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 activeTrackColor:
                     AppColors.primary.withOpacity(0.3),
               ),

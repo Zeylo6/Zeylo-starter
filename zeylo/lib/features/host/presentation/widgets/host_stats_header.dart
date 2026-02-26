@@ -22,8 +22,8 @@ class HostStatsHeader extends StatelessWidget {
     required this.thisMonthEarnings,
     required this.averageRating,
     required this.stats,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,11 +97,11 @@ class HostStatsHeader extends StatelessWidget {
                 ),
                 _StatCard(
                   label: 'Avg Rating',
-                  value: '${averageRating.toStringAsFixed(1)}',
+                  value: averageRating.toStringAsFixed(1),
                 ),
                 _StatCard(
                   label: 'Avg Rating',
-                  value: '${averageRating.toStringAsFixed(1)}',
+                  value: averageRating.toStringAsFixed(1),
                 ),
               ],
             ),

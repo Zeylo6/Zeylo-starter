@@ -66,6 +66,7 @@ class UserProfileModel extends UserProfileEntity {
   }
 
   /// Create a copy with modified fields
+  @override
   UserProfileModel copyWith({
     String? id,
     String? name,

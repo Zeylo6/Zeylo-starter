@@ -25,8 +25,8 @@ class ActivityCard extends StatefulWidget {
     this.onTap,
     this.onMenuTap,
     this.onViewAllParticipants,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ActivityCard> createState() => _ActivityCardState();

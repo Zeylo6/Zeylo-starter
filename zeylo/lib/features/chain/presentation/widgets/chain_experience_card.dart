@@ -36,8 +36,8 @@ class ChainExperienceCard extends StatelessWidget {
     this.onEdit,
     this.onRemove,
     this.showDragHandle = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

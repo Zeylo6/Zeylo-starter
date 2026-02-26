@@ -16,8 +16,8 @@ class FollowingScreen extends ConsumerStatefulWidget {
   const FollowingScreen({
     required this.userId,
     required this.userName,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<FollowingScreen> createState() => _FollowingScreenState();

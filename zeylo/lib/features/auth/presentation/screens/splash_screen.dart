@@ -11,7 +11,7 @@ import '../providers/auth_provider.dart';
 /// Displays a branded splash animation and checks auth state
 /// to navigate to appropriate screen (home, onboarding, or welcome)
 class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();

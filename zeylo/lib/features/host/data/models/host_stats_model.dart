@@ -48,6 +48,7 @@ class HostStatsModel extends HostStatsEntity {
     };
   }
 
+  @override
   HostStatsModel copyWith({
     String? hostId,
     double? earnings,

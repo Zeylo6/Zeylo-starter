@@ -18,8 +18,8 @@ class ExperienceInfoSection extends StatelessWidget {
   const ExperienceInfoSection({
     required this.title,
     required this.items,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

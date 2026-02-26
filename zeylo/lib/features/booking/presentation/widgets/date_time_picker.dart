@@ -20,8 +20,8 @@ class DatePicker extends StatefulWidget {
     required this.label,
     required this.selectedDate,
     required this.onChanged,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<DatePicker> createState() => _DatePickerState();
@@ -147,8 +147,8 @@ class TimePicker extends StatefulWidget {
     required this.label,
     required this.selectedTime,
     required this.onChanged,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<TimePicker> createState() => _TimePickerState();
@@ -157,7 +157,7 @@ class TimePicker extends StatefulWidget {
 class _TimePickerState extends State<TimePicker> {
   late int _selectedHour;
   late String _selectedPeriod;
-  final List<String> _hours = List.generate(12, (i) => '${(i + 1).toString().padLeft(2, '0')}');
+  final List<String> _hours = List.generate(12, (i) => (i + 1).toString().padLeft(2, '0'));
   final List<String> _periods = ['AM', 'PM'];
 
   @override

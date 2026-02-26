@@ -19,8 +19,8 @@ class ChatScreen extends ConsumerStatefulWidget {
     required this.otherUserName,
     required this.currentUserId,
     this.onBackPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();

@@ -19,8 +19,8 @@ class HomeSearchBar extends ConsumerStatefulWidget {
 
   const HomeSearchBar({
     this.onSearchTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<HomeSearchBar> createState() => _HomeSearchBarState();

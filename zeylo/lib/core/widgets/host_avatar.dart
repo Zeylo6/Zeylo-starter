@@ -52,8 +52,8 @@ class HostAvatar extends StatelessWidget {
     this.isVerified = false,
     this.isSuperhost = false,
     this.isOnline = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   double get _avatarSize {
     return switch (size) {

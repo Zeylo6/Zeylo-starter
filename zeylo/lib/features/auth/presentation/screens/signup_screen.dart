@@ -15,7 +15,7 @@ import '../providers/auth_provider.dart';
 ///
 /// Allows new users to create an account with email, password, and phone number
 class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   ConsumerState<SignupScreen> createState() => _SignupScreenState();

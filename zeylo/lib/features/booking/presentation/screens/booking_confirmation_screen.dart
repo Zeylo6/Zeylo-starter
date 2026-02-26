@@ -32,8 +32,8 @@ class BookingConfirmationScreen extends StatelessWidget {
     required this.guests,
     required this.totalPrice,
     this.onContinue,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

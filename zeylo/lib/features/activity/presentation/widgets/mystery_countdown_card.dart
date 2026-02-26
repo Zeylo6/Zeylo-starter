@@ -16,8 +16,8 @@ class MysteryCountdownCard extends StatefulWidget {
   const MysteryCountdownCard({
     required this.activity,
     this.onTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<MysteryCountdownCard> createState() => _MysteryCountdownCardState();

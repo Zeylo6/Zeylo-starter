@@ -122,6 +122,7 @@ class MysteryModel extends MysteryEntity {
   }
 
   /// Create a copy of this model with some fields replaced
+  @override
   MysteryModel copyWith({
     String? id,
     String? userId,

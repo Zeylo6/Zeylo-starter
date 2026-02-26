@@ -5,7 +5,7 @@ import 'routes/app_router.dart';
 
 /// Root widget for the Zeylo application
 class ZeyloApp extends ConsumerWidget {
-  const ZeyloApp({Key? key}) : super(key: key);
+  const ZeyloApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -16,8 +16,8 @@ class EarningsStatCard extends StatelessWidget {
     required this.value,
     this.backgroundColor = AppColors.primary,
     this.textColor = AppColors.textInverse,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -10,7 +10,7 @@ import '../widgets/mystery_countdown_card.dart';
 
 /// Screen displaying user's activities (ongoing, upcoming, past)
 class ActivityScreen extends ConsumerStatefulWidget {
-  const ActivityScreen({Key? key}) : super(key: key);
+  const ActivityScreen({super.key});
 
   @override
   ConsumerState<ActivityScreen> createState() => _ActivityScreenState();

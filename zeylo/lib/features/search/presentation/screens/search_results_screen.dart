@@ -21,8 +21,8 @@ class SearchResultsScreen extends ConsumerStatefulWidget {
 
   const SearchResultsScreen({
     required this.query,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<SearchResultsScreen> createState() =>

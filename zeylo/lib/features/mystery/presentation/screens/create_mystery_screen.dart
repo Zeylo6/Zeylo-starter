@@ -26,8 +26,8 @@ class CreateMysteryScreen extends ConsumerStatefulWidget {
 
   const CreateMysteryScreen({
     required this.userId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<CreateMysteryScreen> createState() =>

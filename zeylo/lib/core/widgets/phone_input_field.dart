@@ -62,8 +62,8 @@ class PhoneInputField extends StatefulWidget {
     this.borderRadius = AppRadius.md,
     this.countryCode = '+94',
     this.countryFlag = '🇱🇰',
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<PhoneInputField> createState() => _PhoneInputFieldState();
@@ -114,7 +114,7 @@ class _PhoneInputFieldState extends State<PhoneInputField> {
     String unformatted = formatted.replaceAll(' ', '');
     // Add country code if not present
     if (!unformatted.startsWith('94') && unformatted.isNotEmpty) {
-      unformatted = '94${unformatted}';
+      unformatted = '94$unformatted';
     }
     return unformatted;
   }

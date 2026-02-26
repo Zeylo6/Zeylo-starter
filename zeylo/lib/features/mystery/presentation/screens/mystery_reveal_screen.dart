@@ -36,8 +36,8 @@ class MysteryRevealScreen extends ConsumerStatefulWidget {
     required this.dateTime,
     required this.duration,
     required this.location,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<MysteryRevealScreen> createState() =>

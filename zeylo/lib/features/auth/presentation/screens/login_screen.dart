@@ -16,7 +16,7 @@ import '../widgets/social_login_button.dart';
 ///
 /// Allows users to log in with email and password or social providers (Google, Apple)
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();

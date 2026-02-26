@@ -80,18 +80,30 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> verifyEmail(String code) async {
+  Future<bool> verifyEmail({
+    required String code,
+    required String email,
+  }) async {
     try {
-      return await dataSource.verifyEmail(code);
+      return await dataSource.verifyEmail(code, email: email);
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> resendVerificationEmail() async {
+  Future<void> sendOtpToEmail(String email) async {
     try {
-      await dataSource.resendVerificationEmail();
+      await dataSource.sendOtpToEmail(email);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> resendVerificationEmail(String email) async {
+    try {
+      await dataSource.resendVerificationEmail(email: email);
     } catch (e) {
       rethrow;
     }

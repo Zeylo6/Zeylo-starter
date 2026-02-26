@@ -63,6 +63,7 @@ class MessageModel extends MessageEntity {
     };
   }
 
+  @override
   MessageModel copyWith({
     String? id,
     String? conversationId,

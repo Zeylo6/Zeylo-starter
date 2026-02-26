@@ -24,8 +24,8 @@ class PastExperienceTile extends StatelessWidget {
     required this.price,
     this.thumbnailUrl,
     this.onPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

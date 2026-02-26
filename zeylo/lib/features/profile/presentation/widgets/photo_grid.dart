@@ -14,8 +14,8 @@ class PhotoGrid extends StatelessWidget {
     required this.photoUrls,
     this.onPhotoPressed,
     this.crossAxisCount = 3,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

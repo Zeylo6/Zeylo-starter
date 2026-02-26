@@ -40,8 +40,8 @@ class HostInfoCard extends StatelessWidget {
     required this.reviewCount,
     required this.bio,
     this.onMessageTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

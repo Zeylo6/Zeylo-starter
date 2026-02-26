@@ -24,8 +24,8 @@ class MoodDescribeScreen extends ConsumerStatefulWidget {
 
   const MoodDescribeScreen({
     this.initialMood,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<MoodDescribeScreen> createState() =>

@@ -47,7 +47,7 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
     }
 
     return UserProfileModel.fromFirestore(
-      doc as DocumentSnapshot<Map<String, dynamic>>,
+      doc,
     );
   }
 
@@ -85,7 +85,7 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
         if (userDoc.exists) {
           profiles.add(
             UserProfileModel.fromFirestore(
-              userDoc as DocumentSnapshot<Map<String, dynamic>>,
+              userDoc,
             ),
           );
         }
@@ -118,7 +118,7 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
         if (userDoc.exists) {
           profiles.add(
             UserProfileModel.fromFirestore(
-              userDoc as DocumentSnapshot<Map<String, dynamic>>,
+              userDoc,
             ),
           );
         }

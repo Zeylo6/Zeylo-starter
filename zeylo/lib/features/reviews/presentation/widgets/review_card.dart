@@ -21,8 +21,8 @@ class ReviewCard extends StatelessWidget {
     required this.review,
     this.onTap,
     this.showFullComment = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   String _getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();

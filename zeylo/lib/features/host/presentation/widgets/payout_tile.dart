@@ -16,8 +16,8 @@ class PayoutTile extends StatelessWidget {
     required this.date,
     required this.amount,
     this.isPositive = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

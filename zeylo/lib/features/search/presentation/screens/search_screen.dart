@@ -15,7 +15,7 @@ import '../widgets/search_suggestions_list.dart';
 /// - Quick category filters
 /// - Navigation to search results
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({Key? key}) : super(key: key);
+  const SearchScreen({super.key});
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -23,7 +23,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   late TextEditingController _controller;
-  List<String> _recentSearches = [
+  final List<String> _recentSearches = [
     'Hiking',
     'Cooking class',
     'Meditation',

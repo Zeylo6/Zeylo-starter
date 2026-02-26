@@ -12,8 +12,8 @@ class PromotionScreen extends StatefulWidget {
 
   const PromotionScreen({
     this.eventId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<PromotionScreen> createState() => _PromotionScreenState();

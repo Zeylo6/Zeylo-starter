@@ -18,7 +18,7 @@ import '../widgets/match_badge.dart';
 /// - Top experiences with match percentage badges
 /// - Book buttons for each experience
 class MoodResultsScreen extends ConsumerStatefulWidget {
-  const MoodResultsScreen({Key? key}) : super(key: key);
+  const MoodResultsScreen({super.key});
 
   @override
   ConsumerState<MoodResultsScreen> createState() =>

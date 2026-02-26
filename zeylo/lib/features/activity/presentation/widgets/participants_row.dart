@@ -24,8 +24,8 @@ class ParticipantsRow extends StatelessWidget {
     required this.label,
     this.displayCount = 4,
     this.onViewAll,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

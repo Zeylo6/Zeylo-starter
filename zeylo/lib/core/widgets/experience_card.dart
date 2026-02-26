@@ -95,8 +95,8 @@ class ExperienceCard extends StatefulWidget {
     this.width,
     this.onTap,
     this.onFavoriteTap,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ExperienceCard> createState() => _ExperienceCardState();
