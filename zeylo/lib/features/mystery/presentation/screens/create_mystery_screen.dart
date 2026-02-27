@@ -125,7 +125,8 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                 label: 'Location',
                 hint: 'Where do you want to explore?',
                 controller: _locationController,
-                prefixWidget: const Icon(Icons.location_on_outlined, color: AppColors.textSecondary, size: 20),
+                prefixWidget: const Icon(Icons.location_on_outlined,
+                    color: AppColors.textSecondary, size: 20),
                 onChanged: (value) => formNotifier.setLocation(value),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -140,7 +141,8 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                       label: 'Date',
                       hint: 'dd/mm',
                       controller: _dateController,
-                      prefixWidget: const Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary, size: 20),
+                      prefixWidget: const Icon(Icons.calendar_today_outlined,
+                          color: AppColors.textSecondary, size: 20),
                       onChanged: (value) => formNotifier.setDate(value),
                       readOnly: true,
                       onTap: () => _selectDate(context, formNotifier),
@@ -175,7 +177,8 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                       label: 'Budget Min',
                       hint: '\$0',
                       controller: _budgetMinController,
-                      prefixWidget: const Icon(Icons.attach_money, color: AppColors.textSecondary, size: 20),
+                      prefixWidget: const Icon(Icons.attach_money,
+                          color: AppColors.textSecondary, size: 20),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
                         final val = double.tryParse(value) ?? 0;
@@ -190,7 +193,8 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                       label: 'Budget Max',
                       hint: '\$500',
                       controller: _budgetMaxController,
-                      prefixWidget: const Icon(Icons.attach_money, color: AppColors.textSecondary, size: 20),
+                      prefixWidget: const Icon(Icons.attach_money,
+                          color: AppColors.textSecondary, size: 20),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
                         final val = double.tryParse(value) ?? 500;
@@ -237,7 +241,10 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                     ? null
                     : () async {
                         await formNotifier.submitForm();
-                        if (formState.error == null && mounted) {
+                        // Re-read state after async operation to check for errors
+                        final updatedState =
+                            ref.read(mysteryFormProvider(widget.userId));
+                        if (updatedState.error == null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Mystery created successfully!'),
