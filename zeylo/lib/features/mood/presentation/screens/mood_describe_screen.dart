@@ -39,6 +39,12 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
   void initState() {
     super.initState();
     _descriptionController = TextEditingController();
+
+    // Sync controller with initial mood description from provider
+    final currentDescription = ref.read(moodProvider).description;
+    if (currentDescription.isNotEmpty) {
+      _descriptionController.text = currentDescription;
+    }
   }
 
   @override
@@ -50,6 +56,19 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
   @override
   Widget build(BuildContext context) {
     final moodState = ref.watch(moodProvider);
+
+    // Listen for errors and show snackbar
+    ref.listen<MoodState>(moodProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+          ),
+        );
+        ref.read(moodProvider.notifier).clearError();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -148,7 +167,8 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
                     'Add location preference',
                     Icons.location_on_outlined,
                     () {
-                      ref.read(moodProvider.notifier)
+                      ref
+                          .read(moodProvider.notifier)
                           .setLocationPreference('San Francisco');
                     },
                   ),
@@ -156,7 +176,8 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
                     'Add budget range',
                     Icons.attach_money,
                     () {
-                      ref.read(moodProvider.notifier)
+                      ref
+                          .read(moodProvider.notifier)
                           .setBudgetPreference(25, 100);
                     },
                   ),
@@ -164,7 +185,8 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
                     'Add time preference',
                     Icons.schedule,
                     () {
-                      ref.read(moodProvider.notifier)
+                      ref
+                          .read(moodProvider.notifier)
                           .setTimePreference(TimePreference.afternoon);
                     },
                   ),
@@ -174,20 +196,19 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
 
               // Find Matches button
               ZeyloButton(
-                label: moodState.isLoading ? 'Finding matches...' : 'Find Matches',
+                label: moodState.isLoading
+                    ? 'Finding matches...'
+                    : 'Find Matches',
                 isLoading: moodState.isLoading,
-                isDisabled: moodState.isLoading ||
-                    moodState.description.isEmpty,
-                onPressed: moodState.isLoading ||
-                        moodState.description.isEmpty
-                    ? null
-                    : () async {
-                        await ref.read(moodProvider.notifier).findMatches();
-                        if (mounted && !moodState.isLoading) {
-                          Navigator.of(context)
-                              .pushNamed('/mood-results');
-                        }
-                      },
+                isDisabled: moodState.description.isEmpty,
+                onPressed: () async {
+                  await ref.read(moodProvider.notifier).findMatches();
+                  if (!mounted) return;
+                  final updatedState = ref.read(moodProvider);
+                  if (updatedState.error == null && !updatedState.isLoading) {
+                    Navigator.of(context).pushNamed('/mood-results');
+                  }
+                },
               ),
               const SizedBox(height: AppSpacing.xl),
             ],
