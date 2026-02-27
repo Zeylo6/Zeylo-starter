@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/seed/seed_data.dart';
 import '../models/category_model.dart';
 import '../models/experience_model.dart';
 
@@ -44,16 +45,27 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
           .limit(10)
           .get();
 
-      final results = snapshot.docs
-          .map((doc) => ExperienceModel.fromFirestore(doc))
+      if (snapshot.docs.isNotEmpty) {
+        final results = snapshot.docs
+            .map((doc) => ExperienceModel.fromFirestore(doc))
+            .toList();
+        results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return results;
+      }
+      
+      // Fallback to mock data if Firestore is empty
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .take(10)
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
           .toList();
-
-      // Sort by createdAt descending on the client side
-      results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      return results;
     } catch (e) {
-      rethrow;
+      // Fallback to mock data on error (e.g. missing index)
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .take(10)
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
   }
 
@@ -68,11 +80,25 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
           .where('isActive', isEqualTo: true)
           .get();
 
-      return snapshot.docs
-          .map((doc) => ExperienceModel.fromFirestore(doc))
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs
+            .map((doc) => ExperienceModel.fromFirestore(doc))
+            .toList();
+      }
+      
+      // Fallback
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .where((e) => e.category == category)
           .toList();
     } catch (e) {
-      rethrow;
+      // Fallback
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .where((e) => e.category == category)
+          .toList();
     }
   }
 
@@ -82,12 +108,24 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       final snapshot =
           await _firestore.collection('categories').orderBy('order').get();
 
-      return snapshot.docs
-          .map((doc) => CategoryModel.fromFirestore(doc))
-          .where((category) => category.isActive)
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs
+            .map((doc) => CategoryModel.fromFirestore(doc))
+            .where((category) => category.isActive)
+            .toList();
+      }
+      
+      // Fallback
+      final mockData = await SeedData.getMockCategories();
+      return mockData
+          .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      rethrow;
+      // Fallback
+      final mockData = await SeedData.getMockCategories();
+      return mockData
+          .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
   }
 
