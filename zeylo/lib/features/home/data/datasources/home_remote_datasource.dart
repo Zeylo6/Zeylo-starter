@@ -36,16 +36,22 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<ExperienceModel>> getFeaturedExperiences() async {
     try {
+      // NOTE: Avoid orderBy('createdAt') with where('isActive') as it requires
+      // a Firestore composite index. Sort client-side instead.
       final snapshot = await _firestore
           .collection('experiences')
           .where('isActive', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
           .limit(10)
           .get();
 
-      return snapshot.docs
+      final results = snapshot.docs
           .map((doc) => ExperienceModel.fromFirestore(doc))
           .toList();
+
+      // Sort by createdAt descending on the client side
+      results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return results;
     } catch (e) {
       rethrow;
     }
