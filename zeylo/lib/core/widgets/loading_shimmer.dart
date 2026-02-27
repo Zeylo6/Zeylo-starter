@@ -229,10 +229,13 @@ class ShimmerListTile extends StatelessWidget {
                 ],
               ),
             ),
-            Container(
-              height: 16,
-              width: 60,
-              color: AppColors.surface,
+            Flexible(
+              flex: 0,
+              child: Container(
+                height: 16,
+                width: 60,
+                color: AppColors.surface,
+              ),
             ),
           ],
         ),
