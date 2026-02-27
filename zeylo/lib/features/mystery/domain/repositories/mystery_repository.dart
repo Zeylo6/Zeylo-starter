@@ -57,4 +57,8 @@ abstract class MysteryRepository {
   ///
   /// Deletes a mystery booking from the database
   Future<Either<Failure, void>> deleteMystery(String mysteryId);
+
+  /// Find a matching mystery experience
+  Future<Either<Failure, String?>> matchMysteryExperience(
+      MysteryEntity mystery);
 }
