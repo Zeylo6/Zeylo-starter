@@ -100,7 +100,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       );
 
       if (mounted) {
+<<<<<<< Updated upstream
         context.go('/email-otp-request');
+=======
+        context.go('/home');
+>>>>>>> Stashed changes
       }
     } catch (e) {
       if (mounted) {
