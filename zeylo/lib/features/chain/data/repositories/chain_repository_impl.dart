@@ -139,4 +139,26 @@ class ChainRepositoryImpl implements ChainRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> enhancePrompt(String prompt) async {
+    try {
+      final result = await dataSource.enhancePrompt(prompt);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ChainExperience>>> generateChainExperiences(
+      String prompt, String location, String date) async {
+    try {
+      final result =
+          await dataSource.generateChainExperiences(prompt, location, date);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

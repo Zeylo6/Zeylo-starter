@@ -87,23 +87,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Provide a dummy user ID or get it from auth provider
-          context.push(
-            '/mystery/create',
-            extra: {'userId': 'user_1'}, // Using demo user ID for now
-          );
-        },
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.card_giftcard, color: Colors.white),
-        label: const Text(
-          'Surprise Me',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'create_chain',
+            onPressed: () {
+              context.push(
+                '/chain/create',
+                extra: {'userId': 'user_1'},
+              );
+            },
+            backgroundColor: AppColors.secondary,
+            icon: const Icon(Icons.link, color: Colors.white),
+            label: const Text(
+              'Create Chain',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: AppSpacing.md),
+          FloatingActionButton.extended(
+            heroTag: 'surprise_me',
+            onPressed: () {
+              // Provide a dummy user ID or get it from auth provider
+              context.push(
+                '/mystery/create',
+                extra: {'userId': 'user_1'}, // Using demo user ID for now
+              );
+            },
+            backgroundColor: AppColors.primary,
+            icon: const Icon(Icons.card_giftcard, color: Colors.white),
+            label: const Text(
+              'Surprise Me',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
