@@ -73,14 +73,12 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
     try {
-      final snapshot = await _firestore
-          .collection('categories')
-          .where('isActive', isEqualTo: true)
-          .orderBy('order', descending: false)
-          .get();
+      final snapshot =
+          await _firestore.collection('categories').orderBy('order').get();
 
       return snapshot.docs
           .map((doc) => CategoryModel.fromFirestore(doc))
+          .where((category) => category.isActive)
           .toList();
     } catch (e) {
       rethrow;
@@ -220,7 +218,8 @@ class Math {
 
   static double _atan(double x) {
     const p = 0.9999999988;
-    return (3.141592653589793 / 4) * x - x * (x.abs() - 1) * (p + 0.1963 * x.abs());
+    return (3.141592653589793 / 4) * x -
+        x * (x.abs() - 1) * (p + 0.1963 * x.abs());
   }
 
   static double _sqrt(double x) {
