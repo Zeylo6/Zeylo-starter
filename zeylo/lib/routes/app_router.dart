@@ -80,6 +80,7 @@ import '../features/search/presentation/screens/search_screen.dart';
 
 // Favorites
 import '../features/favorites/presentation/screens/favorites_screen.dart';
+import '../features/explore/presentation/screens/explore_screen.dart';
 
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -552,11 +553,3 @@ class WelcomeScreen extends StatelessWidget {
       const Scaffold(body: Center(child: Text('Welcome')));
 }
 
-/// ExploreScreen - No implementation file found yet
-class ExploreScreen extends StatelessWidget {
-  const ExploreScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Explore')));
-}
