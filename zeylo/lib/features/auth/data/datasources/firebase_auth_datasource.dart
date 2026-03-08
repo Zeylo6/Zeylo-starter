@@ -20,7 +20,7 @@ class FirebaseAuthDataSource {
   final FirebaseFirestore _firestore;
 
   /// Google Sign-In instance
-  final GoogleSignIn _googleSignIn;
+  final GoogleSignIn? _googleSignIn;
   final OtpEmailService _otpEmailService;
 
   /// Creates a new FirebaseAuthDataSource instance
@@ -31,7 +31,7 @@ class FirebaseAuthDataSource {
     OtpEmailService? otpEmailService,
   })  : _firebaseAuth = firebaseAuth ?? fb_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _googleSignIn = kIsWeb ? null : (googleSignIn ?? GoogleSignIn()),
         _otpEmailService = otpEmailService ?? OtpEmailService();
 
   /// Stream of authentication state changes
@@ -118,7 +118,12 @@ class FirebaseAuthDataSource {
           ..addScope('profile');
         userCredential = await _firebaseAuth.signInWithPopup(provider);
       } else {
-        final googleUser = await _googleSignIn.signIn();
+        final googleSignIn = _googleSignIn;
+        if (googleSignIn == null) {
+          throw Exception('Google Sign-In is not available on this platform');
+        }
+
+        final googleUser = await googleSignIn.signIn();
         if (googleUser == null) {
           throw Exception('Google sign in cancelled');
         }
@@ -229,7 +234,9 @@ class FirebaseAuthDataSource {
   /// Sign out the current user
   Future<void> signOut() async {
     try {
-      await _googleSignIn.signOut();
+      if (_googleSignIn != null) {
+        await _googleSignIn!.signOut();
+      }
       await _firebaseAuth.signOut();
     } catch (e) {
       throw Exception('Sign out failed: ${e.toString()}');

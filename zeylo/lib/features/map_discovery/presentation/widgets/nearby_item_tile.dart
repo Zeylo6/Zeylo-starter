@@ -132,6 +132,12 @@ class NearbyItemTile extends StatelessWidget {
     if (item.time != null) details.add(item.time!);
     if (item.rating != null) details.add(item.rating!);
     if (item.details != null) details.add(item.details!);
+    if (item.commuteFromPreviousMinutes != null) {
+      details.insert(
+        0,
+        '${item.commuteFromPreviousMinutes} min from previous',
+      );
+    }
 
     if (details.isEmpty) return const SizedBox.shrink();
 

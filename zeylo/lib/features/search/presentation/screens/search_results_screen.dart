@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/experience_card.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
+import '../../../../core/discovery/discovery_utils.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/filter_sheet.dart';
 
@@ -31,7 +32,6 @@ class SearchResultsScreen extends ConsumerStatefulWidget {
 
 class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   late TextEditingController _searchController;
-  String _sortBy = 'relevance'; // relevance, price_asc, price_desc, rating
 
   @override
   void initState() {
@@ -104,10 +104,32 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Sort dropdown
-                      _buildSortDropdown(),
+                      Expanded(
+                        child: _buildSortDropdown(
+                          ref.watch(discoverySortModeProvider),
+                        ),
+                      ),
 
                       // Filter button
                       _buildFilterButton(context),
+                      const SizedBox(width: AppSpacing.sm),
+
+                      ElevatedButton(
+                        onPressed: () => _showTripPlanner(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 6,
+                          ),
+                        ),
+                        child: Text(
+                          'Plan Trip',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.textInverse,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -122,36 +144,71 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     );
   }
 
-  Widget _buildSortDropdown() {
+  Widget _buildSortDropdown(DiscoverySortMode sortMode) {
     return DropdownButton<String>(
-      value: _sortBy,
+      value: _sortModeValue(sortMode),
       underline: const SizedBox.shrink(),
-      items: [
-        const DropdownMenuItem(
+      isExpanded: true,
+      items: const [
+        DropdownMenuItem(
           value: 'relevance',
           child: Text('Most Relevant'),
         ),
-        const DropdownMenuItem(
+        DropdownMenuItem(
           value: 'price_asc',
           child: Text('Price: Low to High'),
         ),
-        const DropdownMenuItem(
+        DropdownMenuItem(
           value: 'price_desc',
           child: Text('Price: High to Low'),
         ),
-        const DropdownMenuItem(
+        DropdownMenuItem(
           value: 'rating',
           child: Text('Top Rated'),
+        ),
+        DropdownMenuItem(
+          value: 'newest',
+          child: Text('Newest'),
+        ),
+        DropdownMenuItem(
+          value: 'smart',
+          child: Text('Smart Match'),
         ),
       ],
       onChanged: (value) {
         if (value != null) {
-          setState(() {
-            _sortBy = value;
-          });
+          final nextMode = _sortModeFromValue(value);
+          ref.read(discoverySortModeProvider.notifier).state = nextMode;
         }
       },
     );
+  }
+
+  String _sortModeValue(DiscoverySortMode sortMode) {
+    if (sortMode == DiscoverySortMode.priceLow) return 'price_asc';
+    if (sortMode == DiscoverySortMode.priceHigh) return 'price_desc';
+    if (sortMode == DiscoverySortMode.rating) return 'rating';
+    if (sortMode == DiscoverySortMode.newest) return 'newest';
+    if (sortMode == DiscoverySortMode.smart) return 'smart';
+    return 'relevance';
+  }
+
+  DiscoverySortMode _sortModeFromValue(String value) {
+    switch (value) {
+      case 'price_asc':
+        return DiscoverySortMode.priceLow;
+      case 'price_desc':
+        return DiscoverySortMode.priceHigh;
+      case 'rating':
+        return DiscoverySortMode.rating;
+      case 'newest':
+        return DiscoverySortMode.newest;
+      case 'smart':
+        return DiscoverySortMode.smart;
+      case 'relevance':
+      default:
+        return DiscoverySortMode.relevance;
+    }
   }
 
   Widget _buildFilterButton(BuildContext context) {
@@ -197,31 +254,14 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
   Widget _buildResultsList() {
     return ref.watch(experiencesByFilterProvider).when(
           data: (allExperiences) {
-            // Filter based on search query
-            var results = allExperiences
+            final results = allExperiences
                 .where((exp) =>
                     exp.title.toLowerCase().contains(widget.query.toLowerCase()) ||
-                    exp.description.toLowerCase().contains(widget.query.toLowerCase()) ||
+                    exp.description
+                        .toLowerCase()
+                        .contains(widget.query.toLowerCase()) ||
                     exp.category.toLowerCase().contains(widget.query.toLowerCase()))
                 .toList();
-
-            // Apply sorting
-            switch (_sortBy) {
-              case 'price_asc':
-                results.sort((a, b) => a.price.compareTo(b.price));
-                break;
-              case 'price_desc':
-                results.sort((a, b) => b.price.compareTo(a.price));
-                break;
-              case 'rating':
-                results.sort((a, b) =>
-                    b.averageRating.compareTo(a.averageRating));
-                break;
-              case 'relevance':
-              default:
-                // Default ordering
-                break;
-            }
 
             if (results.isEmpty) {
               return SliverToBoxAdapter(
@@ -330,6 +370,102 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
     Navigator.of(context).pushNamed(
       '/experience-detail',
       arguments: experienceId,
+    );
+  }
+
+  void _showTripPlanner() {
+    final results = ref.read(experiencesByFilterProvider).value ?? [];
+    final trip = DiscoveryUtils.buildTripPlan(
+      experiences: results,
+      query: widget.query,
+      maxStops: 4,
+      maxTotalMinutes: 300,
+    );
+
+    if (trip.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No feasible trip plan from these results.'),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
+      ),
+      builder: (_) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (_, controller) {
+            return Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: SingleChildScrollView(
+                controller: controller,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Suggested Trip', style: AppTypography.headlineSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Optimized route based on proximity and duration.',
+                      style: AppTypography.bodySmall,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ...trip.map(
+                      (leg) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (leg.travelMinutesFromPrevious > 0)
+                              Text(
+                                'Travel ${leg.distanceFromPreviousKm.toStringAsFixed(1)} km '
+                                '(${leg.travelMinutesFromPrevious} min walk) then ${leg.experience.duration} min',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            if (leg.travelMinutesFromPrevious > 0)
+                              const SizedBox(height: AppSpacing.sm),
+                            ExperienceCard(
+                              imageUrl: leg.experience.coverImage,
+                              hostName: leg.experience.hostName,
+                              hostAvatarUrl: leg.experience.hostPhotoUrl,
+                              location:
+                                  '${leg.experience.location.city}, ${leg.experience.location.country}',
+                              price:
+                                  '\$${leg.experience.price.toStringAsFixed(0)} ${leg.experience.currency}',
+                              description: leg.experience.shortDescription,
+                              rating: leg.experience.averageRating,
+                              ratingCount: leg.experience.reviewCount,
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                _navigateToDetail(leg.experience.id);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
