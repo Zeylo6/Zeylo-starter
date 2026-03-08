@@ -227,9 +227,32 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
     }
 
-    return ListView(
+      return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
+        if (state.routeItems.isNotEmpty) ...[
+          Text(
+            'Suggested Route',
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          for (final item in state.routeItems)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+              child: NearbyItemTile(
+                item: item,
+                onTap: () {
+                  // Navigate to item details
+                },
+                onActionTap: () {
+                  // Handle action
+                },
+              ),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
         Text(
           'Nearby Right Now',
           style: AppTypography.titleMedium.copyWith(

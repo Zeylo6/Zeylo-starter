@@ -49,6 +49,13 @@ abstract class ChainRepository {
 
   /// Archive a chain
   ///
-  /// Archives a chain (removes from active listings)
+  /// Archive a chain (removes from active listings)
   Future<Either<Failure, ChainEntity>> archiveChain(String chainId);
+
+  /// Enhance chain prompt using AI
+  Future<Either<Failure, String>> enhancePrompt(String prompt);
+
+  /// Generate chain experiences based on advanced prompt
+  Future<Either<Failure, List<ChainExperience>>> generateChainExperiences(
+      String prompt, String location, String date);
 }

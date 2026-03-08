@@ -71,6 +71,7 @@ class Experience extends Equatable {
   final double averageRating;
   final int reviewCount;
   final bool isActive;
+  final bool isMysteryAvailable;
   final List<String> tags;
   final List<Availability> availability;
   final DateTime createdAt;
@@ -99,6 +100,7 @@ class Experience extends Equatable {
     required this.averageRating,
     required this.reviewCount,
     required this.isActive,
+    required this.isMysteryAvailable,
     required this.tags,
     required this.availability,
     required this.createdAt,
@@ -129,6 +131,7 @@ class Experience extends Equatable {
         averageRating,
         reviewCount,
         isActive,
+        isMysteryAvailable,
         tags,
         availability,
         createdAt,

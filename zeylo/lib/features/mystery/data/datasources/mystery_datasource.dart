@@ -19,6 +19,9 @@ abstract class MysteryDataSource {
 
   /// Delete a mystery
   Future<void> deleteMystery(String mysteryId);
+
+  /// Find a matching experience for a mystery
+  Future<String?> matchMysteryExperience(MysteryModel mystery);
 }
 
 /// Firebase implementation of mystery data source
@@ -64,10 +67,8 @@ class MysteryDataSourceImpl implements MysteryDataSource {
   @override
   Future<MysteryModel> getMysteryById(String mysteryId) async {
     try {
-      final doc = await firestore
-          .collection(_mysteryCollection)
-          .doc(mysteryId)
-          .get();
+      final doc =
+          await firestore.collection(_mysteryCollection).doc(mysteryId).get();
 
       if (!doc.exists) {
         throw Exception('Mystery not found');
@@ -96,12 +97,59 @@ class MysteryDataSourceImpl implements MysteryDataSource {
   @override
   Future<void> deleteMystery(String mysteryId) async {
     try {
-      await firestore
-          .collection(_mysteryCollection)
-          .doc(mysteryId)
-          .delete();
+      await firestore.collection(_mysteryCollection).doc(mysteryId).delete();
     } on FirebaseException catch (e) {
       throw Exception('Failed to delete mystery: ${e.message}');
+    }
+  }
+
+  @override
+  Future<String?> matchMysteryExperience(MysteryModel mystery) async {
+    try {
+      // Query experiences collection for active & mystery available experiences
+      Query<Map<String, dynamic>> query = firestore
+          .collection('experiences')
+          .where('isActive', isEqualTo: true)
+          .where('isMysteryAvailable', isEqualTo: true);
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) return null;
+
+      // Filter in memory for budget and category to avoid requiring composite indexes initially
+      final matches = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final price = (data['price'] as num?)?.toDouble() ?? 0.0;
+
+        // Filter by budget
+        if (price < mystery.budgetMin || price > mystery.budgetMax)
+          return false;
+
+        // Filter by category if not 'surpriseMe'
+        if (mystery.experienceType.name != 'surpriseMe') {
+          final category = data['category'] as String?;
+          switch (mystery.experienceType.name) {
+            case 'adventure':
+              if (category != 'Adventure' && category != 'Nature') return false;
+              break;
+            case 'foodAndDrink':
+              if (category != 'Food & Drink') return false;
+              break;
+            case 'artsAndCulture':
+              if (category != 'Arts & Culture') return false;
+              break;
+          }
+        }
+        return true;
+      }).toList();
+
+      if (matches.isEmpty) return null;
+
+      // Randomly select one match (in a real app, maybe use random number or weighting)
+      matches.shuffle();
+      return matches.first.id;
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to match mystery experience: ${e.message}');
     }
   }
 }
