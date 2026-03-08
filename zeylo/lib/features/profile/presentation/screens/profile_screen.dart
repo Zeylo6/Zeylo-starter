@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/past_experience_tile.dart';
@@ -45,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.more_vert),
             color: AppColors.textPrimary,
-            onPressed: () => _showMoreMenu(context),
+            onPressed: () => _showMoreMenu(context, ref),
           ),
         ],
       ),
@@ -220,23 +222,59 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showMoreMenu(BuildContext context) {
+  void _showMoreMenu(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SizedBox(
-        height: 150,
+      builder: (sheetContext) => SafeArea(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.report_problem),
-              title: const Text('Report'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('Block'),
-              onTap: () => Navigator.pop(context),
-            ),
+            if (isCurrentUser) ...[
+              ListTile(
+                leading: const Icon(Icons.settings_outlined),
+                title: const Text('Settings'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.push('/settings');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout, color: AppColors.error),
+                title: Text(
+                  'Sign Out',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  try {
+                    await ref.read(authNotifierProvider.notifier).signOut();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(e.toString()),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ] else ...[
+              ListTile(
+                leading: const Icon(Icons.report_problem),
+                title: const Text('Report'),
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: const Text('Block'),
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+            ],
           ],
         ),
       ),

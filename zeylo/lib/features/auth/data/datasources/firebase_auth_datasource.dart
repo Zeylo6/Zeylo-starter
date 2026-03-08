@@ -1,12 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:math';
 
 import '../models/user_model.dart';
-import '../services/otp_email_service.dart';
 
 /// Firebase authentication data source
 ///
@@ -21,18 +18,15 @@ class FirebaseAuthDataSource {
 
   /// Google Sign-In instance
   final GoogleSignIn? _googleSignIn;
-  final OtpEmailService _otpEmailService;
 
   /// Creates a new FirebaseAuthDataSource instance
   FirebaseAuthDataSource({
     fb_auth.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-    OtpEmailService? otpEmailService,
   })  : _firebaseAuth = firebaseAuth ?? fb_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = kIsWeb ? null : (googleSignIn ?? GoogleSignIn()),
-        _otpEmailService = otpEmailService ?? OtpEmailService();
+        _googleSignIn = kIsWeb ? null : (googleSignIn ?? GoogleSignIn());
 
   /// Stream of authentication state changes
   Stream<fb_auth.User?> get authStateChanges {
@@ -55,9 +49,23 @@ class FirebaseAuthDataSource {
         throw Exception('Sign in failed: user is null');
       }
 
-      final userModel = await _getUserFromFirestore(user.uid);
+      var userModel = await _getUserFromFirestore(user.uid);
+
+      // Auto-recover: if Firebase Auth user exists but Firestore doc is missing,
+      // create the Firestore doc from Firebase Auth data
       if (userModel == null) {
-        throw Exception('User data not found in Firestore');
+        userModel = UserModel(
+          uid: user.uid,
+          email: user.email ?? email,
+          displayName: user.displayName ?? '',
+          photoUrl: user.photoURL,
+          phoneNumber: user.phoneNumber,
+          isVerified: user.emailVerified,
+          createdAt: DateTime.now(),
+        );
+        await _firestore.collection('users').doc(user.uid).set(
+              userModel.toFirestore(),
+            );
       }
 
       return userModel;
@@ -99,6 +107,9 @@ class FirebaseAuthDataSource {
       await _firestore.collection('users').doc(user.uid).set(
             userModel.toFirestore(),
           );
+
+      // Send Firebase email verification link
+      await user.sendEmailVerification();
 
       return userModel;
     } on fb_auth.FirebaseAuthException catch (e) {
@@ -175,62 +186,6 @@ class FirebaseAuthDataSource {
     }
   }
 
-  /// Sign in with Apple
-  Future<UserModel> signInWithApple() async {
-    try {
-      final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-
-      final oAuthProvider = fb_auth.OAuthProvider('apple.com');
-      final firebaseCredential = oAuthProvider.credential(
-        idToken: credential.identityToken,
-        accessToken: credential.authorizationCode,
-      );
-
-      final userCredential = await _firebaseAuth.signInWithCredential(
-        firebaseCredential,
-      );
-      final user = userCredential.user;
-
-      if (user == null) {
-        throw Exception('Apple sign in failed: user is null');
-      }
-
-      // Check if user exists in Firestore
-      var userModel = await _getUserFromFirestore(user.uid);
-
-      if (userModel == null) {
-        // Create new user
-        final fullName =
-            '${credential.givenName ?? ''} ${credential.familyName ?? ''}'
-                .trim();
-
-        userModel = UserModel(
-          uid: user.uid,
-          email: credential.email ?? user.email ?? '',
-          displayName: fullName.isNotEmpty ? fullName : user.displayName ?? '',
-          photoUrl: user.photoURL,
-          isVerified: user.emailVerified,
-          createdAt: DateTime.now(),
-        );
-
-        await _firestore.collection('users').doc(user.uid).set(
-              userModel.toFirestore(),
-            );
-      }
-
-      return userModel;
-    } on fb_auth.FirebaseAuthException catch (e) {
-      throw _handleFirebaseAuthException(e);
-    } catch (e) {
-      throw Exception('Apple sign in failed: ${e.toString()}');
-    }
-  }
-
   /// Sign out the current user
   Future<void> signOut() async {
     try {
@@ -243,85 +198,48 @@ class FirebaseAuthDataSource {
     }
   }
 
-  /// Send OTP email to a specific email address.
-  Future<void> sendOtpToEmail(String email) async {
+  /// Send Firebase email verification link to current user
+  Future<void> sendVerificationEmail() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in');
+    }
+    if (user.emailVerified) {
+      return; // Already verified
+    }
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user == null) {
-        throw Exception('No user is currently signed in');
-      }
-
-      final otpCode = (10000 + Random().nextInt(90000)).toString();
-      final expiresAt = DateTime.now().add(const Duration(minutes: 10));
-
-      await _otpEmailService.sendOtp(email: email, otpCode: otpCode);
-
-      await _firestore.collection('users').doc(user.uid).update({
-        'pendingVerificationEmail': email,
-        'pendingOtpCode': otpCode,
-        'pendingOtpExpiresAt': Timestamp.fromDate(expiresAt),
-        'isVerified': false,
-      });
+      await user.sendEmailVerification();
     } catch (e) {
-      throw Exception('Send OTP failed: ${e.toString()}');
+      throw Exception('Failed to send verification email: ${e.toString()}');
     }
   }
 
-  /// Verify email with OTP code.
-  Future<bool> verifyEmail(String code, {required String email}) async {
-    try {
-      final user = _firebaseAuth.currentUser;
-      if (user == null) {
-        throw Exception('No user is currently signed in');
-      }
-
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      final data = doc.data();
-      if (data == null) {
-        throw Exception('User data not found');
-      }
-
-      final savedEmail = data['pendingVerificationEmail'] as String?;
-      final savedOtp = data['pendingOtpCode'] as String?;
-      final expiresAt = (data['pendingOtpExpiresAt'] as Timestamp?)?.toDate();
-
-      if (savedEmail == null || savedOtp == null || expiresAt == null) {
-        throw Exception('No OTP request found. Please request a new OTP.');
-      }
-
-      if (savedEmail.toLowerCase() != email.toLowerCase()) {
-        throw Exception('OTP does not match this email.');
-      }
-
-      if (DateTime.now().isAfter(expiresAt)) {
-        throw Exception('OTP expired. Please request a new OTP.');
-      }
-
-      if (savedOtp != code) {
-        throw Exception('Invalid OTP code.');
-      }
-
-      await _firestore.collection('users').doc(user.uid).update({
-        'isVerified': true,
-        'email': email,
-        'pendingVerificationEmail': FieldValue.delete(),
-        'pendingOtpCode': FieldValue.delete(),
-        'pendingOtpExpiresAt': FieldValue.delete(),
-      });
-
-      return true;
-    } catch (e) {
-      throw Exception('Email verification failed: ${e.toString()}');
+  /// Reload the user and check if email is verified via Firebase
+  Future<bool> checkEmailVerified() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in');
     }
+    await user.reload();
+    final refreshedUser = _firebaseAuth.currentUser;
+    if (refreshedUser != null && refreshedUser.emailVerified) {
+      // Sync the isVerified flag in Firestore
+      await _firestore.collection('users').doc(refreshedUser.uid).update({
+        'isVerified': true,
+      });
+      return true;
+    }
+    return false;
   }
 
   /// Resend verification email
-  Future<void> resendVerificationEmail({required String email}) async {
-    try {
-      await sendOtpToEmail(email);
-    } catch (e) {
-      throw Exception('Resend OTP failed: ${e.toString()}');
-    }
+  Future<void> resendVerificationEmail() async {
+    await sendVerificationEmail();
+  }
+
+  /// Check Firebase Auth's emailVerified flag without reload
+  bool get isCurrentUserEmailVerified {
+    return _firebaseAuth.currentUser?.emailVerified ?? false;
   }
 
   /// Reset password for email
