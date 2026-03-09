@@ -15,7 +15,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserEntity?> get authStateChanges {
-    return dataSource.authStateChanges.map((fbUser) => null);
+    return dataSource.authStateChanges.asyncMap((fbUser) async {
+      if (fbUser == null) return null;
+      return await dataSource.getCurrentUser();
+    });
   }
 
   @override
@@ -62,15 +65,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserEntity> signInWithApple() async {
-    try {
-      return await dataSource.signInWithApple();
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  @override
   Future<void> signOut() async {
     try {
       await dataSource.signOut();
@@ -80,33 +74,35 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> verifyEmail({
-    required String code,
-    required String email,
-  }) async {
+  Future<bool> checkEmailVerified() async {
     try {
-      return await dataSource.verifyEmail(code, email: email);
+      return await dataSource.checkEmailVerified();
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> sendOtpToEmail(String email) async {
+  Future<void> sendVerificationEmail() async {
     try {
-      await dataSource.sendOtpToEmail(email);
+      await dataSource.sendVerificationEmail();
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> resendVerificationEmail(String email) async {
+  Future<void> resendVerificationEmail() async {
     try {
-      await dataSource.resendVerificationEmail(email: email);
+      await dataSource.resendVerificationEmail();
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  bool get isCurrentUserEmailVerified {
+    return dataSource.isCurrentUserEmailVerified;
   }
 
   @override
