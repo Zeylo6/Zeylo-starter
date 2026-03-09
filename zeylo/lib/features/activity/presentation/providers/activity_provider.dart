@@ -60,8 +60,11 @@ extension ActivityTabX on ActivityTab {
 }
 
 /// Activity state notifier
-class ActivityNotifier extends StateNotifier<ActivityState> {
-  ActivityNotifier() : super(const ActivityState());
+class ActivityNotifier extends Notifier<ActivityState> {
+  @override
+  ActivityState build() {
+    return const ActivityState();
+  }
 
   /// Set the active tab
   void setActiveTab(ActivityTab tab) {
@@ -160,6 +163,6 @@ class ActivityNotifier extends StateNotifier<ActivityState> {
 }
 
 /// Activity state provider
-final activityProvider = StateNotifierProvider<ActivityNotifier, ActivityState>(
-  (ref) => ActivityNotifier(),
+final activityProvider = NotifierProvider<ActivityNotifier, ActivityState>(
+  () => ActivityNotifier(),
 );

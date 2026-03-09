@@ -66,8 +66,11 @@ class BookingFormState {
 }
 
 /// Notifier for booking form state
-class BookingFormNotifier extends StateNotifier<BookingFormState> {
-  BookingFormNotifier() : super(BookingFormState());
+class BookingFormNotifier extends Notifier<BookingFormState> {
+  @override
+  BookingFormState build() {
+    return BookingFormState();
+  }
 
   void updateFullName(String value) {
     state = state.copyWith(fullName: value);
@@ -141,7 +144,7 @@ final getUserBookingsUseCaseProvider = Provider((ref) {
 
 /// Booking form provider
 final bookingFormProvider =
-    StateNotifierProvider<BookingFormNotifier, BookingFormState>((ref) {
+    NotifierProvider<BookingFormNotifier, BookingFormState>((ref) {
   return BookingFormNotifier();
 });
 

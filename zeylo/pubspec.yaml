@@ -69,7 +69,7 @@ dependencies:
   flutter_svg: ^2.0.17
 
   # Social Sign-In
-  google_sign_in: ^7.2.0
+  google_sign_in: ^6.2.0
   sign_in_with_apple: ^7.0.1
 
   # Functional Programming
