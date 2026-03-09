@@ -66,5 +66,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Zeylo needs your location to show nearby items on the map.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Zeylo needs your location to provide discovery alerts even when the app is in the background.</string>
 </dict>
 </plist>
