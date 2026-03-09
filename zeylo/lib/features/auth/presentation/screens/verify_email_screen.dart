@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,112 +13,77 @@ import '../providers/auth_provider.dart';
 
 /// Email verification screen
 ///
-/// Allows users to enter a 5-digit verification code sent to their email
+/// Shows a "check your email" message after signup/login.
+/// Automatically sends a verification email on load if needed.
+/// Periodically checks if the user has clicked the Firebase verification link.
 class VerifyEmailScreen extends ConsumerStatefulWidget {
-  final String email;
-
-  const VerifyEmailScreen({
-    super.key,
-    required this.email,
-  });
+  const VerifyEmailScreen({super.key});
 
   @override
   ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
 }
 
 class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
-  late List<FocusNode> _focusNodes;
-  late List<TextEditingController> _controllers;
-  bool _isLoading = false;
+  Timer? _autoCheckTimer;
+  bool _isChecking = false;
+  bool _isResending = false;
 
   @override
   void initState() {
     super.initState();
-    _focusNodes = List.generate(5, (_) => FocusNode());
-    _controllers = List.generate(5, (_) => TextEditingController());
-    _validateSessionAndEmail();
+    _sendInitialEmail();
+    _startAutoCheck();
   }
 
   @override
   void dispose() {
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
+    _autoCheckTimer?.cancel();
     super.dispose();
   }
 
-  void _onCodeChanged(String value, int index) {
-    if (value.length == 1 && index < 4) {
-      // Move to next field
-      FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
-    } else if (value.isEmpty && index > 0) {
-      // Move to previous field on backspace
-      FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
-    }
-  }
-
-  Future<void> _validateSessionAndEmail() async {
-    if (widget.email.trim().isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please complete sign-in and request OTP first.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      context.go('/login');
-      return;
-    }
-
-    var user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      try {
-        user = await FirebaseAuth.instance.authStateChanges().first.timeout(
-          const Duration(seconds: 5),
-        );
-      } catch (_) {
-        user = null;
-      }
-    }
-
-    if (!mounted) return;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please complete sign-in and request OTP first.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      context.go('/login');
-    }
-  }
-
-  Future<void> _verifyEmail() async {
-    final code = _controllers.map((c) => c.text).join();
-
-    if (code.length != 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter all 5 digits'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
+  /// Send a verification email when this screen first loads
+  Future<void> _sendInitialEmail() async {
     try {
-      final authNotifier = ref.read(authNotifierProvider.notifier);
-      await authNotifier.verifyEmail(code: code, email: widget.email);
+      await ref.read(authNotifierProvider.notifier).sendVerificationEmail();
+    } catch (_) {
+      // Ignore errors (e.g. too many requests if email was recently sent)
+    }
+  }
 
+  void _startAutoCheck() {
+    _autoCheckTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      if (_isChecking) return;
+      try {
+        final verified =
+            await ref.read(authNotifierProvider.notifier).checkEmailVerified();
+        if (verified && mounted) {
+          _autoCheckTimer?.cancel();
+          context.go('/verify-success');
+        }
+      } catch (_) {
+        // Silently ignore periodic check errors
+      }
+    });
+  }
+
+  Future<void> _manualCheck() async {
+    setState(() => _isChecking = true);
+    try {
+      final verified =
+          await ref.read(authNotifierProvider.notifier).checkEmailVerified();
       if (mounted) {
-        context.go('/home');
+        if (verified) {
+          _autoCheckTimer?.cancel();
+          context.go('/verify-success');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Email not yet verified. Please check your inbox and click the link.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -128,23 +95,18 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isChecking = false);
     }
   }
 
   Future<void> _resendEmail() async {
+    setState(() => _isResending = true);
     try {
-      final authNotifier = ref.read(authNotifierProvider.notifier);
-      await authNotifier.resendVerificationEmail(widget.email);
-
+      await ref.read(authNotifierProvider.notifier).resendVerificationEmail();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Verification email resent successfully'),
+            content: Text('Verification email sent! Check your inbox.'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -158,141 +120,137 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    _autoCheckTimer?.cancel();
+    await ref.read(authNotifierProvider.notifier).signOut();
+    if (mounted) {
+      context.go('/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final email = FirebaseAuth.instance.currentUser?.email ?? '';
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: GestureDetector(
-          onTap: () {
-            if (Navigator.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/onboarding');
-            }
-          },
-          child: const Icon(
-            Icons.arrow_back,
-            color: AppColors.textPrimary,
+        actions: [
+          // Sign out button so user can escape this screen
+          TextButton(
+            onPressed: _signOut,
+            child: Text(
+              'Sign Out',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
-        ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppSpacing.md),
-              // Title
-              Text(
-                'Verify Your Email',
-                style: AppTypography.headlineLarge.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+      body: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: AppSpacing.xxxl),
+            // Email icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: AppSpacing.md),
-              // Subtitle
-              Text(
-                'We sent an OTP to ${widget.email}',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+              child: const Icon(
+                Icons.mail_outline_rounded,
+                size: 40,
+                color: AppColors.primary,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Enter the 5 digit code that mentioned in the email',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            // Title
+            Text(
+              'Verify Your Email',
+              style: AppTypography.headlineLarge.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: AppSpacing.xxxl),
-              // Code input fields
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  5,
-                  (index) => _buildCodeField(index),
-                ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // Subtitle
+            Text(
+              "We've sent a verification link to",
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
               ),
-              const SizedBox(height: AppSpacing.xxxl),
-              // Verify button
-              ZeyloButton(
-                onPressed: _isLoading ? null : _verifyEmail,
-                label: 'Verify',
-                isLoading: _isLoading,
-                variant: ButtonVariant.filled,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              email,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: AppSpacing.massive),
-              // Resend link
-              Center(
-                child: GestureDetector(
-                  onTap: _resendEmail,
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      text: "Haven't got the email yet? ",
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: 'Resend email',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
-                          ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            // Instruction
+            Text(
+              'Click the link in your email to verify your account. This page will update automatically.',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xxxl),
+            // Manual check button
+            ZeyloButton(
+              onPressed: _isChecking ? null : _manualCheck,
+              label: "I've Verified My Email",
+              isLoading: _isChecking,
+              variant: ButtonVariant.filled,
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            // Resend link
+            GestureDetector(
+              onTap: _isResending ? null : _resendEmail,
+              child: _isResending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        text: "Didn't receive the email? ",
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
                         ),
-                      ],
+                        children: [
+                          TextSpan(
+                            text: 'Resend',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCodeField(int index) {
-    return SizedBox(
-      width: 50,
-      height: 60,
-      child: TextField(
-        controller: _controllers[index],
-        focusNode: _focusNodes[index],
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        decoration: InputDecoration(
-          counterText: '',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: AppColors.border,
-              width: 2,
             ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 2,
-            ),
-          ),
-          contentPadding: EdgeInsets.zero,
+          ],
         ),
-        style: AppTypography.headlineSmall.copyWith(
-          color: AppColors.textPrimary,
-        ),
-        onChanged: (value) => _onCodeChanged(value, index),
       ),
     );
   }

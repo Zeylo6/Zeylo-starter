@@ -30,33 +30,24 @@ abstract class AuthRepository {
   /// Throws [Exception] if sign in fails
   Future<UserEntity> signInWithGoogle();
 
-  /// Sign in using Apple OAuth
-  ///
-  /// Opens Apple sign in flow and authenticates user
-  /// Throws [Exception] if sign in fails
-  Future<UserEntity> signInWithApple();
-
   /// Sign out the current user
   ///
   /// Clears authentication tokens and user session
   Future<void> signOut();
 
-  /// Verify email with verification code
+  /// Check if the user's email has been verified via Firebase
   ///
-  /// Verifies the user's email address using a sent verification code
-  /// Returns true if verification succeeds
-  Future<bool> verifyEmail({
-    required String code,
-    required String email,
-  });
+  /// Reloads the user and checks emailVerified status
+  Future<bool> checkEmailVerified();
 
-  /// Send OTP to email for verification
-  Future<void> sendOtpToEmail(String email);
+  /// Send Firebase email verification link to current user
+  Future<void> sendVerificationEmail();
 
   /// Resend verification email
-  ///
-  /// Sends a new verification email to the user
-  Future<void> resendVerificationEmail(String email);
+  Future<void> resendVerificationEmail();
+
+  /// Check Firebase Auth's emailVerified flag without reload
+  bool get isCurrentUserEmailVerified;
 
   /// Reset password for email
   ///

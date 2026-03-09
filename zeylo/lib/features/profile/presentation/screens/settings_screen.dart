@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Settings screen for user preferences and account management
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   String _selectedLanguage = 'English';
@@ -336,22 +339,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _handleSignOut() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Sign Out?'),
         content: const Text('Are you sure you want to sign out of your account?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Handle sign out
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Signed out successfully')),
-              );
-              Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              try {
+                await ref.read(authNotifierProvider.notifier).signOut();
+                if (mounted) {
+                  context.go('/login');
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
             },
             child: Text(
               'Sign Out',

@@ -1,24 +1,13 @@
 import '../repositories/auth_repository.dart';
 
-/// Use case for verifying email with verification code
+/// Use case for checking if the user's email has been verified via Firebase link
 class VerifyEmailUseCase {
-  /// The auth repository instance
   final AuthRepository repository;
 
-  /// Creates a new VerifyEmailUseCase instance
   const VerifyEmailUseCase(this.repository);
 
-  /// Execute the email verification operation
-  ///
-  /// Parameters:
-  /// - [code]: The verification code sent to the user's email
-  ///
-  /// Returns: true if verification succeeds, false otherwise
-  /// Throws: [Exception] if verification fails
-  Future<bool> call({
-    required String code,
-    required String email,
-  }) async {
-    return repository.verifyEmail(code: code, email: email);
+  /// Reload user and check emailVerified status
+  Future<bool> call() async {
+    return repository.checkEmailVerified();
   }
 }
