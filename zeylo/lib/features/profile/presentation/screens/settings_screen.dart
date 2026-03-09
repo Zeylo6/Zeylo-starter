@@ -334,24 +334,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _handleSignOut() {
+    final scaffoldContext = context;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Sign Out?'),
         content: const Text('Are you sure you want to sign out of your account?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               // Handle sign out
-              ScaffoldMessenger.of(context).showSnackBar(
+              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                 const SnackBar(content: Text('Signed out successfully')),
               );
-              Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+              Navigator.of(scaffoldContext).pushNamedAndRemoveUntil('/', (_) => false);
             },
             child: Text(
               'Sign Out',
@@ -364,22 +365,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _handleDeleteAccount() {
+    final scaffoldContext = context;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Account?'),
         content: const Text(
           'This action cannot be undone. All your data will be permanently deleted.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                 const SnackBar(content: Text('Account deletion in progress...')),
               );
             },
