@@ -186,7 +186,10 @@ class _FollowingTileState extends ConsumerState<_FollowingTile> {
               onPressed: _toggleFollow,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    _isFollowing ? AppColors.primary : AppColors.primary,
+                    _isFollowing ? AppColors.surface : AppColors.primary,
+                side: _isFollowing
+                    ? const BorderSide(color: AppColors.border)
+                    : BorderSide.none,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
@@ -194,7 +197,7 @@ class _FollowingTileState extends ConsumerState<_FollowingTile> {
               child: Text(
                 _isFollowing ? 'Following' : 'Follow',
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textInverse,
+                  color: _isFollowing ? AppColors.textPrimary : AppColors.textInverse,
                 ),
               ),
             ),
