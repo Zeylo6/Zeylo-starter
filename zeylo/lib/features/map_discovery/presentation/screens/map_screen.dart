@@ -6,6 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../providers/map_provider.dart';
 import '../widgets/map_filter_tabs.dart';
 import '../widgets/nearby_item_tile.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Screen displaying nearby locations and activities on a map
 class MapScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
+  GoogleMapController? _mapController;
   @override
   void initState() {
     super.initState();
@@ -23,6 +25,26 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(mapProvider.notifier).loadNearbyItems();
     });
+  }
+
+  Set<Marker> _buildMarkers(MapState state) {
+    return state.nearbyItems.map((item) {
+      return Marker(
+        markerId: MarkerId(item.id),
+        position: LatLng(item.latitude ?? 0.0, item.longitude ?? 0.0),
+        infoWindow: InfoWindow(
+          title: item.title,
+          snippet: item.subtitle,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          item.type == NearbyItemType.event
+              ? BitmapDescriptor.hueViolet
+              : item.type == NearbyItemType.people
+                  ? BitmapDescriptor.hueGreen
+                  : BitmapDescriptor.hueBlue,
+        ),
+      );
+    }).toSet();
   }
 
   @override
@@ -36,7 +58,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           // Location header
           _buildLocationHeader(context, state),
           // Map placeholder
-          _buildMapPlaceholder(),
+          _buildMapPlaceholder(state),
           // Filter tabs
           MapFilterTabs(
             filters: MapFilterType.values,
@@ -107,71 +129,29 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
-  Widget _buildMapPlaceholder() {
+  Widget _buildMapPlaceholder(MapState state) {
     return Container(
-      height: 200,
+      height: 250, // Increased height for better visibility
       margin: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Stack(
-        children: [
-          // Map background
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F4FF),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.map,
-                    size: 48,
-                    color: AppColors.textSecondary.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'Map View',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary.withOpacity(0.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: GoogleMap(
+          onMapCreated: (controller) => _mapController = controller,
+          initialCameraPosition: CameraPosition(
+            target:
+                LatLng(state.currentLat ?? 6.9271, state.currentLng ?? 79.8612),
+            zoom: 14.0,
           ),
-          // Pin markers
-          Positioned(
-            left: 40,
-            top: 40,
-            child: _buildPin(Colors.purple), // Events - purple
-          ),
-          Positioned(
-            right: 30,
-            top: 60,
-            child: _buildPin(Colors.green), // People - green
-          ),
-          Positioned(
-            left: 60,
-            bottom: 40,
-            child: _buildPin(Colors.blue), // Businesses - blue
-          ),
-          Positioned(
-            right: 50,
-            bottom: 50,
-            child: _buildPin(
-              const Color(0xFFEC4899),
-              size: 12, // Current user - smaller
-            ),
-          ),
-        ],
+          markers: _buildMarkers(state),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+        ),
       ),
     );
   }
@@ -227,7 +207,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
     }
 
-      return ListView(
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         if (state.routeItems.isNotEmpty) ...[

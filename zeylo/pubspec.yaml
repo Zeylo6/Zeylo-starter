@@ -30,9 +30,11 @@ dependencies:
   # Image Picker
   image_picker: ^1.1.2
 
-  # Location Services
+  # Location Servicesf
   geolocator: ^14.0.2
   geocoding: ^4.0.0
+
+  google_maps_flutter: ^2.10.0
 
   # Internationalization & Formatting
   intl: any
