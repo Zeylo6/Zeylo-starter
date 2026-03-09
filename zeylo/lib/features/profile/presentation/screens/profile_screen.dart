@@ -89,10 +89,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Posts',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTypography.labelLarge,
                 ),
               ],
             ),
@@ -122,10 +119,7 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'Past Experiences',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTypography.labelLarge,
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Container(
@@ -243,3 +237,6 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
+
+
+
