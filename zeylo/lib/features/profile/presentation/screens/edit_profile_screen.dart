@@ -110,9 +110,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
         title: Text(
           'Edit Profile',
-          style: AppTypography.titleLarge.copyWith(
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.titleLarge,
         ),
       ),
       body: SingleChildScrollView(
@@ -175,36 +173,41 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     });
 
     try {
-      final profileAsync = ref.watch(profileProvider(widget.userId));
-      profileAsync.whenData((profile) async {
-        final updatedProfile = profile.copyWith(
-          name: _nameController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          bio: _bioController.text,
-        );
+      final profileAsync = ref.read(profileProvider(widget.userId));
+      final profile = profileAsync.valueOrNull;
+      if (profile == null) return;
 
-        final repository = ref.watch(profileRepositoryProvider);
-        final result = await repository.updateProfile(widget.userId, updatedProfile);
+      final updatedProfile = profile.copyWith(
+        name: _nameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        bio: _bioController.text,
+      );
 
-        result.fold(
-          (failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${failure.message}')),
-            );
-          },
-          (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile updated successfully')),
-            );
-            Navigator.pop(context);
-          },
-        );
-      });
+      final repository = ref.read(profileRepositoryProvider);
+      final result = await repository.updateProfile(widget.userId, updatedProfile);
+
+      if (!mounted) return;
+
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${failure.message}')),
+          );
+        },
+        (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully')),
+          );
+          Navigator.pop(context);
+        },
+      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 }
