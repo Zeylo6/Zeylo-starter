@@ -137,15 +137,16 @@ class _FollowingTileState extends ConsumerState<_FollowingTile> {
   bool _isFollowing = true;
 
   Future<void> _toggleFollow() async {
+    final newFollowState = !_isFollowing;
     setState(() {
-      _isFollowing = !_isFollowing;
+      _isFollowing = newFollowState;
     });
 
     ref.invalidate(
       followActionProvider((
         widget.userId,
         widget.user.id,
-        !_isFollowing,
+        newFollowState,
       )),
     );
   }
