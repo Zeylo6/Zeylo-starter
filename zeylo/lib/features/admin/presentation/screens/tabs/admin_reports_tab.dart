@@ -169,6 +169,33 @@ class AdminReportsTab extends StatelessWidget {
                               ],
                             ),
                             SizedBox(height: AppSpacing.md),
+                            
+                            // Fetch names of Reporter and Target
+                            FutureBuilder<List<DocumentSnapshot>>(
+                              future: Future.wait([
+                                FirebaseFirestore.instance.collection('users').doc(data['reporterId']).get(),
+                                FirebaseFirestore.instance.collection('users').doc(data['reportedUid'] ?? data['reportedUserId']).get(),
+                              ]),
+                              builder: (context, userSnapshot) {
+                                if (!userSnapshot.hasData) return const SizedBox();
+                                final reporterData = userSnapshot.data![0].data() as Map<String, dynamic>?;
+                                final targetData = userSnapshot.data![1].data() as Map<String, dynamic>?;
+                                
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Reporter: ${reporterData?['displayName'] ?? reporterData?['name'] ?? 'Unknown'}', 
+                                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                                      Text('Target: ${targetData?['displayName'] ?? targetData?['name'] ?? 'Unknown'}', 
+                                          style: const TextStyle(fontSize: 13, color: AppColors.error, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
