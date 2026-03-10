@@ -88,6 +88,77 @@ class ProfileScreen extends ConsumerWidget {
           if (isCurrentUser && currentUserData != null)
             _buildRoleBadge(currentUserData.role.name),
 
+          // My Bookings card (seekers only)
+          if (isCurrentUser && currentUserData?.role.name == 'seeker')
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              child: GestureDetector(
+                onTap: () => context.push('/seeker-dashboard'),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6C63FF), Color(0xFF48CAE4)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6C63FF).withAlpha(60),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(50),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: const Icon(
+                          Icons.calendar_today_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'My Bookings',
+                            style: AppTypography.titleMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'View all your experiences',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           const Divider(height: 1),
 
           // Posts section

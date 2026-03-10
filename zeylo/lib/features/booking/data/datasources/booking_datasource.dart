@@ -51,12 +51,16 @@ class BookingRemoteDataSource implements BookingDataSource {
     try {
       final querySnapshot = await _bookingsCollection
           .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs
+      final bookings = querySnapshot.docs
           .map((doc) => BookingModel.fromFirestore(doc.data(), doc.id))
           .toList();
+
+      // Sort in memory to avoid requiring a composite index
+      bookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
+      return bookings;
     } catch (e) {
       throw Exception('Failed to get user bookings: $e');
     }
@@ -67,12 +71,16 @@ class BookingRemoteDataSource implements BookingDataSource {
     try {
       final querySnapshot = await _bookingsCollection
           .where('hostId', isEqualTo: hostId)
-          .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs
+      final bookings = querySnapshot.docs
           .map((doc) => BookingModel.fromFirestore(doc.data(), doc.id))
           .toList();
+
+      // Sort in memory to avoid requiring a composite index
+      bookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
+      return bookings;
     } catch (e) {
       throw Exception('Failed to get host bookings: $e');
     }

@@ -213,6 +213,164 @@ class HostDashboardScreen extends ConsumerWidget {
 
           const SizedBox(height: AppSpacing.lg),
 
+          // Confirmed Bookings section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Confirmed Bookings',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Upcoming experiences ready to be started',
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('bookings')
+                      .where('hostId', isEqualTo: hostId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Text('Error loading confirmed bookings: ${snapshot.error}');
+                    }
+
+                    final allBookings = snapshot.data?.docs ?? [];
+                    final confirmedBookings = allBookings.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return data['status'] == 'confirmed';
+                    }).toList();
+                    
+                    if (confirmedBookings.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        child: Text(
+                          'No confirmed bookings.',
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: confirmedBookings.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final date = data['date'] is Timestamp
+                            ? (data['date'] as Timestamp).toDate()
+                            : DateTime.now();
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          data['experienceTitle'] ?? 'Experience',
+                                          style: AppTypography.labelMedium.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  const Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${data['guests'] ?? 1} guest(s)',
+                                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                  const Spacer(),
+                                  SizedBox(
+                                    height: 36,
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection('bookings')
+                                            .doc(doc.id)
+                                            .update({'status': 'ongoing'});
+                                        
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Experience started! It is now ongoing.'),
+                                              backgroundColor: AppColors.primary,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      ),
+                                      child: const Text('Start Experience', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
           // Active experiences section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -336,6 +494,174 @@ class HostDashboardScreen extends ConsumerWidget {
                 ),
 
 
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Completed & Paid Bookings section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withAlpha(25),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Completed Bookings',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Experiences that seekers have paid and completed',
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('bookings')
+                      .where('hostId', isEqualTo: hostId)
+                      // Removed multiple filters and orderBy to avoid composite index requirement
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Text('Error loading completed bookings: ${snapshot.error}');
+                    }
+
+                    // Filter and sort in memory
+                    final allDocs = snapshot.data?.docs ?? [];
+                    final docs = allDocs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return data['status'] == 'completed' && 
+                             data['paymentStatus'] == 'paid';
+                    }).toList();
+
+                    // Sort by updatedAt descending
+                    docs.sort((a, b) {
+                      final aTime = (a.data() as Map<String, dynamic>)['updatedAt'] as Timestamp?;
+                      final bTime = (b.data() as Map<String, dynamic>)['updatedAt'] as Timestamp?;
+                      if (aTime == null || bTime == null) return 0;
+                      return bTime.compareTo(aTime);
+                    });
+
+                    // Limit to 10
+                    final limitedDocs = docs.take(10).toList();
+
+                    if (limitedDocs.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              const Text('🎯', style: TextStyle(fontSize: 36)),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No completed bookings yet',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: limitedDocs.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final date = data['date'] is Timestamp
+                            ? (data['date'] as Timestamp).toDate()
+                            : DateTime.now();
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: AppColors.success.withAlpha(60),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withAlpha(25),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                ),
+                                child: const Icon(
+                                  Icons.event_available,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      data['experienceTitle'] ?? 'Experience',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${date.day}/${date.month}/${date.year}  •  ${data['guests'] ?? 1} guest(s)',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withAlpha(25),
+                                  borderRadius: BorderRadius.circular(AppRadius.full),
+                                ),
+                                child: Text(
+                                  '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
               ],
             ),
           ),
