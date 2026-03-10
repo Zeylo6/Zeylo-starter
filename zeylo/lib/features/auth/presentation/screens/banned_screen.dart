@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -100,15 +102,45 @@ class BannedScreen extends StatelessWidget {
               // Actions
               ZeyloButton(
                 label: 'Contact Support',
-                onPressed: () {
-                  // TODO: Implement support link
+                onPressed: () async {
+                  final Uri emailLaunchUri = Uri(
+                    scheme: 'mailto',
+                    path: 'officialzeylolk@gmail.com',
+                    query: encodeQueryParameters(<String, String>{
+                      'subject': 'Appeal for Account Restriction',
+                      'body': 'Hello Zeylo Support,\n\nI would like to appeal the restriction of my account. [Please add your explanation here]'
+                    }),
+                  );
+
+                  try {
+                    final bool launched = await launchUrl(
+                      emailLaunchUri,
+                      mode: LaunchMode.externalApplication,
+                    );
+                    
+                    if (!launched && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Could not open email app. Please contact officialzeylolk@gmail.com directly.'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    debugPrint('Error launching email: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('An error occurred. Please contact officialzeylolk@gmail.com')),
+                      );
+                    }
+                  }
                 },
                 width: double.infinity,
               ),
               const SizedBox(height: AppSpacing.md),
               TextButton(
-                onPressed: () {
-                  // Logout to allow switching accounts
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
                 },
                 child: Text(
                   'Sign out of this account',
@@ -124,5 +156,12 @@ class BannedScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String? encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map((MapEntry<String, String> e) =>
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
   }
 }
