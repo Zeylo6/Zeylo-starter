@@ -265,10 +265,7 @@ class HostDashboardScreen extends ConsumerWidget {
                           experienceId: doc.id,
                           title: data['title'] ?? 'Untitled Experience',
                           onEditPressed: () {
-                            // TODO: Implement edit functionality later
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Edit functionality coming soon!')),
-                            );
+                            _showEditExperienceSheet(context, doc.id, data);
                           },
                           onDeletePressed: () {
                             showDialog(
@@ -400,6 +397,107 @@ class HostDashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditExperienceSheet(BuildContext context, String expId, Map<String, dynamic> data) {
+    final titleController = TextEditingController(text: data['title'] ?? '');
+    final descController = TextEditingController(text: data['description'] ?? '');
+    final priceController = TextEditingController(text: (data['price'] ?? 0).toString());
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('Edit Experience', style: AppTypography.titleLarge),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: descController,
+                    decoration: const InputDecoration(labelText: 'Description'),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: priceController,
+                    decoration: const InputDecoration(labelText: 'Price (USD)', prefixText: '\$'),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              setSheetState(() => isSaving = true);
+                              try {
+                                await FirebaseFirestore.instance
+                                    .collection('experiences')
+                                    .doc(expId)
+                                    .update({
+                                  'title': titleController.text.trim(),
+                                  'description': descController.text.trim(),
+                                  'price': double.tryParse(priceController.text.trim()) ?? 0,
+                                  'updatedAt': FieldValue.serverTimestamp(),
+                                });
+                                if (context.mounted) {
+                                  Navigator.pop(sheetContext);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Experience updated successfully!')),
+                                  );
+                                }
+                              } catch (e) {
+                                setSheetState(() => isSaving = false);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to save: $e')),
+                                  );
+                                }
+                              }
+                            },
+                      child: isSaving
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Save Changes'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -56,6 +56,9 @@ class ExperienceCard extends StatefulWidget {
   /// Description preview text
   final String description;
 
+  /// Optional title for the experience
+  final String? title;
+
   /// Rating value (1-5)
   final double? rating;
 
@@ -86,6 +89,7 @@ class ExperienceCard extends StatefulWidget {
     required this.location,
     required this.price,
     required this.description,
+    this.title,
     this.hostAvatarUrl,
     this.rating,
     this.ratingCount,
@@ -140,6 +144,18 @@ class _ExperienceCardState extends State<ExperienceCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Title (if provided)
+                      if (widget.title != null && widget.title!.isNotEmpty) ...[
+                        Text(
+                          widget.title!,
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
                       // Host info
                       _buildHostInfo(),
                       const SizedBox(height: AppSpacing.sm),
