@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Settings screen for user preferences and account management
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   String _selectedLanguage = 'English';
@@ -334,7 +337,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _handleSignOut() {
-    final scaffoldContext = context;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -346,13 +348,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogContext);
-              // Handle sign out
-              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                const SnackBar(content: Text('Signed out successfully')),
-              );
-              Navigator.of(scaffoldContext).pushNamedAndRemoveUntil('/', (_) => false);
+              try {
+                await ref.read(authNotifierProvider.notifier).signOut();
+                if (mounted) {
+                  context.go('/login');
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
             },
             child: Text(
               'Sign Out',
@@ -365,23 +377,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _handleDeleteAccount() {
-    final scaffoldContext = context;
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Delete Account?'),
         content: const Text(
           'This action cannot be undone. All your data will be permanently deleted.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Account deletion in progress...')),
               );
             },

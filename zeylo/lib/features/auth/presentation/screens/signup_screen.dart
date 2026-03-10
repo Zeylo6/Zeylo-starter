@@ -10,6 +10,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/phone_input_field.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/social_login_button.dart';
 
 /// Sign up screen for user registration
 ///
@@ -101,6 +102,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
       if (mounted) {
         context.go('/verify-email');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+
+    try {
+      await authNotifier.signInWithGoogle();
+
+      if (mounted) {
+        final isVerified =
+            ref.read(authRepositoryProvider).isCurrentUserEmailVerified;
+        if (isVerified) {
+          context.go('/home');
+        } else {
+          try {
+            await authNotifier.sendVerificationEmail();
+          } catch (_) {}
+          if (mounted) context.go('/verify-email');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -275,7 +306,48 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 isLoading: isLoading,
                 variant: ButtonVariant.filled,
               ),
-              const SizedBox(height: AppSpacing.massive),
+              const SizedBox(height: AppSpacing.xxl),
+              // Divider with text
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: AppColors.border,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    child: Text(
+                      'Or',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: AppColors.border,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              // Google sign up button
+              SocialLoginButton(
+                label: 'Sign up with Google',
+                icon: const Icon(
+                  Icons.g_mobiledata,
+                  color: AppColors.textPrimary,
+                  size: 24,
+                ),
+                onTap: isLoading ? null : _signUpWithGoogle,
+                isLoading: isLoading,
+              ),
+              const SizedBox(height: AppSpacing.xxxl),
               // Login link
               Center(
                 child: GestureDetector(

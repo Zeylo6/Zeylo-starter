@@ -30,30 +30,38 @@ class CreateChainScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CreateChainScreen> createState() =>
-      _CreateChainScreenState();
+  ConsumerState<CreateChainScreen> createState() => _CreateChainScreenState();
 }
 
 class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
   late TextEditingController _destinationController;
   late TextEditingController _dateController;
+  late TextEditingController _promptController;
 
   @override
   void initState() {
     super.initState();
     _destinationController = TextEditingController();
     _dateController = TextEditingController();
+    _promptController = TextEditingController();
   }
 
   @override
   void dispose() {
     _destinationController.dispose();
     _dateController.dispose();
+    _promptController.dispose();
     super.dispose();
   }
 
-  @override
   Widget build(BuildContext context) {
+    ref.listen(chainFormProvider(widget.userId), (previous, next) {
+      if (previous?.prompt != next.prompt &&
+          _promptController.text != next.prompt) {
+        _promptController.text = next.prompt;
+      }
+    });
+
     final formState = ref.watch(chainFormProvider(widget.userId));
     final formNotifier = ref.read(chainFormProvider(widget.userId).notifier);
 
@@ -106,12 +114,39 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               // Subtitle
               Center(
                 child: Text(
-                  'Connect multiple experiences for the perfect day',
+                  'Connect multiple experiences for the perfect day using our AI.',
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // AI Prompt field
+              ZeyloTextField(
+                label: 'Describe your perfect day',
+                hint:
+                    'E.g., I want a relaxing morning, energetic afternoon, and cultural evening.',
+                controller: _promptController,
+                maxLines: 3,
+                prefixWidget: const Icon(Icons.auto_awesome,
+                    color: AppColors.primary, size: 20),
+                suffixWidget: IconButton(
+                  icon: formState.isEnhancing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AppColors.primary))
+                      : const Icon(Icons.auto_fix_high,
+                          color: AppColors.primary),
+                  tooltip: 'Enhance Prompt',
+                  onPressed: formState.isEnhancing
+                      ? null
+                      : () => formNotifier.enhancePrompt(),
+                ),
+                onChanged: (value) => formNotifier.setPrompt(value),
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -120,7 +155,8 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
                 label: 'Destination City',
                 hint: 'Where do you want to explore?',
                 controller: _destinationController,
-                prefixWidget: const Icon(Icons.location_on_outlined, color: AppColors.textSecondary, size: 20),
+                prefixWidget: const Icon(Icons.location_on_outlined,
+                    color: AppColors.textSecondary, size: 20),
                 onChanged: (value) => formNotifier.setDestinationCity(value),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -130,7 +166,8 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
                 label: 'Date',
                 hint: 'mm/dd/yyyy',
                 controller: _dateController,
-                prefixWidget: const Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary, size: 20),
+                prefixWidget: const Icon(Icons.calendar_today_outlined,
+                    color: AppColors.textSecondary, size: 20),
                 onChanged: (value) => formNotifier.setDate(value),
                 readOnly: true,
                 onTap: () => _selectDate(context, formNotifier),
@@ -153,9 +190,30 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Suggested chain section
-              _buildSuggestedChainSection(),
-              const SizedBox(height: AppSpacing.xl),
+              // Buttons
+              if (formState.experiences.isEmpty) ...[
+                ZeyloButton(
+                  label: formState.isGenerating
+                      ? 'Generating...'
+                      : 'Generate AI Chain',
+                  isLoading: formState.isGenerating,
+                  isDisabled: formState.isGenerating ||
+                      formState.prompt.isEmpty ||
+                      formState.destinationCity.isEmpty,
+                  onPressed: formState.isGenerating
+                      ? null
+                      : () {
+                          FocusScope.of(context).unfocus();
+                          formNotifier
+                              .setName('${_destinationController.text} Trip');
+                          formNotifier.generateExperiences();
+                        },
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ] else ...[
+                _buildDynamicChainSection(formState.experiences),
+                const SizedBox(height: AppSpacing.xl),
+              ],
 
               // Error message
               if (formState.error != null)
@@ -204,7 +262,7 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
     );
   }
 
-  Widget _buildSuggestedChainSection() {
+  Widget _buildDynamicChainSection(List<ChainExperience> experiences) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.08),
@@ -218,29 +276,27 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Suggested Chain: San Francisco Food & Culture',
+            'Generated Experiences',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          // Suggested experiences
-          _buildSuggestedExperience(
-            1,
-            'Morning Coffee & Pastry Tour',
-            '9:00 AM - 11:00 AM',
-            '2h',
-            '\$35',
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildSuggestedExperience(
-            2,
-            'Chinatown Cultural Walk',
-            '11:30 AM - 1:30 PM',
-            '2h',
-            '\$40',
-          ),
+          ...experiences.asMap().entries.map((entry) {
+            final index = entry.key;
+            final exp = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: _buildSuggestedExperience(
+                index + 1,
+                exp.title,
+                '${exp.startTime} - ${exp.endTime}',
+                '${exp.duration}h',
+                '\$${exp.price.toStringAsFixed(0)}',
+              ),
+            );
+          }),
         ],
       ),
     );

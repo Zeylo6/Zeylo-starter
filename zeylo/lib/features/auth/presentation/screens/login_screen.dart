@@ -8,13 +8,12 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/phone_input_field.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/social_login_button.dart';
 
 /// Login screen for user authentication
 ///
-/// Allows users to log in with email and password or social providers (Google, Apple)
+/// Allows users to log in with email and password or Google
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -23,32 +22,21 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  late TextEditingController _nameController;
-  late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
 
-  late GlobalKey<FormState> _formKey;
-
-  String? _nameError;
-  String? _phoneError;
   String? _emailError;
   String? _passwordError;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _phoneController = TextEditingController();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
-    _formKey = GlobalKey<FormState>();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -56,16 +44,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _validateAndSubmit() {
     setState(() {
-      _nameError = Validators.validateName(_nameController.text);
-      _phoneError = Validators.validatePhone(_phoneController.text);
       _emailError = Validators.validateEmail(_emailController.text);
       _passwordError = Validators.validatePassword(_passwordController.text);
     });
 
-    if (_nameError == null &&
-        _phoneError == null &&
-        _emailError == null &&
-        _passwordError == null) {
+    if (_emailError == null && _passwordError == null) {
       _performLogin();
     }
   }
@@ -80,7 +63,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (mounted) {
-        context.go('/home');
+        // Check if email is verified
+        final isVerified =
+            ref.read(authRepositoryProvider).isCurrentUserEmailVerified;
+        if (isVerified) {
+          context.go('/home');
+        } else {
+          // Send a fresh verification email and redirect to verify screen
+          try {
+            await authNotifier.sendVerificationEmail();
+          } catch (_) {
+            // Ignore if send fails (e.g. too many requests) — still navigate
+          }
+          if (mounted) context.go('/verify-email');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -101,7 +97,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await authNotifier.signInWithGoogle();
 
       if (mounted) {
-        context.go('/verify-email');
+        final isVerified =
+            ref.read(authRepositoryProvider).isCurrentUserEmailVerified;
+        if (isVerified) {
+          context.go('/home');
+        } else {
+          try {
+            await authNotifier.sendVerificationEmail();
+          } catch (_) {}
+          if (mounted) context.go('/verify-email');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -115,23 +120,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _signInWithApple() async {
-    final authNotifier = ref.read(authNotifierProvider.notifier);
-
-    try {
-      await authNotifier.signInWithApple();
-
-      if (mounted) {
-        context.go('/verify-email');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
+  Future<void> _showForgotPasswordDialog() async {
+    final emailController =
+        TextEditingController(text: _emailController.text);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Enter your email address to receive a password reset link.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                hintText: 'Enter your email',
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-        );
+          TextButton(
+            onPressed: () => Navigator.pop(context, emailController.text),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+    emailController.dispose();
+
+    if (result != null && result.isNotEmpty && mounted) {
+      try {
+        await ref.read(authNotifierProvider.notifier).resetPassword(result);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Password reset email sent. Check your inbox.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     }
   }
@@ -173,30 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xxxl),
-              // Form fields
-              ZeyloTextField(
-                label: 'Full Name',
-                hint: 'Enter your full name',
-                controller: _nameController,
-                errorText: _nameError,
-                onChanged: (_) {
-                  setState(() {
-                    _nameError = null;
-                  });
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              PhoneInputField(
-                label: 'Mobile Number',
-                controller: _phoneController,
-                errorText: _phoneError,
-                onChanged: (_) {
-                  setState(() {
-                    _phoneError = null;
-                  });
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              // Email field
               ZeyloTextField(
                 label: 'Email Address',
                 hint: 'Enter your email',
@@ -210,6 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
+              // Password field
               ZeyloTextField(
                 label: 'Password',
                 hint: 'Enter your password',
@@ -221,6 +248,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     _passwordError = null;
                   });
                 },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              // Forgot password link
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: _showForgotPasswordDialog,
+                  child: Text(
+                    'Forgot Password?',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.xxxl),
               // Continue button
@@ -260,18 +302,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.xxl),
-              // Apple login button
-              SocialLoginButton(
-                label: 'Login with Apple',
-                icon: const Icon(
-                  Icons.apple,
-                  color: AppColors.textPrimary,
-                  size: 20,
-                ),
-                onTap: isLoading ? null : _signInWithApple,
-                isLoading: isLoading,
-              ),
-              const SizedBox(height: AppSpacing.md),
               // Google login button
               SocialLoginButton(
                 label: 'Login with Google',

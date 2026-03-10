@@ -1,20 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/ai_service.dart';
+import '../../../../core/services/mock_ai_service_impl.dart';
 import '../../data/datasources/chain_datasource.dart';
 import '../../data/repositories/chain_repository_impl.dart';
 import '../../domain/entities/chain_entity.dart';
 import '../../domain/repositories/chain_repository.dart';
 import '../../domain/usecases/create_chain_usecase.dart';
+import '../../domain/usecases/enhance_chain_prompt_usecase.dart';
+import '../../domain/usecases/generate_chain_experiences_usecase.dart';
 
 /// Firebase Firestore provider
 final firebaseFirestoreProvider = Provider((ref) {
   return FirebaseFirestore.instance;
 });
 
+/// AI Service provider
+final aiServiceProvider = Provider<AIService>((ref) {
+  return MockAIServiceImpl();
+});
+
 /// Chain data source provider
 final chainDataSourceProvider = Provider((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
-  return ChainDataSourceImpl(firestore: firestore);
+  final aiService = ref.watch(aiServiceProvider);
+  return ChainDataSourceImpl(firestore: firestore, aiService: aiService);
 });
 
 /// Chain repository provider
@@ -29,6 +39,18 @@ final createChainUseCaseProvider = Provider((ref) {
   return CreateChainUseCase(repository: repository);
 });
 
+/// Enhance prompt use case provider
+final enhanceChainPromptUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(chainRepositoryProvider);
+  return EnhanceChainPromptUseCase(repository: repository);
+});
+
+/// Generate chain experiences use case provider
+final generateChainExperiencesUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(chainRepositoryProvider);
+  return GenerateChainExperiencesUseCase(repository: repository);
+});
+
 /// State for chain form
 class ChainFormState {
   final String name;
@@ -38,6 +60,9 @@ class ChainFormState {
   final ChainDuration totalTime;
   final List<String> selectedInterests;
   final List<ChainExperience> experiences;
+  final String prompt;
+  final bool isEnhancing;
+  final bool isGenerating;
   final bool isLoading;
   final String? error;
 
@@ -49,12 +74,14 @@ class ChainFormState {
     this.totalTime = ChainDuration.fullDay,
     this.selectedInterests = const [],
     this.experiences = const [],
+    this.prompt = '',
+    this.isEnhancing = false,
+    this.isGenerating = false,
     this.isLoading = false,
     this.error,
   });
 
-  double get totalPrice =>
-      experiences.fold(0.0, (sum, exp) => sum + exp.price);
+  double get totalPrice => experiences.fold(0.0, (sum, exp) => sum + exp.price);
 
   ChainFormState copyWith({
     String? name,
@@ -64,6 +91,9 @@ class ChainFormState {
     ChainDuration? totalTime,
     List<String>? selectedInterests,
     List<ChainExperience>? experiences,
+    String? prompt,
+    bool? isEnhancing,
+    bool? isGenerating,
     bool? isLoading,
     String? error,
   }) {
@@ -75,6 +105,9 @@ class ChainFormState {
       totalTime: totalTime ?? this.totalTime,
       selectedInterests: selectedInterests ?? this.selectedInterests,
       experiences: experiences ?? this.experiences,
+      prompt: prompt ?? this.prompt,
+      isEnhancing: isEnhancing ?? this.isEnhancing,
+      isGenerating: isGenerating ?? this.isGenerating,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
     );
@@ -84,10 +117,14 @@ class ChainFormState {
 /// Chain form state notifier
 class ChainFormNotifier extends StateNotifier<ChainFormState> {
   final CreateChainUseCase createChainUseCase;
+  final EnhanceChainPromptUseCase enhanceChainPromptUseCase;
+  final GenerateChainExperiencesUseCase generateChainExperiencesUseCase;
   final String userId;
 
   ChainFormNotifier({
     required this.createChainUseCase,
+    required this.enhanceChainPromptUseCase,
+    required this.generateChainExperiencesUseCase,
     required this.userId,
   }) : super(const ChainFormState());
 
@@ -140,6 +177,50 @@ class ChainFormNotifier extends StateNotifier<ChainFormState> {
       experiences[index] = experience;
     }
     state = state.copyWith(experiences: experiences);
+  }
+
+  void setPrompt(String prompt) {
+    state = state.copyWith(prompt: prompt);
+  }
+
+  Future<void> enhancePrompt() async {
+    if (state.prompt.isEmpty) return;
+
+    state = state.copyWith(isEnhancing: true, error: null);
+
+    final result = await enhanceChainPromptUseCase(state.prompt);
+
+    result.fold(
+      (failure) =>
+          state = state.copyWith(isEnhancing: false, error: failure.message),
+      (enhanced) =>
+          state = state.copyWith(isEnhancing: false, prompt: enhanced),
+    );
+  }
+
+  Future<void> generateExperiences() async {
+    if (state.prompt.isEmpty) return;
+    if (state.destinationCity.isEmpty) {
+      state = state.copyWith(error: 'Please enter a destination first');
+      return;
+    }
+
+    state = state.copyWith(isGenerating: true, error: null);
+
+    final params = GenerateChainExperiencesParams(
+      prompt: state.prompt,
+      location: state.destinationCity,
+      date: state.date,
+    );
+
+    final result = await generateChainExperiencesUseCase(params);
+
+    result.fold(
+      (failure) =>
+          state = state.copyWith(isGenerating: false, error: failure.message),
+      (experiences) =>
+          state = state.copyWith(isGenerating: false, experiences: experiences),
+    );
   }
 
   Future<void> submitForm() async {
@@ -213,9 +294,13 @@ class ChainFormNotifier extends StateNotifier<ChainFormState> {
 final chainFormProvider =
     StateNotifierProvider.family<ChainFormNotifier, ChainFormState, String>(
   (ref, userId) {
-    final useCase = ref.watch(createChainUseCaseProvider);
+    final createUseCase = ref.watch(createChainUseCaseProvider);
+    final enhanceUseCase = ref.watch(enhanceChainPromptUseCaseProvider);
+    final generateUseCase = ref.watch(generateChainExperiencesUseCaseProvider);
     return ChainFormNotifier(
-      createChainUseCase: useCase,
+      createChainUseCase: createUseCase,
+      enhanceChainPromptUseCase: enhanceUseCase,
+      generateChainExperiencesUseCase: generateUseCase,
       userId: userId,
     );
   },

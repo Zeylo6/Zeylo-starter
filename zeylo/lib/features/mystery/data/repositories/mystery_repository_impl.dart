@@ -137,4 +137,30 @@ class MysteryRepositoryImpl implements MysteryRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String?>> matchMysteryExperience(
+    MysteryEntity mystery,
+  ) async {
+    try {
+      final model = MysteryModel(
+        id: mystery.id,
+        userId: mystery.userId,
+        location: mystery.location,
+        date: mystery.date,
+        time: mystery.time,
+        budgetMin: mystery.budgetMin,
+        budgetMax: mystery.budgetMax,
+        experienceType: mystery.experienceType,
+        status: mystery.status,
+        matchedExperienceId: mystery.matchedExperienceId,
+        revealedAt: mystery.revealedAt,
+        createdAt: mystery.createdAt,
+      );
+      final result = await dataSource.matchMysteryExperience(model);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

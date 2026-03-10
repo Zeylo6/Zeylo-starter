@@ -10,7 +10,6 @@ import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
-import '../features/auth/presentation/screens/email_otp_request_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../features/auth/presentation/screens/verify_success_screen.dart';
 
@@ -80,6 +79,7 @@ import '../features/search/presentation/screens/search_screen.dart';
 
 // Favorites
 import '../features/favorites/presentation/screens/favorites_screen.dart';
+import '../features/explore/presentation/screens/explore_screen.dart';
 
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -92,26 +92,45 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           authState.whenData((user) => user != null).value ?? false;
       final location = state.matchedLocation;
 
-      // Auth-related routes that unauthenticated users can access
-      final isAuthRoute = location == '/' ||
+      // Routes accessible without being logged in
+      final isPublicAuthRoute = location == '/' ||
           location == '/onboarding' ||
           location == '/welcome' ||
           location == '/login' ||
-          location == '/signup' ||
-          location == '/verify-email' ||
-          location == '/verify-success';
+          location == '/signup';
 
-      // Redirect unauthenticated users to onboarding (unless on auth route)
-      if (!isLoggedIn && !isAuthRoute) {
+      // Routes for logged-in but unverified users
+      final isVerificationRoute =
+          location == '/verify-email' || location == '/verify-success';
+
+      // Redirect unauthenticated users to onboarding
+      if (!isLoggedIn && !isPublicAuthRoute) {
         return '/onboarding';
       }
 
-      // Redirect authenticated users away from welcome/onboarding/splash
-      if (isLoggedIn &&
-          (location == '/welcome' ||
-              location == '/onboarding' ||
-              location == '/')) {
-        return '/home';
+      // For logged-in users: check email verification
+      if (isLoggedIn) {
+        final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
+        final isEmailVerified = fbUser?.emailVerified ?? false;
+
+        // If on splash/welcome/onboarding, redirect based on verification
+        if (location == '/' ||
+            location == '/welcome' ||
+            location == '/onboarding') {
+          return isEmailVerified ? '/home' : '/verify-email';
+        }
+
+        // If verified but on verification routes, go to home
+        if (isEmailVerified && isVerificationRoute) {
+          return '/home';
+        }
+
+        // If NOT verified and trying to access app routes, go to verify
+        if (!isEmailVerified &&
+            !isVerificationRoute &&
+            !isPublicAuthRoute) {
+          return '/verify-email';
+        }
       }
 
       return null;
@@ -142,13 +161,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/verify-email',
-        builder: (context, state) => VerifyEmailScreen(
-          email: state.uri.queryParameters['email'] ?? '',
-        ),
-      ),
-      GoRoute(
-        path: '/email-otp-request',
-        builder: (context, state) => const EmailOtpRequestScreen(),
+        builder: (context, state) => const VerifyEmailScreen(),
       ),
       GoRoute(
         path: '/verify-success',
@@ -552,11 +565,3 @@ class WelcomeScreen extends StatelessWidget {
       const Scaffold(body: Center(child: Text('Welcome')));
 }
 
-/// ExploreScreen - No implementation file found yet
-class ExploreScreen extends StatelessWidget {
-  const ExploreScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Explore')));
-}

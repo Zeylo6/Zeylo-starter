@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart' as cloud_firestore;
-import 'package:cloud_firestore/cloud_firestore.dart' show DocumentSnapshot, Timestamp;
+import 'package:cloud_firestore/cloud_firestore.dart'
+    show DocumentSnapshot, Timestamp;
 import '../../domain/entities/experience_entity.dart';
 
 /// Model for Availability data
@@ -151,6 +152,7 @@ class ExperienceModel {
   final double averageRating;
   final int reviewCount;
   final bool isActive;
+  final bool isMysteryAvailable;
   final List<String> tags;
   final List<AvailabilityModel> availability;
   final DateTime createdAt;
@@ -179,6 +181,7 @@ class ExperienceModel {
     required this.averageRating,
     required this.reviewCount,
     required this.isActive,
+    required this.isMysteryAvailable,
     required this.tags,
     required this.availability,
     required this.createdAt,
@@ -211,9 +214,11 @@ class ExperienceModel {
       averageRating: (json['averageRating'] as num).toDouble(),
       reviewCount: json['reviewCount'] as int,
       isActive: json['isActive'] as bool,
+      isMysteryAvailable: json['isMysteryAvailable'] as bool? ?? false,
       tags: List<String>.from(json['tags'] as List? ?? []),
       availability: (json['availability'] as List?)
-              ?.map((e) => AvailabilityModel.fromJson(e as Map<String, dynamic>))
+              ?.map(
+                  (e) => AvailabilityModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -248,9 +253,11 @@ class ExperienceModel {
       averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: data['reviewCount'] as int? ?? 0,
       isActive: data['isActive'] as bool? ?? true,
+      isMysteryAvailable: data['isMysteryAvailable'] as bool? ?? false,
       tags: List<String>.from(data['tags'] as List? ?? []),
       availability: (data['availability'] as List?)
-              ?.map((e) => AvailabilityModel.fromJson(e as Map<String, dynamic>))
+              ?.map(
+                  (e) => AvailabilityModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
@@ -282,6 +289,7 @@ class ExperienceModel {
       'averageRating': averageRating,
       'reviewCount': reviewCount,
       'isActive': isActive,
+      'isMysteryAvailable': isMysteryAvailable,
       'tags': tags,
       'availability': availability.map((e) => e.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
@@ -313,6 +321,7 @@ class ExperienceModel {
       averageRating: averageRating,
       reviewCount: reviewCount,
       isActive: isActive,
+      isMysteryAvailable: isMysteryAvailable,
       tags: tags,
       availability: availability.map((e) => e.toEntity()).toList(),
       createdAt: createdAt,

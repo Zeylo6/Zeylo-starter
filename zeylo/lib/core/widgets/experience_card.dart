@@ -134,25 +134,24 @@ class _ExperienceCardState extends State<ExperienceCard> {
                 // Image with favorite icon and match badge
                 _buildImageSection(),
                 // Content
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Host info
-                        _buildHostInfo(),
-                        const SizedBox(height: AppSpacing.sm),
-                        // Location
-                        _buildLocation(),
-                        const SizedBox(height: AppSpacing.xs),
-                        // Price
-                        _buildPrice(),
-                        const SizedBox(height: AppSpacing.sm),
-                        // Description with See more
-                        _buildDescription(),
-                      ],
-                    ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Host info
+                      _buildHostInfo(),
+                      const SizedBox(height: AppSpacing.sm),
+                      // Location
+                      _buildLocation(),
+                      const SizedBox(height: AppSpacing.xs),
+                      // Price
+                      _buildPrice(),
+                      const SizedBox(height: AppSpacing.sm),
+                      // Description with See more
+                      _buildDescription(),
+                    ],
                   ),
                 ),
               ],
@@ -165,7 +164,6 @@ class _ExperienceCardState extends State<ExperienceCard> {
 
   Widget _buildImageSection() {
     return Expanded(
-      flex: 2,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -265,6 +263,7 @@ class _ExperienceCardState extends State<ExperienceCard> {
           child: Text(
             widget.hostName,
             style: AppTypography.titleMedium,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -308,6 +307,7 @@ class _ExperienceCardState extends State<ExperienceCard> {
           child: Text(
             widget.location,
             style: AppTypography.bodySmallSecondary,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),

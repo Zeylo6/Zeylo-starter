@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -85,6 +86,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'create_chain',
+            onPressed: () {
+              context.push(
+                '/chain/create',
+                extra: {'userId': 'user_1'},
+              );
+            },
+            backgroundColor: AppColors.secondary,
+            icon: const Icon(Icons.link, color: Colors.white),
+            label: const Text(
+              'Create Chain',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FloatingActionButton.extended(
+            heroTag: 'surprise_me',
+            onPressed: () {
+              // Provide a dummy user ID or get it from auth provider
+              context.push(
+                '/mystery/create',
+                extra: {'userId': 'user_1'}, // Using demo user ID for now
+              );
+            },
+            backgroundColor: AppColors.primary,
+            icon: const Icon(Icons.card_giftcard, color: Colors.white),
+            label: const Text(
+              'Surprise Me',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -211,10 +256,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _navigateToDetail(String experienceId) {
     // Navigate to experience detail screen
-    Navigator.of(context).pushNamed(
-      '/experience-detail',
-      arguments: experienceId,
-    );
+    context.push('/experience/$experienceId');
   }
 
   void _toggleFavorite(String experienceId) {
