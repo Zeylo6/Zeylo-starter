@@ -9,7 +9,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../providers/profile_provider.dart';
-import '../widgets/past_experience_tile.dart';
 import '../widgets/photo_grid.dart';
 import '../widgets/profile_header.dart';
 import '../../../auth/domain/entities/user_entity.dart';
@@ -133,81 +132,6 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.md),
             const Divider(height: 1),
-
-            // Past experiences section
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.md,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Past Experiences',
-                        style: AppTypography.labelLarge.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.lock_outline,
-                              size: 12,
-                              color: AppColors.success,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              'Private',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.success,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Past experiences list
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Column(
-                children: [
-                  PastExperienceTile(
-                    experienceId: '1',
-                    title: 'Traditional Cooking Adventure',
-                    rating: 4.9,
-                    ratingCount: 234,
-                    price: 45,
-                  ),
-                  PastExperienceTile(
-                    experienceId: '2',
-                    title: 'Sunrise watching',
-                    rating: 4.8,
-                    ratingCount: 156,
-                    price: 35,
-                  ),
-                ],
-              ),
-            ),
 
             const SizedBox(height: AppSpacing.lg),
 

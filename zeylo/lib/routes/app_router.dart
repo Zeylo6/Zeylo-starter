@@ -88,7 +88,6 @@ import '../features/search/presentation/screens/search_screen.dart';
 
 // Favorites
 import '../features/favorites/presentation/screens/favorites_screen.dart';
-import '../features/explore/presentation/screens/explore_screen.dart';
 
 // Admin & Business
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
@@ -213,10 +212,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const MapScreen(),
           ),
 
-          // Explore route
+          // Community route (navbar tab)
           GoRoute(
-            path: '/explore',
-            builder: (context, state) => const ExploreScreen(),
+            path: '/community',
+            builder: (context, state) => const CommunityScreen(),
           ),
 
           // Profile route
@@ -417,11 +416,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const MoodResultsScreen(),
       ),
 
-      // Community & social routes
-      GoRoute(
-        path: '/community',
-        builder: (context, state) => const CommunityScreen(),
-      ),
+      // Social routes
       GoRoute(
         path: '/messages',
         builder: (context, state) {
@@ -579,7 +574,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     int getSelectedIndex() {
       if (location.startsWith('/home')) return 0;
       if (location.startsWith('/discover')) return 1;
-      if (location.startsWith('/explore')) return 2;
+      if (location.startsWith('/community')) return 2;
       if (location.startsWith('/profile')) return 3;
       if (location.startsWith('/notifications')) return 4;
       return 0;
@@ -594,7 +589,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           context.go('/discover');
           break;
         case 2:
-          context.go('/explore');
+          context.go('/community');
           break;
         case 3:
           context.go('/profile');
@@ -623,9 +618,9 @@ class _MainScaffoldState extends State<MainScaffold> {
             label: 'Discover',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.link),
-            activeIcon: Icon(Icons.link),
-            label: 'Explore',
+            icon: Icon(Icons.groups_outlined),
+            activeIcon: Icon(Icons.groups),
+            label: 'Community',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
