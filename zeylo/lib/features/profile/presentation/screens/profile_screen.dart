@@ -84,18 +84,10 @@ class ProfileScreen extends ConsumerWidget {
             onEditPressed: isCurrentUser ? onEditPressed : null,
           ),
           
-          // Debug Role Display
-          if (isCurrentUser)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  'DEBUG: Your current role is "${currentUserData?.role.name ?? 'unknown'}"',
-                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            
+          // Premium Role Badge
+          if (isCurrentUser && currentUserData != null)
+            _buildRoleBadge(currentUserData.role.name),
+
           const Divider(height: 1),
 
           // Posts section
@@ -354,6 +346,54 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => Navigator.pop(sheetContext),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(String roleName) {
+    final roleData = {
+      'seeker':  {'emoji': '🔍', 'label': 'Seeker',   'start': const Color(0xFF6C63FF), 'end': const Color(0xFF48CAE4)},
+      'host':    {'emoji': '🏡', 'label': 'Host',     'start': const Color(0xFFFF9A3C), 'end': const Color(0xFFFF6B6B)},
+      'business':{'emoji': '💼', 'label': 'Business', 'start': const Color(0xFF11998E), 'end': const Color(0xFF38EF7D)},
+      'admin':   {'emoji': '🛡️', 'label': 'Admin',   'start': const Color(0xFF8E2DE2), 'end': const Color(0xFF4A00E0)},
+    };
+    final data = roleData[roleName] ?? roleData['seeker']!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [data['start'] as Color, data['end'] as Color],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: (data['start'] as Color).withAlpha(77),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(data['emoji'] as String, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Text(
+              data['label'] as String,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: 0.5,
+              ),
+            ),
           ],
         ),
       ),

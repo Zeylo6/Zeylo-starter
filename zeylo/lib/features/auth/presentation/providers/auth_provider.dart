@@ -134,6 +134,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     required String email,
     required String phone,
     required String password,
+    String role = 'seeker',
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -142,6 +143,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
         email: email,
         phone: phone,
         password: password,
+        role: role,
       );
       state = AsyncValue.data(user);
     } catch (e, st) {

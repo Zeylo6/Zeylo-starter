@@ -22,6 +22,7 @@ abstract class AuthRepository {
     required String email,
     required String phone,
     required String password,
+    String role = 'seeker',
   });
 
   /// Sign in using Google OAuth
