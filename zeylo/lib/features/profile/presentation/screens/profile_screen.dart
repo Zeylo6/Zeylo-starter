@@ -74,15 +74,23 @@ class ProfileScreen extends ConsumerWidget {
     final currentUserAsync = ref.watch(currentUserProvider);
     final currentUserData = currentUserAsync.value;
     
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Profile header
-          ProfileHeader(
-            profile: profile,
-            onEditPressed: isCurrentUser ? onEditPressed : null,
-          ),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(profileProvider(userId));
+        ref.invalidate(currentUserProvider);
+        // Wait a small bit to allow fresh data to stream in
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile header
+            ProfileHeader(
+              profile: profile,
+              onEditPressed: isCurrentUser ? onEditPressed : null,
+            ),
           
           // Premium Role Badge
           if (isCurrentUser && currentUserData != null)
@@ -234,8 +242,9 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showMoreMenu(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(

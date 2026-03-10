@@ -1,105 +1,144 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class AdminDashboardScreen extends ConsumerWidget {
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+
+// Import the tabs we will build below
+import 'tabs/admin_overview_tab.dart';
+import 'tabs/admin_users_tab.dart';
+import 'tabs/admin_reports_tab.dart';
+import 'tabs/admin_businesses_tab.dart';
+
+class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
-  void approveBusiness(DocumentSnapshot doc) async {
-    final data = doc.data() as Map<String, dynamic>;
-    
-    // 1. Move to active businesses
-    await FirebaseFirestore.instance.collection('businesses').add(data);
-    
-    // 2. Delete from pending
-    await doc.reference.delete();
-    
-    // 3. Update the user's role to 'verified_business'
-    final submittedBy = data['submittedBy'] as String?;
-    if (submittedBy != null && submittedBy.isNotEmpty) {
-      await FirebaseFirestore.instance.collection('users').doc(submittedBy).update({'role': 'business'});
-    }
-  }
+  @override
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
 
-  void rejectBusiness(DocumentSnapshot doc) async {
-    await doc.reference.update({'status': 'rejected'});
-  }
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  int _selectedIndex = 0;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 800;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Dashboard')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('pending_businesses')
-            .where('status', isEqualTo: 'pending')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      backgroundColor: AppColors.background,
+      appBar: isDesktop
+          ? null
+          : AppBar(
+              title: const Text('Admin Console', style: TextStyle(fontWeight: FontWeight.bold)),
+              backgroundColor: AppColors.surface,
+              elevation: 1,
+            ),
+      drawer: isDesktop ? null : _buildSidebar(),
+      body: Row(
+        children: [
+          if (isDesktop) _buildSidebar(),
+          Expanded(
+            child: _buildCurrentTab(),
+          ),
+        ],
+      ),
+    );
+  }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final pendingDocs = snapshot.data?.docs ?? [];
-
-          if (pendingDocs.isEmpty) {
-            return const Center(child: Text('No pending businesses to review.'));
-          }
-
-          return ListView.builder(
-            itemCount: pendingDocs.length,
-            itemBuilder: (context, index) {
-              final doc = pendingDocs[index];
-              final data = doc.data() as Map<String, dynamic>;
-              
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        data['name'] ?? 'Unknown Business',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Location: ${data['location'] ?? 'Not provided'}'),
-                      const Divider(),
-                      const Text('Original Description (By User):', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(data['original_desc'] ?? ''),
-                      const Divider(),
-                      const Text('Enhanced Description (By AI):', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(data['enhanced_desc'] ?? ''),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => rejectBusiness(doc),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: const Text('Reject'),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () => approveBusiness(doc),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                            child: const Text('Approve'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+  Widget _buildSidebar() {
+    return Drawer(
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(right: BorderSide(color: AppColors.border)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 48),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
                 ),
-              );
-            },
-          );
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 36),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Zeylo Admin',
+              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            _buildNavItem(0, Icons.dashboard_rounded, 'Overview'),
+            _buildNavItem(1, Icons.storefront_rounded, 'Business Approvals'),
+            _buildNavItem(2, Icons.flag_rounded, 'User Reports'),
+            _buildNavItem(3, Icons.people_rounded, 'User Management'),
+            const Spacer(),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.exit_to_app, color: AppColors.error),
+              title: const Text('Exit Console', style: TextStyle(color: AppColors.error)),
+              onTap: () => context.pop(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String title) {
+    final isSelected = _selectedIndex == index;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected ? AppColors.primary : AppColors.textSecondary,
+        ),
+        title: Text(
+          title,
+          style: AppTypography.labelLarge.copyWith(
+            color: isSelected ? AppColors.primary : AppColors.textPrimary,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        onTap: () {
+          setState(() => _selectedIndex = index);
+          if (!MediaQuery.of(context).size.width.isFinite) {
+             // Closes drawer if on mobile
+             Navigator.pop(context); 
+          }
         },
       ),
     );
   }
-}
 
+  Widget _buildCurrentTab() {
+    switch (_selectedIndex) {
+      case 0:
+        return const AdminOverviewTab();
+      case 1:
+        return const AdminBusinessesTab();
+      case 2:
+        return const AdminReportsTab();
+      case 3:
+        return const AdminUsersTab();
+      default:
+        return const AdminOverviewTab();
+    }
+  }
+}

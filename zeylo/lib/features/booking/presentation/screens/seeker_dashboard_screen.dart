@@ -11,6 +11,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../providers/booking_provider.dart';
 import '../widgets/payment_card_input.dart';
+import '../widgets/report_sheet.dart';
 
 /// Seeker Dashboard Screen — shows a seeker's bookings in 3 tabs
 class SeekerDashboardScreen extends ConsumerStatefulWidget {
@@ -254,6 +255,34 @@ class _BookingCard extends ConsumerWidget {
                 right: AppSpacing.sm,
                 child: _StatusBadge(status: booking.status),
               ),
+              if (type == 'ongoing' || type == 'past')
+                Positioned(
+                  bottom: AppSpacing.sm,
+                  right: AppSpacing.sm,
+                  child: GestureDetector(
+                    onTap: () => _showReportSheet(context, ref),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.flag_rounded, size: 14, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Report',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
 
@@ -371,6 +400,20 @@ class _BookingCard extends ConsumerWidget {
       builder: (_) => _PaymentSheet(
         booking: booking,
         onSuccess: onPaymentComplete,
+      ),
+    );
+  }
+
+  void _showReportSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReportSheet(
+        reportedUserId: booking.hostId, // Seeker is reporting the Host
+        bookingId: booking.id,
+        reporterRole: 'seeker',
+        reportedRole: 'host',
       ),
     );
   }
