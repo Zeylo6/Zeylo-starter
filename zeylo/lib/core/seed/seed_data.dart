@@ -123,7 +123,7 @@ class SeedData {
         'bio':
             'Sri Lankan culture expert passionate about sharing authentic local experiences and traditions with travelers from around the world.',
         'location': {'city': 'Colombo', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 365))),
@@ -143,7 +143,7 @@ class SeedData {
         'bio':
             'Adventure guide with over 10 years of experience leading hiking and trekking expeditions across Sri Lanka\'s breathtaking landscapes.',
         'location': {'city': 'Kandy', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 450))),
@@ -163,7 +163,7 @@ class SeedData {
         'bio':
             'Professional cooking instructor specializing in traditional Sri Lankan cuisine. Love sharing family recipes and culinary secrets.',
         'location': {'city': 'Galle', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 380))),
@@ -183,7 +183,7 @@ class SeedData {
         'bio':
             'Accomplished nature photographer and conservationist dedicated to capturing and preserving Sri Lanka\'s incredible biodiversity.',
         'location': {'city': 'Ella', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 300))),
@@ -203,7 +203,7 @@ class SeedData {
         'bio':
             'Professional surfing instructor with a passion for ocean sports and teaching beginners to experienced surfers in Mirissa.',
         'location': {'city': 'Mirissa', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 250))),
@@ -1329,7 +1329,7 @@ class SeedData {
       'bio':
           'Passionate traveler and adventure seeker exploring local experiences around the world.',
       'location': {'city': 'Colombo', 'country': 'Sri Lanka'},
-      'isHost': false,
+        'role': 'seeker',
       'isVerified': true,
       'createdAt':
           Timestamp.fromDate(DateTime.now().subtract(Duration(days: 120))),

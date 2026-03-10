@@ -81,6 +81,10 @@ import '../features/search/presentation/screens/search_screen.dart';
 import '../features/favorites/presentation/screens/favorites_screen.dart';
 import '../features/explore/presentation/screens/explore_screen.dart';
 
+// Admin & Business
+import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../features/business/presentation/screens/business_registration_screen.dart';
+
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -193,6 +197,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 isCurrentUser: true,
               );
             },
+          ),
+          // Admin Dashboard route
+          GoRoute(
+            path: '/admin-dashboard',
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          
+          // Business Registration route
+          GoRoute(
+            path: '/business-registration',
+            builder: (context, state) => const BusinessRegistrationScreen(),
           ),
         ],
       ),
@@ -472,6 +487,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/favorites',
         builder: (context, state) => const FavoritesScreen(),
       ),
+
     ],
   );
 });

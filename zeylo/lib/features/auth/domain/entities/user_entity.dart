@@ -1,3 +1,11 @@
+/// Role of the user in the Zeylo application
+enum UserRole {
+  seeker,
+  host,
+  business,
+  admin,
+}
+
 /// User entity representing a user in the Zeylo application
 class UserEntity {
   /// Unique identifier for the user
@@ -21,8 +29,8 @@ class UserEntity {
   /// User's location (city, country)
   final Map<String, String>? location;
 
-  /// Whether the user is a host
-  final bool isHost;
+  /// The user's role, determining permissions and app behavior
+  final UserRole role;
 
   /// Whether the user's email is verified
   final bool isVerified;
@@ -56,7 +64,7 @@ class UserEntity {
     this.phoneNumber,
     this.bio,
     this.location,
-    this.isHost = false,
+    this.role = UserRole.seeker,
     this.isVerified = false,
     required this.createdAt,
     this.followersCount = 0,
@@ -76,7 +84,7 @@ class UserEntity {
     String? phoneNumber,
     String? bio,
     Map<String, String>? location,
-    bool? isHost,
+    UserRole? role,
     bool? isVerified,
     DateTime? createdAt,
     int? followersCount,
@@ -94,7 +102,7 @@ class UserEntity {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       bio: bio ?? this.bio,
       location: location ?? this.location,
-      isHost: isHost ?? this.isHost,
+      role: role ?? this.role,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
       followersCount: followersCount ?? this.followersCount,
@@ -112,6 +120,6 @@ class UserEntity {
       'email: $email, '
       'displayName: $displayName, '
       'isVerified: $isVerified, '
-      'isHost: $isHost'
+      'role: ${role.name}'
       ')';
 }
