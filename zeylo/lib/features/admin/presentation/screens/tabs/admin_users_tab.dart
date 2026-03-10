@@ -26,12 +26,14 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
         children: [
           Text(
             'User Management',
-            style: AppTypography.headlineMedium.copyWith(fontWeight: FontWeight.w800),
+            style: AppTypography.headlineMedium
+                .copyWith(fontWeight: FontWeight.w800),
           ),
           SizedBox(height: AppSpacing.sm),
           Text(
             'Manage all seekers, hosts, and businesses',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium
+                .copyWith(color: AppColors.textSecondary),
           ),
           SizedBox(height: AppSpacing.xl),
           SizedBox(
@@ -40,7 +42,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               label: '',
               hint: 'Search by name or email...',
               controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+              onChanged: (val) =>
+                  setState(() => _searchQuery = val.toLowerCase()),
             ),
           ),
           SizedBox(height: AppSpacing.lg),
@@ -52,24 +55,29 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 border: Border.all(color: AppColors.border),
               ),
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('users').snapshots(),
+                stream:
+                    FirebaseFirestore.instance.collection('users').snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error loading users: ${snapshot.error}'));
+                    return Center(
+                        child: Text('Error loading users: ${snapshot.error}'));
                   }
 
                   var docs = snapshot.data?.docs ?? [];
-                  
+
                   if (_searchQuery.isNotEmpty) {
                     docs = docs.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
-                      final name = (data['displayName'] ?? '').toString().toLowerCase();
-                      final email = (data['email'] ?? '').toString().toLowerCase();
-                      return name.contains(_searchQuery) || email.contains(_searchQuery);
+                      final name =
+                          (data['displayName'] ?? '').toString().toLowerCase();
+                      final email =
+                          (data['email'] ?? '').toString().toLowerCase();
+                      return name.contains(_searchQuery) ||
+                          email.contains(_searchQuery);
                     }).toList();
                   }
 
@@ -88,42 +96,64 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: data['photoUrl'] != null ? NetworkImage(data['photoUrl']) : null,
-                          child: data['photoUrl'] == null ? const Icon(Icons.person) : null,
+                          backgroundImage: data['photoUrl'] != null
+                              ? NetworkImage(data['photoUrl'])
+                              : null,
+                          child: data['photoUrl'] == null
+                              ? const Icon(Icons.person)
+                              : null,
                         ),
                         title: Row(
                           children: [
-                            Text(data['displayName'] ?? 'Unknown User', style: const TextStyle(fontWeight: FontWeight.w600)),
+                            Text(data['displayName'] ?? 'Unknown User',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
                             if (isBanned) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: AppColors.error,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('BANNED', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                child: const Text('BANNED',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold)),
                               ),
                             ]
                           ],
                         ),
-                        subtitle: Text('${data['email']} • Role: ${role.toString().toUpperCase()}'),
+                        subtitle: Text(
+                            '${data['email']} • Role: ${role.toString().toUpperCase()}'),
                         trailing: PopupMenuButton<String>(
                           onSelected: (value) async {
                             if (value == 'ban') {
-                              await doc.reference.update({'isBanned': !isBanned});
+                              await doc.reference
+                                  .update({'isBanned': !isBanned});
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isBanned ? 'User unbanned' : 'User banned')));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(isBanned
+                                            ? 'User unbanned'
+                                            : 'User banned')));
                               }
                             } else if (value == 'view') {
-                               // Future feature: View detailed profile
+                              // Future feature: View detailed profile
                             }
                           },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(value: 'view', child: Text('View Details')),
+                            const PopupMenuItem(
+                                value: 'view', child: Text('View Details')),
                             PopupMenuItem(
-                              value: 'ban', 
-                              child: Text(isBanned ? 'Unban User' : 'Ban User', style: TextStyle(color: isBanned ? AppColors.success : AppColors.error)),
+                              value: 'ban',
+                              child: Text(isBanned ? 'Unban User' : 'Ban User',
+                                  style: TextStyle(
+                                      color: isBanned
+                                          ? AppColors.success
+                                          : AppColors.error)),
                             ),
                           ],
                         ),

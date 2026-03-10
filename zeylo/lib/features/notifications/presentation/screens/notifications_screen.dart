@@ -14,7 +14,7 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
-    
+
     if (user == null) {
       return const Scaffold(
         body: Center(child: Text('Please log in to view notifications.')),
@@ -40,7 +40,10 @@ class NotificationsScreen extends ConsumerWidget {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error loading notifications: ${snapshot.error}. Make sure indexes are built if needed.', textAlign: TextAlign.center));
+            return Center(
+                child: Text(
+                    'Error loading notifications: ${snapshot.error}. Make sure indexes are built if needed.',
+                    textAlign: TextAlign.center));
           }
 
           var notifications = snapshot.data?.docs.toList() ?? [];
@@ -51,11 +54,11 @@ class NotificationsScreen extends ConsumerWidget {
             final bData = b.data() as Map<String, dynamic>;
             final aTime = aData['createdAt'] as Timestamp?;
             final bTime = bData['createdAt'] as Timestamp?;
-            
+
             if (aTime == null && bTime == null) return 0;
             if (aTime == null) return 1;
             if (bTime == null) return -1;
-            
+
             return bTime.compareTo(aTime); // Descending order
           });
 
@@ -64,9 +67,12 @@ class NotificationsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_off_outlined, size: 60, color: AppColors.textSecondary),
+                  Icon(Icons.notifications_off_outlined,
+                      size: 60, color: AppColors.textSecondary),
                   const SizedBox(height: AppSpacing.md),
-                  Text('No notifications yet.', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+                  Text('No notifications yet.',
+                      style: AppTypography.titleMedium
+                          .copyWith(color: AppColors.textSecondary)),
                 ],
               ),
             );
@@ -78,12 +84,12 @@ class NotificationsScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final doc = notifications[index];
               final data = doc.data() as Map<String, dynamic>;
-              
+
               final title = data['title'] ?? 'Notification';
               final message = data['message'] ?? '';
               final isRead = data['isRead'] ?? false;
               final timestamp = data['createdAt'] as Timestamp?;
-              
+
               String timeAgo = '';
               if (timestamp != null) {
                 final date = timestamp.toDate();
@@ -94,10 +100,14 @@ class NotificationsScreen extends ConsumerWidget {
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: isRead ? AppColors.surface : AppColors.primary.withOpacity(0.05),
+                  color: isRead
+                      ? AppColors.surface
+                      : AppColors.primary.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(
-                    color: isRead ? AppColors.border : AppColors.primary.withOpacity(0.5),
+                    color: isRead
+                        ? AppColors.border
+                        : AppColors.primary.withOpacity(0.5),
                   ),
                 ),
                 child: InkWell(
@@ -125,7 +135,9 @@ class NotificationsScreen extends ConsumerWidget {
                             backgroundColor: Colors.transparent,
                             child: Icon(
                               _getIconForType(data['type']),
-                              color: isRead ? AppColors.textSecondary : AppColors.primary,
+                              color: isRead
+                                  ? AppColors.textSecondary
+                                  : AppColors.primary,
                             ),
                           ),
                         ),
@@ -137,8 +149,12 @@ class NotificationsScreen extends ConsumerWidget {
                               Text(
                                 title,
                                 style: AppTypography.labelLarge.copyWith(
-                                  fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                                  color: isRead ? AppColors.textSecondary : AppColors.textPrimary,
+                                  fontWeight: isRead
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
+                                  color: isRead
+                                      ? AppColors.textSecondary
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: AppSpacing.xs),
@@ -153,7 +169,8 @@ class NotificationsScreen extends ConsumerWidget {
                               const SizedBox(height: AppSpacing.xs),
                               Text(
                                 timeAgo,
-                                style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: AppColors.textSecondary),
                               ),
                             ],
                           ),

@@ -22,8 +22,7 @@ class SeekerDashboardScreen extends ConsumerStatefulWidget {
       _SeekerDashboardScreenState();
 }
 
-class _SeekerDashboardScreenState
-    extends ConsumerState<SeekerDashboardScreen>
+class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -54,8 +53,7 @@ class _SeekerDashboardScreenState
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) =>
-          Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }
 
@@ -94,7 +92,8 @@ class _SeekerDashboardScreenState
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
-          labelStyle: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700),
+          labelStyle:
+              AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700),
           tabs: const [
             Tab(text: 'Upcoming'),
             Tab(text: 'Ongoing'),
@@ -107,9 +106,7 @@ class _SeekerDashboardScreenState
           final upcoming = bookings
               .where((b) => b.status == 'pending' || b.status == 'confirmed')
               .toList();
-          final ongoing = bookings
-              .where((b) => b.status == 'ongoing')
-              .toList();
+          final ongoing = bookings.where((b) => b.status == 'ongoing').toList();
           final past = bookings
               .where((b) => b.status == 'completed' || b.status == 'cancelled')
               .toList();
@@ -133,7 +130,9 @@ class _SeekerDashboardScreenState
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.md),
               Text('Error loading bookings', style: AppTypography.bodyMedium),
-              Text('$e', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+              Text('$e',
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -193,7 +192,8 @@ class _SeekerDashboardScreenState
             booking: bookings[index],
             type: type,
             userId: userId,
-            onPaymentComplete: () => ref.invalidate(userBookingsProvider(userId)),
+            onPaymentComplete: () =>
+                ref.invalidate(userBookingsProvider(userId)),
           );
         },
       ),
@@ -262,14 +262,16 @@ class _BookingCard extends ConsumerWidget {
                   child: GestureDetector(
                     onTap: () => _showReportSheet(context, ref),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.error.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.flag_rounded, size: 14, color: Colors.white),
+                          const Icon(Icons.flag_rounded,
+                              size: 14, color: Colors.white),
                           const SizedBox(width: 4),
                           Text(
                             'Report',
@@ -304,7 +306,8 @@ class _BookingCard extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                    const Icon(Icons.calendar_today,
+                        size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
                       '${booking.date.day}/${booking.date.month}/${booking.date.year}  ${booking.startTime}',
@@ -317,7 +320,8 @@ class _BookingCard extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.group, size: 14, color: AppColors.textSecondary),
+                    const Icon(Icons.group,
+                        size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
                       '${booking.guests} guest${booking.guests > 1 ? 's' : ''}',
@@ -340,7 +344,8 @@ class _BookingCard extends ConsumerWidget {
                 if (booking.paymentStatus == 'paid') ...[
                   const SizedBox(height: AppSpacing.sm),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.success.withAlpha(25),
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -348,7 +353,8 @@ class _BookingCard extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle, size: 14, color: AppColors.success),
+                        const Icon(Icons.check_circle,
+                            size: 14, color: AppColors.success),
                         const SizedBox(width: 4),
                         Text(
                           'Payment Confirmed',
@@ -428,9 +434,9 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = {
-      'pending':   {'color': const Color(0xFFF59E0B), 'label': 'Pending'},
+      'pending': {'color': const Color(0xFFF59E0B), 'label': 'Pending'},
       'confirmed': {'color': const Color(0xFF10B981), 'label': 'Confirmed'},
-      'ongoing':   {'color': const Color(0xFF6C63FF), 'label': 'Ongoing'},
+      'ongoing': {'color': const Color(0xFF6C63FF), 'label': 'Ongoing'},
       'completed': {'color': const Color(0xFF059669), 'label': 'Completed'},
       'cancelled': {'color': const Color(0xFFEF4444), 'label': 'Cancelled'},
     };
@@ -511,7 +517,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       batch.set(activityRef, {
         'userId': widget.booking.hostId, // The recipient is the host
         'title': 'Payment Received! 💰',
-        'message': 'A seeker has completed the payment for "${widget.booking.experienceTitle}".',
+        'message':
+            'A seeker has completed the payment for "${widget.booking.experienceTitle}".',
         'createdAt': FieldValue.serverTimestamp(),
         'type': 'payment_received',
         'isRead': false,
@@ -559,7 +566,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       builder: (_, controller) => Container(
         decoration: const BoxDecoration(
           color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
         child: ListView(
           controller: controller,
@@ -595,7 +603,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                     ),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
-                  child: const Icon(Icons.payment, color: Colors.white, size: 24),
+                  child:
+                      const Icon(Icons.payment, color: Colors.white, size: 24),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -633,11 +642,13 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               ),
               child: Column(
                 children: [
-                  _summaryRow('Experience', widget.booking.experienceTitle, bold: false),
+                  _summaryRow('Experience', widget.booking.experienceTitle,
+                      bold: false),
                   const Divider(height: AppSpacing.lg),
                   _summaryRow('Guests', '${widget.booking.guests} person(s)'),
                   const SizedBox(height: 4),
-                  _summaryRow('Date', '${widget.booking.date.day}/${widget.booking.date.month}/${widget.booking.date.year}'),
+                  _summaryRow('Date',
+                      '${widget.booking.date.day}/${widget.booking.date.month}/${widget.booking.date.year}'),
                   const Divider(height: AppSpacing.lg),
                   _summaryRow(
                     'Total Amount',
@@ -663,7 +674,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               onCardNumberChanged: (v) => setState(() => _cardNumber = v),
               onExpiryChanged: (v) => setState(() => _expiry = v),
               onCVCChanged: (v) => setState(() => _cvc = v),
-              onCardholderNameChanged: (v) => setState(() => _cardholderName = v),
+              onCardholderNameChanged: (v) =>
+                  setState(() => _cardholderName = v),
             ),
             const SizedBox(height: AppSpacing.xl),
 
@@ -679,7 +691,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock, size: 14, color: AppColors.textSecondary),
+                const Icon(Icons.lock,
+                    size: 14, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
                 Text(
                   'Payments are encrypted & secure',
@@ -695,13 +708,15 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false, bool highlight = false}) {
+  Widget _summaryRow(String label, String value,
+      {bool bold = false, bool highlight = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+          style:
+              AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
         ),
         Text(
           value,

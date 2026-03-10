@@ -132,61 +132,62 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   Widget _buildMapPlaceholder(MapState state) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('businesses').snapshots(),
-      builder: (context, snapshot) {
-        final businessDocs = snapshot.data?.docs ?? [];
-        final businessMarkers = businessDocs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          // Basic coordinate parsing from location string (e.g. "6.92, 79.86")
-          double lat = state.currentLat ?? 6.9271; 
-          double lng = state.currentLng ?? 79.8612;
-          try {
-            final locStr = data['location']?.toString() ?? '';
-            final parts = locStr.split(',');
-            if (parts.length >= 2) {
-              lat = double.parse(parts[0].trim());
-              lng = double.parse(parts[1].trim());
-            }
-          } catch (_) {}
-          
-          return Marker(
-            markerId: MarkerId('biz_${doc.id}'),
-            position: LatLng(lat, lng),
-            infoWindow: InfoWindow(
-              title: data['name'] ?? 'Local Business',
-              snippet: data['enhanced_desc'] ?? 'Special offer inside!',
-            ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          );
-        }).toSet();
+        stream: FirebaseFirestore.instance.collection('businesses').snapshots(),
+        builder: (context, snapshot) {
+          final businessDocs = snapshot.data?.docs ?? [];
+          final businessMarkers = businessDocs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            // Basic coordinate parsing from location string (e.g. "6.92, 79.86")
+            double lat = state.currentLat ?? 6.9271;
+            double lng = state.currentLng ?? 79.8612;
+            try {
+              final locStr = data['location']?.toString() ?? '';
+              final parts = locStr.split(',');
+              if (parts.length >= 2) {
+                lat = double.parse(parts[0].trim());
+                lng = double.parse(parts[1].trim());
+              }
+            } catch (_) {}
 
-        final allMarkers = _buildMarkers(state).union(businessMarkers);
-
-        return Container(
-          height: 250, // Increased height for better visibility
-          margin: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: GoogleMap(
-              onMapCreated: (controller) => _mapController = controller,
-              initialCameraPosition: CameraPosition(
-                target: LatLng(state.currentLat ?? 6.9271, state.currentLng ?? 79.8612),
-                zoom: 14.0,
+            return Marker(
+              markerId: MarkerId('biz_${doc.id}'),
+              position: LatLng(lat, lng),
+              infoWindow: InfoWindow(
+                title: data['name'] ?? 'Local Business',
+                snippet: data['enhanced_desc'] ?? 'Special offer inside!',
               ),
-              markers: allMarkers,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen),
+            );
+          }).toSet();
+
+          final allMarkers = _buildMarkers(state).union(businessMarkers);
+
+          return Container(
+            height: 250, // Increased height for better visibility
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
             ),
-          ),
-        );
-      }
-    );
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: GoogleMap(
+                onMapCreated: (controller) => _mapController = controller,
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(
+                      state.currentLat ?? 6.9271, state.currentLng ?? 79.8612),
+                  zoom: 14.0,
+                ),
+                markers: allMarkers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+              ),
+            ),
+          );
+        });
   }
 
   Widget _buildPin(Color color, {double size = 16}) {

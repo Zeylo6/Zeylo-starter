@@ -37,7 +37,8 @@ class ExperienceDetailScreen extends ConsumerStatefulWidget {
       _ExperienceDetailScreenState();
 }
 
-class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen> {
+class _ExperienceDetailScreenState
+    extends ConsumerState<ExperienceDetailScreen> {
   bool _isFavorite = false;
 
   @override
@@ -157,9 +158,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
                         ),
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Icon(
-                          _isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                          _isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: _isFavorite
                               ? AppColors.error
                               : AppColors.textPrimary,
@@ -369,7 +368,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
     try {
       // Create a pending booking document
       final docRef = FirebaseFirestore.instance.collection('bookings').doc();
-      
+
       await docRef.set({
         'id': docRef.id,
         'experienceId': experience.id,
@@ -377,7 +376,9 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
         'experienceCoverImage': experience.coverImage,
         'userId': user.uid,
         'hostId': experience.hostId,
-        'date': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1))), // Placeholder for next day (User should usually pick date)
+        'date': Timestamp.fromDate(DateTime.now().add(const Duration(
+            days:
+                1))), // Placeholder for next day (User should usually pick date)
         'startTime': '10:00 AM', // Placeholder
         'guests': 1, // Placeholder
         'totalPrice': experience.price,
@@ -386,7 +387,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       // Add notification for the host
       await FirebaseFirestore.instance.collection('activities').add({
         'userId': experience.hostId, // Target the host

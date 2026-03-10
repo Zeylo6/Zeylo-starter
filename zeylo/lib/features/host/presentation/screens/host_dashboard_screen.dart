@@ -133,7 +133,6 @@ class HostDashboardScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('bookings')
@@ -155,9 +154,10 @@ class HostDashboardScreen extends ConsumerWidget {
                     for (var doc in bookings) {
                       final data = doc.data() as Map<String, dynamic>;
                       final createdAt = data['createdAt'] as Timestamp?;
-                      
+
                       if (createdAt != null) {
-                        final age = DateTime.now().difference(createdAt.toDate());
+                        final age =
+                            DateTime.now().difference(createdAt.toDate());
                         if (age.inHours >= 48) {
                           // Auto-expire
                           FirebaseFirestore.instance
@@ -169,13 +169,15 @@ class HostDashboardScreen extends ConsumerWidget {
                       }
                       validBookings.add(doc);
                     }
-                    
+
                     if (validBookings.isEmpty) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                         child: Text(
                           'No pending requests.',
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: AppColors.textSecondary),
                         ),
                       );
                     }
@@ -191,7 +193,10 @@ class HostDashboardScreen extends ConsumerWidget {
                                 .doc(doc.id)
                                 .update({'status': 'confirmed'});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Booking accepted!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+                              const SnackBar(
+                                  content: Text('Booking accepted!',
+                                      style: TextStyle(color: Colors.white)),
+                                  backgroundColor: Colors.green),
                             );
                           },
                           onReject: () {
@@ -200,7 +205,8 @@ class HostDashboardScreen extends ConsumerWidget {
                                 .doc(doc.id)
                                 .update({'status': 'rejected'});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Booking rejected.')),
+                              const SnackBar(
+                                  content: Text('Booking rejected.')),
                             );
                           },
                         );
@@ -235,10 +241,10 @@ class HostDashboardScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Upcoming experiences ready to be started',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('bookings')
@@ -250,7 +256,8 @@ class HostDashboardScreen extends ConsumerWidget {
                     }
 
                     if (snapshot.hasError) {
-                      return Text('Error loading confirmed bookings: ${snapshot.error}');
+                      return Text(
+                          'Error loading confirmed bookings: ${snapshot.error}');
                     }
 
                     final allBookings = snapshot.data?.docs ?? [];
@@ -258,13 +265,15 @@ class HostDashboardScreen extends ConsumerWidget {
                       final data = doc.data() as Map<String, dynamic>;
                       return data['status'] == 'confirmed';
                     }).toList();
-                    
+
                     if (confirmedBookings.isEmpty) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                         child: Text(
                           'No confirmed bookings.',
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: AppColors.textSecondary),
                         ),
                       );
                     }
@@ -291,18 +300,22 @@ class HostDashboardScreen extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          data['experienceTitle'] ?? 'Experience',
-                                          style: AppTypography.labelMedium.copyWith(
+                                          data['experienceTitle'] ??
+                                              'Experience',
+                                          style: AppTypography.labelMedium
+                                              .copyWith(
                                             fontWeight: FontWeight.bold,
                                             color: AppColors.textPrimary,
                                           ),
                                         ),
                                         Text(
                                           '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
-                                          style: AppTypography.bodySmall.copyWith(
+                                          style:
+                                              AppTypography.bodySmall.copyWith(
                                             color: AppColors.textSecondary,
                                           ),
                                         ),
@@ -321,11 +334,13 @@ class HostDashboardScreen extends ConsumerWidget {
                               const SizedBox(height: AppSpacing.md),
                               Row(
                                 children: [
-                                  const Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+                                  const Icon(Icons.person_outline,
+                                      size: 16, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${data['guests'] ?? 1} guest(s)',
-                                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                    style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary),
                                   ),
                                   const Spacer(),
                                   SizedBox(
@@ -336,12 +351,15 @@ class HostDashboardScreen extends ConsumerWidget {
                                             .collection('bookings')
                                             .doc(doc.id)
                                             .update({'status': 'ongoing'});
-                                        
+
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
                                             const SnackBar(
-                                              content: Text('Experience started! It is now ongoing.'),
-                                              backgroundColor: AppColors.primary,
+                                              content: Text(
+                                                  'Experience started! It is now ongoing.'),
+                                              backgroundColor:
+                                                  AppColors.primary,
                                             ),
                                           );
                                         }
@@ -350,11 +368,16 @@ class HostDashboardScreen extends ConsumerWidget {
                                         backgroundColor: AppColors.primary,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadius.sm),
                                         ),
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
                                       ),
-                                      child: const Text('Start Experience', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                      child: const Text('Start Experience',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold)),
                                     ),
                                   ),
                                 ],
@@ -393,10 +416,10 @@ class HostDashboardScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Experiences currently in progress',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('bookings')
@@ -408,7 +431,8 @@ class HostDashboardScreen extends ConsumerWidget {
                     }
 
                     if (snapshot.hasError) {
-                      return Text('Error loading ongoing bookings: ${snapshot.error}');
+                      return Text(
+                          'Error loading ongoing bookings: ${snapshot.error}');
                     }
 
                     final allBookings = snapshot.data?.docs ?? [];
@@ -416,13 +440,15 @@ class HostDashboardScreen extends ConsumerWidget {
                       final data = doc.data() as Map<String, dynamic>;
                       return data['status'] == 'ongoing';
                     }).toList();
-                    
+
                     if (ongoingBookings.isEmpty) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                         child: Text(
                           'No ongoing bookings.',
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: AppColors.textSecondary),
                         ),
                       );
                     }
@@ -440,7 +466,8 @@ class HostDashboardScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(color: AppColors.primary.withAlpha(80)),
+                            border: Border.all(
+                                color: AppColors.primary.withAlpha(80)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,10 +475,12 @@ class HostDashboardScreen extends ConsumerWidget {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: AppColors.primary.withAlpha(30),
-                                      borderRadius: BorderRadius.circular(AppRadius.full),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadius.full),
                                     ),
                                     child: Row(
                                       children: [
@@ -466,7 +495,8 @@ class HostDashboardScreen extends ConsumerWidget {
                                         const SizedBox(width: 6),
                                         Text(
                                           'ONGOING',
-                                          style: AppTypography.labelSmall.copyWith(
+                                          style:
+                                              AppTypography.labelSmall.copyWith(
                                             color: AppColors.primary,
                                             fontWeight: FontWeight.w800,
                                             fontSize: 10,
@@ -479,21 +509,30 @@ class HostDashboardScreen extends ConsumerWidget {
                                   Row(
                                     children: [
                                       GestureDetector(
-                                        onTap: () => _showReportSheet(context, doc.id, data['userId']),
+                                        onTap: () => _showReportSheet(
+                                            context, doc.id, data['userId']),
                                         child: Container(
-                                          margin: const EdgeInsets.only(right: AppSpacing.sm),
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          margin: const EdgeInsets.only(
+                                              right: AppSpacing.sm),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: AppColors.error.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                                            border: Border.all(color: AppColors.error.withOpacity(0.5)),
+                                            color: AppColors.error
+                                                .withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.sm),
+                                            border: Border.all(
+                                                color: AppColors.error
+                                                    .withOpacity(0.5)),
                                           ),
-                                          child: const Icon(Icons.flag_rounded, size: 16, color: AppColors.error),
+                                          child: const Icon(Icons.flag_rounded,
+                                              size: 16, color: AppColors.error),
                                         ),
                                       ),
                                       Text(
                                         '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                        style: AppTypography.labelMedium.copyWith(
+                                        style:
+                                            AppTypography.labelMedium.copyWith(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -519,11 +558,13 @@ class HostDashboardScreen extends ConsumerWidget {
                               const SizedBox(height: AppSpacing.sm),
                               Row(
                                 children: [
-                                  const Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+                                  const Icon(Icons.person_outline,
+                                      size: 16, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${data['guests'] ?? 1} guest(s)',
-                                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                                    style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary),
                                   ),
                                 ],
                               ),
@@ -574,17 +615,20 @@ class HostDashboardScreen extends ConsumerWidget {
                     }
 
                     if (snapshot.hasError) {
-                      return Text('Error loading experiences: ${snapshot.error}');
+                      return Text(
+                          'Error loading experiences: ${snapshot.error}');
                     }
 
                     final exps = snapshot.data?.docs ?? [];
-                    
+
                     if (exps.isEmpty) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         child: Text(
                           'No experiences listed yet.',
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: AppColors.textSecondary),
                         ),
                       );
                     }
@@ -603,7 +647,8 @@ class HostDashboardScreen extends ConsumerWidget {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Delete Experience'),
-                                content: const Text('Are you sure you want to delete this listing? This action cannot be undone.'),
+                                content: const Text(
+                                    'Are you sure you want to delete this listing? This action cannot be undone.'),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(ctx),
@@ -612,32 +657,42 @@ class HostDashboardScreen extends ConsumerWidget {
                                   TextButton(
                                     onPressed: () async {
                                       final expId = doc.id;
-                                      final expTitle = data['title'] ?? 'Experience';
+                                      final expTitle =
+                                          data['title'] ?? 'Experience';
                                       Navigator.pop(ctx);
-                                      
+
                                       // 1. Delete the experience
                                       await FirebaseFirestore.instance
                                           .collection('experiences')
                                           .doc(expId)
                                           .delete();
-                                          
+
                                       // 2. Cancel active bookings & notify seekers
-                                      final bookingsSnap = await FirebaseFirestore.instance
-                                          .collection('bookings')
-                                          .where('experienceId', isEqualTo: expId)
-                                          .get();
-                                          
+                                      final bookingsSnap =
+                                          await FirebaseFirestore.instance
+                                              .collection('bookings')
+                                              .where('experienceId',
+                                                  isEqualTo: expId)
+                                              .get();
+
                                       for (var booking in bookingsSnap.docs) {
-                                        final bStatus = booking.data()['status'];
-                                        if (bStatus == 'pending' || bStatus == 'confirmed') {
-                                          await booking.reference.update({'status': 'cancelled_by_host'});
-                                          
+                                        final bStatus =
+                                            booking.data()['status'];
+                                        if (bStatus == 'pending' ||
+                                            bStatus == 'confirmed') {
+                                          await booking.reference.update(
+                                              {'status': 'cancelled_by_host'});
+
                                           // Send notification to the seeker
-                                          await FirebaseFirestore.instance.collection('activities').add({
+                                          await FirebaseFirestore.instance
+                                              .collection('activities')
+                                              .add({
                                             'userId': booking.data()['userId'],
                                             'title': 'Booking Cancelled',
-                                            'message': 'The host has cancelled the listing for $expTitle.',
-                                            'createdAt': FieldValue.serverTimestamp(),
+                                            'message':
+                                                'The host has cancelled the listing for $expTitle.',
+                                            'createdAt':
+                                                FieldValue.serverTimestamp(),
                                             'type': 'booking_cancellation',
                                             'isRead': false,
                                           });
@@ -645,12 +700,16 @@ class HostDashboardScreen extends ConsumerWidget {
                                       }
 
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Experience deleted and upcoming bookings cancelled.')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Experience deleted and upcoming bookings cancelled.')),
                                         );
                                       }
                                     },
-                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    child: const Text('Delete',
+                                        style: TextStyle(color: Colors.red)),
                                   ),
                                 ],
                               ),
@@ -661,8 +720,6 @@ class HostDashboardScreen extends ConsumerWidget {
                     );
                   },
                 ),
-
-
               ],
             ),
           ),
@@ -683,7 +740,8 @@ class HostDashboardScreen extends ConsumerWidget {
                         color: AppColors.success.withAlpha(25),
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
-                      child: const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                      child: const Icon(Icons.check_circle,
+                          color: AppColors.success, size: 18),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
@@ -698,10 +756,10 @@ class HostDashboardScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Experiences that seekers have paid and completed',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: AppSpacing.md),
-
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('bookings')
@@ -714,21 +772,24 @@ class HostDashboardScreen extends ConsumerWidget {
                     }
 
                     if (snapshot.hasError) {
-                      return Text('Error loading completed bookings: ${snapshot.error}');
+                      return Text(
+                          'Error loading completed bookings: ${snapshot.error}');
                     }
 
                     // Filter and sort in memory
                     final allDocs = snapshot.data?.docs ?? [];
                     final docs = allDocs.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
-                      return data['status'] == 'completed' && 
-                             data['paymentStatus'] == 'paid';
+                      return data['status'] == 'completed' &&
+                          data['paymentStatus'] == 'paid';
                     }).toList();
 
                     // Sort by updatedAt descending
                     docs.sort((a, b) {
-                      final aTime = (a.data() as Map<String, dynamic>)['updatedAt'] as Timestamp?;
-                      final bTime = (b.data() as Map<String, dynamic>)['updatedAt'] as Timestamp?;
+                      final aTime = (a.data()
+                          as Map<String, dynamic>)['updatedAt'] as Timestamp?;
+                      final bTime = (b.data()
+                          as Map<String, dynamic>)['updatedAt'] as Timestamp?;
                       if (aTime == null || bTime == null) return 0;
                       return bTime.compareTo(aTime);
                     });
@@ -738,7 +799,8 @@ class HostDashboardScreen extends ConsumerWidget {
 
                     if (limitedDocs.isEmpty) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         child: Center(
                           child: Column(
                             children: [
@@ -781,7 +843,8 @@ class HostDashboardScreen extends ConsumerWidget {
                                 height: 48,
                                 decoration: BoxDecoration(
                                   color: AppColors.success.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.sm),
                                 ),
                                 child: const Icon(
                                   Icons.event_available,
@@ -811,10 +874,12 @@ class HostDashboardScreen extends ConsumerWidget {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: AppColors.success.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(AppRadius.full),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.full),
                                 ),
                                 child: Text(
                                   '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
@@ -841,7 +906,8 @@ class HostDashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showReportSheet(BuildContext context, String bookingId, String reportedUserId) {
+  void _showReportSheet(
+      BuildContext context, String bookingId, String reportedUserId) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -913,19 +979,26 @@ class HostDashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditExperienceSheet(BuildContext context, String expId, Map<String, dynamic> data) {
+  void _showEditExperienceSheet(
+      BuildContext context, String expId, Map<String, dynamic> data) {
     final titleController = TextEditingController(text: data['title'] ?? '');
-    final shortDescController = TextEditingController(text: data['shortDescription'] ?? '');
-    final descController = TextEditingController(text: data['description'] ?? '');
-    final priceController = TextEditingController(text: (data['price'] ?? 0).toString());
-    final durationController = TextEditingController(text: (data['duration'] ?? 0).toString());
-    final maxGuestsController = TextEditingController(text: (data['maxGuests'] ?? 0).toString());
-    
+    final shortDescController =
+        TextEditingController(text: data['shortDescription'] ?? '');
+    final descController =
+        TextEditingController(text: data['description'] ?? '');
+    final priceController =
+        TextEditingController(text: (data['price'] ?? 0).toString());
+    final durationController =
+        TextEditingController(text: (data['duration'] ?? 0).toString());
+    final maxGuestsController =
+        TextEditingController(text: (data['maxGuests'] ?? 0).toString());
+
     // Handle location structure
     final location = data['location'] as Map<String, dynamic>?;
-    final addressController = TextEditingController(text: location?['address'] ?? '');
+    final addressController =
+        TextEditingController(text: location?['address'] ?? '');
     final cityController = TextEditingController(text: location?['city'] ?? '');
-    
+
     String currentImageUrl = data['coverImage'] ?? '';
     File? selectedImage;
     bool isSaving = false;
@@ -964,10 +1037,12 @@ class HostDashboardScreen extends ConsumerWidget {
             Future<String?> uploadToCloudinary() async {
               if (selectedImage == null) return currentImageUrl;
               try {
-                final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+                final url = Uri.parse(
+                    'https://api.cloudinary.com/v1_1/$cloudName/image/upload');
                 final request = http.MultipartRequest('POST', url)
                   ..fields['upload_preset'] = uploadPreset
-                  ..files.add(await http.MultipartFile.fromPath('file', selectedImage!.path));
+                  ..files.add(await http.MultipartFile.fromPath(
+                      'file', selectedImage!.path));
 
                 final response = await request.send();
                 final responseData = await response.stream.toBytes();
@@ -999,7 +1074,8 @@ class HostDashboardScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Text('Edit Experience', style: AppTypography.titleLarge),
+                        Text('Edit Experience',
+                            style: AppTypography.titleLarge),
                         const Spacer(),
                         IconButton(
                           icon: const Icon(Icons.close),
@@ -1008,7 +1084,7 @@ class HostDashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    
+
                     // Image Picker Logic
                     GestureDetector(
                       onTap: pickImage,
@@ -1022,44 +1098,64 @@ class HostDashboardScreen extends ConsumerWidget {
                         ),
                         child: selectedImage != null
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                                child: Image.file(selectedImage!, fit: BoxFit.cover),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
+                                child: Image.file(selectedImage!,
+                                    fit: BoxFit.cover),
                               )
                             : (currentImageUrl.isNotEmpty
                                 ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(AppRadius.md),
-                                    child: Image.network(currentImageUrl, fit: BoxFit.cover),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.md),
+                                    child: Image.network(currentImageUrl,
+                                        fit: BoxFit.cover),
                                   )
-                                : const Center(child: Icon(Icons.add_a_photo, size: 40, color: AppColors.textSecondary))),
+                                : const Center(
+                                    child: Icon(Icons.add_a_photo,
+                                        size: 40,
+                                        color: AppColors.textSecondary))),
                       ),
                     ),
-                    const Center(child: Text('Tap to change photo', style: TextStyle(fontSize: 12, color: Colors.grey))),
+                    const Center(
+                        child: Text('Tap to change photo',
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.grey))),
                     const SizedBox(height: AppSpacing.md),
 
                     _buildEditField(titleController, 'Experience Title'),
                     const SizedBox(height: AppSpacing.md),
                     _buildEditField(shortDescController, 'Short Description'),
                     const SizedBox(height: AppSpacing.md),
-                    _buildEditField(descController, 'Full Description', maxLines: 5),
+                    _buildEditField(descController, 'Full Description',
+                        maxLines: 5),
                     const SizedBox(height: AppSpacing.md),
-                    
+
                     Row(
                       children: [
-                        Expanded(child: _buildEditField(priceController, 'Price (USD)', isNumber: true)),
+                        Expanded(
+                            child: _buildEditField(
+                                priceController, 'Price (USD)',
+                                isNumber: true)),
                         const SizedBox(width: AppSpacing.sm),
-                        Expanded(child: _buildEditField(durationController, 'Duration (mins)', isNumber: true)),
+                        Expanded(
+                            child: _buildEditField(
+                                durationController, 'Duration (mins)',
+                                isNumber: true)),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _buildEditField(maxGuestsController, 'Max Guests', isNumber: true),
+                    _buildEditField(maxGuestsController, 'Max Guests',
+                        isNumber: true),
                     const SizedBox(height: AppSpacing.md),
-                    
-                    Text('Location', style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+
+                    Text('Location',
+                        style: AppTypography.labelLarge
+                            .copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: AppSpacing.sm),
                     _buildEditField(addressController, 'Street Address'),
                     const SizedBox(height: AppSpacing.sm),
                     _buildEditField(cityController, 'City'),
-                    
+
                     const SizedBox(height: AppSpacing.xl),
                     SizedBox(
                       width: double.infinity,
@@ -1067,7 +1163,9 @@ class HostDashboardScreen extends ConsumerWidget {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.md)),
                         ),
                         onPressed: isSaving
                             ? null
@@ -1075,8 +1173,10 @@ class HostDashboardScreen extends ConsumerWidget {
                                 setSheetState(() => isSaving = true);
                                 try {
                                   // 1. Upload new image if selected
-                                  final finalImageUrl = await uploadToCloudinary();
-                                  if (finalImageUrl == null && selectedImage != null) {
+                                  final finalImageUrl =
+                                      await uploadToCloudinary();
+                                  if (finalImageUrl == null &&
+                                      selectedImage != null) {
                                     throw Exception("Image upload failed");
                                   }
 
@@ -1086,14 +1186,24 @@ class HostDashboardScreen extends ConsumerWidget {
                                       .doc(expId)
                                       .update({
                                     'title': titleController.text.trim(),
-                                    'shortDescription': shortDescController.text.trim(),
+                                    'shortDescription':
+                                        shortDescController.text.trim(),
                                     'description': descController.text.trim(),
-                                    'price': double.tryParse(priceController.text.trim()) ?? 0,
-                                    'duration': int.tryParse(durationController.text.trim()) ?? 0,
-                                    'maxGuests': int.tryParse(maxGuestsController.text.trim()) ?? 0,
+                                    'price': double.tryParse(
+                                            priceController.text.trim()) ??
+                                        0,
+                                    'duration': int.tryParse(
+                                            durationController.text.trim()) ??
+                                        0,
+                                    'maxGuests': int.tryParse(
+                                            maxGuestsController.text.trim()) ??
+                                        0,
                                     'coverImage': finalImageUrl,
-                                    'images': [finalImageUrl], // Resetting images list for now
-                                    'location.address': addressController.text.trim(),
+                                    'images': [
+                                      finalImageUrl
+                                    ], // Resetting images list for now
+                                    'location.address':
+                                        addressController.text.trim(),
                                     'location.city': cityController.text.trim(),
                                     'updatedAt': FieldValue.serverTimestamp(),
                                   });
@@ -1101,21 +1211,28 @@ class HostDashboardScreen extends ConsumerWidget {
                                   if (context.mounted) {
                                     Navigator.pop(sheetContext);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Experience updated successfully!')),
+                                      const SnackBar(
+                                          content: Text(
+                                              'Experience updated successfully!')),
                                     );
                                   }
                                 } catch (e) {
                                   setSheetState(() => isSaving = false);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Failed to save: $e')),
+                                      SnackBar(
+                                          content: Text('Failed to save: $e')),
                                     );
                                   }
                                 }
                               },
                         child: isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text('Save Changes',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -1129,15 +1246,18 @@ class HostDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEditField(TextEditingController controller, String label, {int maxLines = 1, bool isNumber = false}) {
+  Widget _buildEditField(TextEditingController controller, String label,
+      {int maxLines = 1, bool isNumber = false}) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sm)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
     );
   }

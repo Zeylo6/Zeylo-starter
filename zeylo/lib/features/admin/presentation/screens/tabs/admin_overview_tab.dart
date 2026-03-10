@@ -17,25 +17,48 @@ class AdminOverviewTab extends StatelessWidget {
         children: [
           Text(
             'Platform Analytics',
-            style: AppTypography.headlineMedium.copyWith(fontWeight: FontWeight.w800),
+            style: AppTypography.headlineMedium
+                .copyWith(fontWeight: FontWeight.w800),
           ),
           SizedBox(height: AppSpacing.sm),
           Text(
             'High-level overview of Zeylo\'s performance',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium
+                .copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xl),
           Row(
             children: [
-              Expanded(child: _MetricCard(title: 'Total Users', streamQuery: FirebaseFirestore.instance.collection('users').snapshots(), icon: Icons.group_rounded, color: Colors.blue)),
+              Expanded(
+                  child: _MetricCard(
+                      title: 'Total Users',
+                      streamQuery: FirebaseFirestore.instance
+                          .collection('users')
+                          .snapshots(),
+                      icon: Icons.group_rounded,
+                      color: Colors.blue)),
               SizedBox(width: AppSpacing.md),
-              Expanded(child: _MetricCard(title: 'Active Experiences', streamQuery: FirebaseFirestore.instance.collection('experiences').snapshots(), icon: Icons.explore_rounded, color: Colors.green)),
+              Expanded(
+                  child: _MetricCard(
+                      title: 'Active Experiences',
+                      streamQuery: FirebaseFirestore.instance
+                          .collection('experiences')
+                          .snapshots(),
+                      icon: Icons.explore_rounded,
+                      color: Colors.green)),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              Expanded(child: _MetricCard(title: 'Total Bookings', streamQuery: FirebaseFirestore.instance.collection('bookings').snapshots(), icon: Icons.calendar_month_rounded, color: Colors.orange)),
+              Expanded(
+                  child: _MetricCard(
+                      title: 'Total Bookings',
+                      streamQuery: FirebaseFirestore.instance
+                          .collection('bookings')
+                          .snapshots(),
+                      icon: Icons.calendar_month_rounded,
+                      color: Colors.orange)),
               SizedBox(width: AppSpacing.md),
               Expanded(child: _RevenueCard()),
             ],
@@ -43,7 +66,8 @@ class AdminOverviewTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
           Text(
             'Recent System Activity',
-            style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w700),
+            style:
+                AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w700),
           ),
           SizedBox(height: AppSpacing.md),
           _buildActivityFeed(),
@@ -75,10 +99,10 @@ class AdminOverviewTab extends StatelessWidget {
           }
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
-             return const Padding(
-               padding: EdgeInsets.all(16.0),
-               child: Text('No recent activity'),
-             );
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('No recent activity'),
+            );
           }
           return Column(
             children: docs.map((doc) {
@@ -86,10 +110,13 @@ class AdminOverviewTab extends StatelessWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppColors.primary.withOpacity(0.1),
-                  child: Icon(Icons.receipt_long, color: AppColors.primary, size: 18),
+                  child: Icon(Icons.receipt_long,
+                      color: AppColors.primary, size: 18),
                 ),
-                title: Text('New booking for ${data['experienceTitle'] ?? 'Experience'}'),
-                subtitle: Text('Status: ${data['status']} - \$${(data['totalPrice'] ?? 0).toString()}'),
+                title: Text(
+                    'New booking for ${data['experienceTitle'] ?? 'Experience'}'),
+                subtitle: Text(
+                    'Status: ${data['status']} - \$${(data['totalPrice'] ?? 0).toString()}'),
               );
             }).toList(),
           );
@@ -139,7 +166,9 @@ class _MetricCard extends StatelessWidget {
                 stream: streamQuery,
                 builder: (context, snapshot) {
                   if (snapshot.hasError || !snapshot.hasData) {
-                    return Text('--', style: AppTypography.headlineMedium.copyWith(fontWeight: FontWeight.bold));
+                    return Text('--',
+                        style: AppTypography.headlineMedium
+                            .copyWith(fontWeight: FontWeight.bold));
                   }
                   return Text(
                     '${snapshot.data!.docs.length}',
@@ -153,7 +182,9 @@ class _MetricCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(title, style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+          Text(title,
+              style: AppTypography.labelLarge
+                  .copyWith(color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -181,19 +212,25 @@ class _RevenueCard extends StatelessWidget {
                   color: Colors.purple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
-                child: const Icon(Icons.attach_money, color: Colors.purple, size: 24),
+                child: const Icon(Icons.attach_money,
+                    color: Colors.purple, size: 24),
               ),
               const Spacer(),
               StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('bookings').where('status', isEqualTo: 'completed').snapshots(),
+                stream: FirebaseFirestore.instance
+                    .collection('bookings')
+                    .where('status', isEqualTo: 'completed')
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError || !snapshot.hasData) {
-                    return Text('--', style: AppTypography.headlineMedium.copyWith(fontWeight: FontWeight.bold));
+                    return Text('--',
+                        style: AppTypography.headlineMedium
+                            .copyWith(fontWeight: FontWeight.bold));
                   }
                   double total = 0;
-                  for(var doc in snapshot.data!.docs) {
-                     final data = doc.data() as Map<String, dynamic>;
-                     total += (data['totalPrice'] as num?)?.toDouble() ?? 0.0;
+                  for (var doc in snapshot.data!.docs) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    total += (data['totalPrice'] as num?)?.toDouble() ?? 0.0;
                   }
                   return Text(
                     '\$${total.toStringAsFixed(0)}',
@@ -207,7 +244,9 @@ class _RevenueCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('Total Processed Revenue', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+          Text('Total Processed Revenue',
+              style: AppTypography.labelLarge
+                  .copyWith(color: AppColors.textSecondary)),
         ],
       ),
     );

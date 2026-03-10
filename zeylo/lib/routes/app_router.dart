@@ -12,6 +12,7 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../features/auth/presentation/screens/verify_success_screen.dart';
+import '../features/auth/presentation/screens/banned_screen.dart';
 
 // Onboarding
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -72,7 +73,6 @@ import '../features/map_discovery/presentation/screens/join_experience_screen.da
 import '../features/map_discovery/presentation/screens/live_experience_screen.dart';
 import '../features/map_discovery/presentation/screens/map_screen.dart';
 
-
 // Reviews
 import '../features/reviews/presentation/screens/rate_host_screen.dart';
 
@@ -88,7 +88,6 @@ import '../features/search/presentation/screens/search_screen.dart';
 
 // Favorites
 import '../features/favorites/presentation/screens/favorites_screen.dart';
-
 
 // Admin & Business
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
@@ -139,10 +138,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
 
         // If NOT verified and trying to access app routes, go to verify
-        if (!isEmailVerified &&
-            !isVerificationRoute &&
-            !isPublicAuthRoute) {
+        if (!isEmailVerified && !isVerificationRoute && !isPublicAuthRoute) {
           return '/verify-email';
+        }
+
+        // Check for ban status
+        final userEntity = ref.watch(currentUserProvider).value;
+        if (userEntity != null && userEntity.isBanned) {
+          if (location != '/banned') {
+            return '/banned';
+          }
+        } else if (location == '/banned') {
+          // If not banned but on banned screen, go home
+          return '/home';
         }
       }
 
@@ -180,6 +188,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/verify-success',
         builder: (context, state) => const VerifySuccessScreen(),
       ),
+      GoRoute(
+        path: '/banned',
+        builder: (context, state) {
+          final user = ref.read(currentUserProvider).value;
+          return BannedScreen(reason: user?.banReason);
+        },
+      ),
 
       // Main app with bottom navigation
       ShellRoute(
@@ -190,19 +205,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/home',
             builder: (context, state) => const HomeScreen(),
           ),
-          
+
           // Discover route
           GoRoute(
             path: '/discover',
             builder: (context, state) => const MapScreen(),
           ),
-          
+
           // Community route (navbar tab)
           GoRoute(
             path: '/community',
             builder: (context, state) => const CommunityScreen(),
           ),
-          
+
           // Profile route
           GoRoute(
             path: '/profile',
@@ -225,7 +240,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/admin-dashboard',
             builder: (context, state) => const AdminDashboardScreen(),
           ),
-          
+
           // Business Registration route
           GoRoute(
             path: '/business-registration',
@@ -534,7 +549,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/favorites',
         builder: (context, state) => const FavoritesScreen(),
       ),
-
     ],
   );
 });
@@ -636,4 +650,3 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Welcome')));
 }
-

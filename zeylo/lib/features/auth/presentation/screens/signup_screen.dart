@@ -84,7 +84,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please agree to the Terms of Service and Privacy Policy'),
+          content:
+              Text('Please agree to the Terms of Service and Privacy Policy'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -248,7 +249,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
-              
+
               // Role Selector
               Text(
                 'I am a...',
@@ -266,10 +267,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 mainAxisSpacing: AppSpacing.sm,
                 childAspectRatio: 2.2,
                 children: [
-                  _buildRoleCard('seeker', '🔍', 'Seeker', 'Discover experiences'),
+                  _buildRoleCard(
+                      'seeker', '🔍', 'Seeker', 'Discover experiences'),
                   _buildRoleCard('host', '🏡', 'Host', 'List your experiences'),
-                  _buildRoleCard('business', '💼', 'Business', 'Offer group packages'),
-                  _buildRoleCard('admin', '🛡️', 'Admin', 'Manage the platform'),
+                  _buildRoleCard(
+                      'business', '💼', 'Business', 'Offer group packages'),
+                  _buildRoleCard(
+                      'admin', '🛡️', 'Admin', 'Manage the platform'),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -406,17 +410,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
-  Widget _buildRoleCard(String role, String emoji, String label, String description) {
+  Widget _buildRoleCard(
+      String role, String emoji, String label, String description) {
     final bool isSelected = _selectedRole == role;
     return GestureDetector(
       onTap: () => setState(() => _selectedRole = role),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: [AppColors.primary.withAlpha(51), AppColors.primary.withAlpha(25)],
+                  colors: [
+                    AppColors.primary.withAlpha(51),
+                    AppColors.primary.withAlpha(25)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -428,7 +437,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
-              ? [BoxShadow(color: AppColors.primary.withAlpha(51), blurRadius: 8, offset: const Offset(0, 2))]
+              ? [
+                  BoxShadow(
+                      color: AppColors.primary.withAlpha(51),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ]
               : null,
         ),
         child: Row(
@@ -443,7 +457,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Text(
                     label,
                     style: AppTypography.labelMedium.copyWith(
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

@@ -22,7 +22,8 @@ class PendingBookingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     String formattedDate = 'Unknown Date';
     if (booking['date'] != null && booking['date'] is Timestamp) {
-      formattedDate = DateFormat('MMM d, yyyy').format((booking['date'] as Timestamp).toDate());
+      formattedDate = DateFormat('MMM d, yyyy')
+          .format((booking['date'] as Timestamp).toDate());
     }
 
     return Container(
@@ -42,7 +43,8 @@ class PendingBookingTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   booking['experienceTitle'] ?? 'Experience',
-                  style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTypography.labelLarge
+                      .copyWith(fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -55,7 +57,8 @@ class PendingBookingTile extends StatelessWidget {
                 ),
                 child: Text(
                   'Pending',
-                  style: AppTypography.labelSmall.copyWith(color: Colors.orange[800], fontWeight: FontWeight.bold),
+                  style: AppTypography.labelSmall.copyWith(
+                      color: Colors.orange[800], fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -78,7 +81,8 @@ class PendingBookingTile extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm)),
                   ),
                   child: const Text('Reject'),
                 ),
@@ -90,7 +94,8 @@ class PendingBookingTile extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.sm)),
                   ),
                   child: const Text('Accept'),
                 ),

@@ -105,7 +105,8 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedEvents = _selectedDay != null ? _getEventsForDay(_selectedDay!) : [];
+    final selectedEvents =
+        _selectedDay != null ? _getEventsForDay(_selectedDay!) : [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -191,11 +192,13 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                           itemBuilder: (context, index) {
                             final exp = selectedEvents[index];
                             return Container(
-                              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                              margin:
+                                  const EdgeInsets.only(bottom: AppSpacing.md),
                               padding: const EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
                                 border: Border.all(color: AppColors.border),
                               ),
                               child: Column(
@@ -203,21 +206,30 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                                 children: [
                                   Text(
                                     exp['experienceTitle'] ?? 'Experience',
-                                    style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                    style: AppTypography.labelLarge
+                                        .copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
                                   if (exp['isBlock'] == true) ...[
-                                    Text('You have blocked this date.', style: AppTypography.bodySmall.copyWith(color: AppColors.error)),
+                                    Text('You have blocked this date.',
+                                        style: AppTypography.bodySmall
+                                            .copyWith(color: AppColors.error)),
                                     const SizedBox(height: AppSpacing.sm),
                                     TextButton(
-                                      onPressed: () => _unblockDate(exp['blockId']),
-                                      style: TextButton.styleFrom(foregroundColor: AppColors.error, padding: EdgeInsets.zero),
+                                      onPressed: () =>
+                                          _unblockDate(exp['blockId']),
+                                      style: TextButton.styleFrom(
+                                          foregroundColor: AppColors.error,
+                                          padding: EdgeInsets.zero),
                                       child: const Text('Unblock'),
                                     ),
                                   ] else ...[
-                                    Text('Time: ${exp['startTime'] ?? 'TBA'}', style: AppTypography.bodySmall),
-                                    Text('Guests: ${exp['guests'] ?? 1}', style: AppTypography.bodySmall),
-                                    Text('Price: \$${exp['totalPrice'] ?? 0}', style: AppTypography.bodySmall),
+                                    Text('Time: ${exp['startTime'] ?? 'TBA'}',
+                                        style: AppTypography.bodySmall),
+                                    Text('Guests: ${exp['guests'] ?? 1}',
+                                        style: AppTypography.bodySmall),
+                                    Text('Price: \$${exp['totalPrice'] ?? 0}',
+                                        style: AppTypography.bodySmall),
                                     const SizedBox(height: AppSpacing.sm),
                                     if (exp['status'] != 'cancelled_by_host')
                                       TextButton(
@@ -231,7 +243,10 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                                         child: const Text('Cancel Booking'),
                                       )
                                     else
-                                      Text('Cancelled', style: AppTypography.bodySmall.copyWith(color: AppColors.error)),
+                                      Text('Cancelled',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                                  color: AppColors.error)),
                                   ],
                                 ],
                               ),
@@ -257,25 +272,32 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
       });
       _fetchBookings(); // Refresh visually
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Date blocked.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Date blocked.')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error blocking date: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error blocking date: $e')));
       }
     }
   }
 
   Future<void> _unblockDate(String blockId) async {
     try {
-      await FirebaseFirestore.instance.collection('calendar_blocks').doc(blockId).delete();
+      await FirebaseFirestore.instance
+          .collection('calendar_blocks')
+          .doc(blockId)
+          .delete();
       _fetchBookings(); // Refresh visually
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Date unblocked.')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Date unblocked.')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error unblocking date: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error unblocking date: $e')));
       }
     }
   }
@@ -283,12 +305,13 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
   Future<void> _cancelBooking(Map<String, dynamic> booking) async {
     final bookingId = booking['id'];
     if (bookingId == null) return;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Booking'),
-        content: const Text('Are you sure you want to cancel this booking? The seeker will be notified.'),
+        content: const Text(
+            'Are you sure you want to cancel this booking? The seeker will be notified.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -299,7 +322,10 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
               Navigator.pop(ctx);
               try {
                 // Update booking status
-                await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({
+                await FirebaseFirestore.instance
+                    .collection('bookings')
+                    .doc(bookingId)
+                    .update({
                   'status': 'cancelled_by_host',
                 });
 
@@ -307,25 +333,29 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                 await FirebaseFirestore.instance.collection('activities').add({
                   'userId': booking['userId'], // target the seeker
                   'title': 'Booking Cancelled',
-                  'message': 'The host has cancelled your booking for ${booking['experienceTitle'] ?? 'an experience'}.',
+                  'message':
+                      'The host has cancelled your booking for ${booking['experienceTitle'] ?? 'an experience'}.',
                   'createdAt': FieldValue.serverTimestamp(),
                   'type': 'booking_cancellation',
                   'isRead': false,
                 });
-                
+
                 // Refresh calendar locally
                 _fetchBookings();
-                
+
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Booking cancelled.')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Booking cancelled.')));
                 }
-              } catch(e) {
+              } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to cancel: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to cancel: $e')));
                 }
               }
             },
-            child: const Text('Cancel Booking', style: TextStyle(color: AppColors.error)),
+            child: const Text('Cancel Booking',
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

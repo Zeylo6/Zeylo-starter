@@ -21,6 +21,8 @@ class UserModel extends UserEntity {
     super.fcmToken,
     super.favorites,
     super.settings,
+    super.isBanned,
+    super.banReason,
   });
 
   /// Parse the role from string, with fallback to old 'isHost' boolean if present
@@ -64,6 +66,8 @@ class UserModel extends UserEntity {
           ? List<String>.from(json['favorites'] as List)
           : [],
       settings: json['settings'] as Map<String, dynamic>? ?? {},
+      isBanned: json['isBanned'] as bool? ?? false,
+      banReason: json['banReason'] as String?,
     );
   }
 
@@ -92,6 +96,8 @@ class UserModel extends UserEntity {
           ? List<String>.from(data['favorites'] as List)
           : [],
       settings: data['settings'] as Map<String, dynamic>? ?? {},
+      isBanned: data['isBanned'] as bool? ?? false,
+      banReason: data['banReason'] as String?,
     );
   }
 
@@ -114,6 +120,8 @@ class UserModel extends UserEntity {
       'fcmToken': fcmToken,
       'favorites': favorites,
       'settings': settings,
+      'isBanned': isBanned,
+      'banReason': banReason,
     };
   }
 
@@ -135,6 +143,8 @@ class UserModel extends UserEntity {
       'fcmToken': fcmToken,
       'favorites': favorites,
       'settings': settings,
+      'isBanned': isBanned,
+      'banReason': banReason,
     };
   }
 
@@ -157,6 +167,8 @@ class UserModel extends UserEntity {
     String? fcmToken,
     List<String>? favorites,
     Map<String, dynamic>? settings,
+    bool? isBanned,
+    String? banReason,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -175,6 +187,8 @@ class UserModel extends UserEntity {
       fcmToken: fcmToken ?? this.fcmToken,
       favorites: favorites ?? this.favorites,
       settings: settings ?? this.settings,
+      isBanned: isBanned ?? this.isBanned,
+      banReason: banReason ?? this.banReason,
     );
   }
 }
