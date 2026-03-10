@@ -72,7 +72,6 @@ import '../features/map_discovery/presentation/screens/join_experience_screen.da
 import '../features/map_discovery/presentation/screens/live_experience_screen.dart';
 import '../features/map_discovery/presentation/screens/map_screen.dart';
 
-
 // Reviews
 import '../features/reviews/presentation/screens/rate_host_screen.dart';
 
@@ -139,9 +138,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
 
         // If NOT verified and trying to access app routes, go to verify
-        if (!isEmailVerified &&
-            !isVerificationRoute &&
-            !isPublicAuthRoute) {
+        if (!isEmailVerified && !isVerificationRoute && !isPublicAuthRoute) {
           return '/verify-email';
         }
       }
@@ -190,19 +187,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/home',
             builder: (context, state) => const HomeScreen(),
           ),
-          
+
           // Discover route
           GoRoute(
             path: '/discover',
             builder: (context, state) => const MapScreen(),
           ),
-          
+
           // Explore route
           GoRoute(
             path: '/explore',
             builder: (context, state) => const ExploreScreen(),
           ),
-          
+
           // Profile route
           GoRoute(
             path: '/profile',
@@ -225,7 +222,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/admin-dashboard',
             builder: (context, state) => const AdminDashboardScreen(),
           ),
-          
+
           // Business Registration route
           GoRoute(
             path: '/business-registration',
@@ -538,7 +535,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/favorites',
         builder: (context, state) => const FavoritesScreen(),
       ),
-
     ],
   );
 });
@@ -640,4 +636,3 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Welcome')));
 }
-

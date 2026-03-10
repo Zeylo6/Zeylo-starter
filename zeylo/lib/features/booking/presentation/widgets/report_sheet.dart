@@ -14,10 +14,13 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 class ReportSheet extends ConsumerStatefulWidget {
   /// The UID of the user being reported
   final String reportedUserId;
+
   /// Optional booking ID associated with the report
   final String? bookingId;
+
   /// Role of the person reporting ('seeker' or 'host')
   final String reporterRole;
+
   /// Role of the person being reported ('host' or 'seeker')
   final String reportedRole;
 
@@ -72,7 +75,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
       return;
     }
 
-    if (_selectedReason == 'Other...' && _detailsController.text.trim().isEmpty) {
+    if (_selectedReason == 'Other...' &&
+        _detailsController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please provide additional details.')),
       );
@@ -98,7 +102,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Report submitted successfully. Our team will review it shortly.'),
+            content: Text(
+                'Report submitted successfully. Our team will review it shortly.'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -132,7 +137,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
         return Container(
           decoration: const BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
           ),
           child: ListView(
             controller: controller,
@@ -166,7 +172,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                       color: AppColors.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
-                    child: const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 28),
+                    child: const Icon(Icons.warning_amber_rounded,
+                        color: AppColors.error, size: 28),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -195,7 +202,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
               Text(
                 'Why are you reporting this?',
-                style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTypography.titleMedium
+                    .copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: AppSpacing.sm),
 
@@ -219,7 +227,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
               if (_selectedReason != null) ...[
                 Text(
                   'Additional Details',
-                  style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                  style: AppTypography.titleMedium
+                      .copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 ZeyloTextField(
@@ -236,13 +245,15 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                 onPressed: _submitReport,
                 isLoading: _isSubmitting,
                 width: double.infinity,
-                isDisabled: _selectedReason == null || _detailsController.text.isEmpty,
+                isDisabled:
+                    _selectedReason == null || _detailsController.text.isEmpty,
               ),
               const SizedBox(height: AppSpacing.md),
               Center(
                 child: Text(
                   'Your report will be reviewed by our admin team.',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
                 ),
               ),
             ],

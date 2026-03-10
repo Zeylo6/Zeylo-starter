@@ -73,7 +73,7 @@ class ProfileScreen extends ConsumerWidget {
     // Read the current user model persistently loaded from Firestore
     final currentUserAsync = ref.watch(currentUserProvider);
     final currentUserData = currentUserAsync.value;
-    
+
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(profileProvider(userId));
@@ -91,160 +91,160 @@ class ProfileScreen extends ConsumerWidget {
               profile: profile,
               onEditPressed: isCurrentUser ? onEditPressed : null,
             ),
-          
-          // Premium Role Badge
-          if (isCurrentUser && currentUserData != null)
-            _buildRoleBadge(currentUserData.role.name),
 
-          // Dashboard Cards Section
-          if (isCurrentUser && currentUserData != null)
-            _buildDashboardSection(context, currentUserData),
+            // Premium Role Badge
+            if (isCurrentUser && currentUserData != null)
+              _buildRoleBadge(currentUserData.role.name),
 
-          const Divider(height: 1),
+            // Dashboard Cards Section
+            if (isCurrentUser && currentUserData != null)
+              _buildDashboardSection(context, currentUserData),
 
-          // Posts section
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.md,
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.grid_on, color: AppColors.textPrimary),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Posts',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
+            const Divider(height: 1),
 
-          // Photo grid
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: PhotoGrid(
-              photoUrls: const [], // Load from backend
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1),
-
-          // Past experiences section
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.md,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Past Experiences',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+            // Posts section
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.grid_on, color: AppColors.textPrimary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Posts',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
+                  ),
+                ],
+              ),
+            ),
+
+            // Photo grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: PhotoGrid(
+                photoUrls: const [], // Load from backend
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1),
+
+            // Past experiences section
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Past Experiences',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.lock_outline,
-                            size: 12,
-                            color: AppColors.success,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            'Private',
-                            style: AppTypography.labelSmall.copyWith(
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.lock_outline,
+                              size: 12,
                               color: AppColors.success,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 2),
+                            Text(
+                              'Private',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Past experiences list
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Column(
+                children: [
+                  PastExperienceTile(
+                    experienceId: '1',
+                    title: 'Traditional Cooking Adventure',
+                    rating: 4.9,
+                    ratingCount: 234,
+                    price: 45,
+                  ),
+                  PastExperienceTile(
+                    experienceId: '2',
+                    title: 'Sunrise watching',
+                    rating: 4.8,
+                    ratingCount: 156,
+                    price: 35,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // Logout button (if current user)
+            if (isCurrentUser && onLogoutPressed != null)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: onLogoutPressed,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: AppColors.error,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Past experiences list
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Column(
-              children: [
-                PastExperienceTile(
-                  experienceId: '1',
-                  title: 'Traditional Cooking Adventure',
-                  rating: 4.9,
-                  ratingCount: 234,
-                  price: 45,
-                ),
-                PastExperienceTile(
-                  experienceId: '2',
-                  title: 'Sunrise watching',
-                  rating: 4.8,
-                  ratingCount: 156,
-                  price: 35,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // Logout button (if current user)
-          if (isCurrentUser && onLogoutPressed != null)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: onLogoutPressed,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: AppColors.error,
-                      width: 1.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                  ),
-                  child: Text(
-                    'Log out',
-                    style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.error,
+                    child: Text(
+                      'Log out',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.error,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-          const SizedBox(height: AppSpacing.md),
-        ],
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _showMoreMenu(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
@@ -257,20 +257,26 @@ class ProfileScreen extends ConsumerWidget {
               // Developer/Admin - Clear Bookings
               ListTile(
                 leading: const Icon(Icons.delete_sweep, color: AppColors.error),
-                title: const Text('Clear All Bookings (Dev)', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+                title: const Text('Clear All Bookings (Dev)',
+                    style: TextStyle(
+                        color: AppColors.error, fontWeight: FontWeight.bold)),
                 onTap: () async {
                   Navigator.pop(sheetContext);
                   try {
-                    final snapshot = await FirebaseFirestore.instance.collection('bookings').get();
+                    final snapshot = await FirebaseFirestore.instance
+                        .collection('bookings')
+                        .get();
                     for (var doc in snapshot.docs) {
                       await doc.reference.delete();
                     }
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All bookings cleared successfully.')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('All bookings cleared successfully.')));
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to clear bookings: $e')));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Failed to clear bookings: $e')));
                     }
                   }
                 },
@@ -455,17 +461,39 @@ class ProfileScreen extends ConsumerWidget {
 
   Widget _buildRoleBadge(String roleName) {
     final roleData = {
-      'seeker':  {'emoji': '🔍', 'label': 'Seeker',   'start': const Color(0xFF6C63FF), 'end': const Color(0xFF48CAE4)},
-      'host':    {'emoji': '🏡', 'label': 'Host',     'start': const Color(0xFFFF9A3C), 'end': const Color(0xFFFF6B6B)},
-      'business':{'emoji': '💼', 'label': 'Business', 'start': const Color(0xFF11998E), 'end': const Color(0xFF38EF7D)},
-      'admin':   {'emoji': '🛡️', 'label': 'Admin',   'start': const Color(0xFF8E2DE2), 'end': const Color(0xFF4A00E0)},
+      'seeker': {
+        'emoji': '🔍',
+        'label': 'Seeker',
+        'start': const Color(0xFF6C63FF),
+        'end': const Color(0xFF48CAE4)
+      },
+      'host': {
+        'emoji': '🏡',
+        'label': 'Host',
+        'start': const Color(0xFFFF9A3C),
+        'end': const Color(0xFFFF6B6B)
+      },
+      'business': {
+        'emoji': '💼',
+        'label': 'Business',
+        'start': const Color(0xFF11998E),
+        'end': const Color(0xFF38EF7D)
+      },
+      'admin': {
+        'emoji': '🛡️',
+        'label': 'Admin',
+        'start': const Color(0xFF8E2DE2),
+        'end': const Color(0xFF4A00E0)
+      },
     };
     final data = roleData[roleName] ?? roleData['seeker']!;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [data['start'] as Color, data['end'] as Color],
@@ -501,4 +529,3 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
-

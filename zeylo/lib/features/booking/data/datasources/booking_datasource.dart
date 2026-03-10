@@ -49,9 +49,8 @@ class BookingRemoteDataSource implements BookingDataSource {
   @override
   Future<List<BookingModel>> getUserBookings(String userId) async {
     try {
-      final querySnapshot = await _bookingsCollection
-          .where('userId', isEqualTo: userId)
-          .get();
+      final querySnapshot =
+          await _bookingsCollection.where('userId', isEqualTo: userId).get();
 
       final bookings = querySnapshot.docs
           .map((doc) => BookingModel.fromFirestore(doc.data(), doc.id))
@@ -59,7 +58,7 @@ class BookingRemoteDataSource implements BookingDataSource {
 
       // Sort in memory to avoid requiring a composite index
       bookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      
+
       return bookings;
     } catch (e) {
       throw Exception('Failed to get user bookings: $e');
@@ -69,9 +68,8 @@ class BookingRemoteDataSource implements BookingDataSource {
   @override
   Future<List<BookingModel>> getHostBookings(String hostId) async {
     try {
-      final querySnapshot = await _bookingsCollection
-          .where('hostId', isEqualTo: hostId)
-          .get();
+      final querySnapshot =
+          await _bookingsCollection.where('hostId', isEqualTo: hostId).get();
 
       final bookings = querySnapshot.docs
           .map((doc) => BookingModel.fromFirestore(doc.data(), doc.id))
@@ -79,7 +77,7 @@ class BookingRemoteDataSource implements BookingDataSource {
 
       // Sort in memory to avoid requiring a composite index
       bookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      
+
       return bookings;
     } catch (e) {
       throw Exception('Failed to get host bookings: $e');

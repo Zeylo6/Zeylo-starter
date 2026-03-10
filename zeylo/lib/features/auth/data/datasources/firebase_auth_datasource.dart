@@ -180,7 +180,8 @@ class FirebaseAuthDataSource {
         throw Exception('Google sign in cancelled');
       }
       if (e.code == 'popup-blocked') {
-        throw Exception('Popup blocked. Allow popups for this site and try again.');
+        throw Exception(
+            'Popup blocked. Allow popups for this site and try again.');
       }
       throw _handleFirebaseAuthException(e);
     } catch (e) {
