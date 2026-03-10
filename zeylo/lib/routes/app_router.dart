@@ -31,6 +31,9 @@ import '../features/host/presentation/screens/earnings_screen.dart';
 import '../features/host/presentation/screens/create_experience_screen.dart';
 import '../features/host/presentation/screens/host_calendar_screen.dart';
 
+// Seeker
+import '../features/booking/presentation/screens/seeker_dashboard_screen.dart';
+
 // Mystery
 import '../features/mystery/presentation/screens/create_mystery_screen.dart';
 import '../features/mystery/presentation/screens/mystery_reveal_screen.dart';
@@ -251,6 +254,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/host-calendar',
             builder: (context, state) => const HostCalendarScreen(),
+          ),
+          // Seeker Dashboard route
+          GoRoute(
+            path: '/seeker-dashboard',
+            builder: (context, state) => const SeekerDashboardScreen(),
           ),
         ],
       ),

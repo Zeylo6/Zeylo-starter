@@ -2,6 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -18,6 +22,7 @@ class CreateExperienceScreen extends ConsumerStatefulWidget {
 
 class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen> {
   final _titleController = TextEditingController();
+  final _imageUrlController = TextEditingController();
   final _shortDescController = TextEditingController();
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
@@ -25,13 +30,16 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
   final _maxGuestsController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isAIEnhancing = false;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
     _titleController.dispose();
+    _imageUrlController.dispose();
     _shortDescController.dispose();
     _descController.dispose();
     _priceController.dispose();
@@ -62,10 +70,11 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     setState(() => _isAIEnhancing = true);
     try {
       final aiService = ref.read(aiServiceProvider);
-      final prompt = "Make this experience description sound highly professional, extremely exciting, and incredibly immersive for a premium discovery app. Return ONLY the enhanced description without conversational padding: $currentDesc";
-      
+      final prompt =
+          "Make this experience description sound highly professional, extremely exciting, and incredibly immersive for a premium discovery app. Return ONLY the enhanced description without conversational padding: $currentDesc";
+
       final enhancedDesc = await aiService.enhancePrompt(prompt);
-      
+
       if (mounted) {
         setState(() {
           _descController.text = enhancedDesc;
@@ -81,8 +90,66 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      _showSnackbar("Failed to pick image: $e");
+    }
+  }
+
+  /// Uploads to Cloudinary using Unsigned Preset
+  Future<String?> _uploadToCloudinary() async {
+    if (_selectedImage == null) return null;
+
+    const cloudName = 'deukwmcoi';
+    const uploadPreset = 'Zeylo_images';
+
+    try {
+      final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+      final request = http.MultipartRequest('POST', url)
+        ..fields['upload_preset'] = uploadPreset
+        ..files.add(await http.MultipartFile.fromPath('file', _selectedImage!.path));
+
+      final response = await request.send();
+      final responseData = await response.stream.toBytes();
+      final responseString = String.fromCharCodes(responseData);
+      final jsonMap = jsonDecode(responseString);
+
+      if (response.statusCode == 200) {
+        return jsonMap['secure_url'];
+      } else {
+        debugPrint('Cloudinary Error: ${jsonMap['error']['message']}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Upload error: $e");
+      return null;
+    }
+  }
+
+  void _generateRandomImage() {
+    final title = _titleController.text.trim();
+    final keyword = title.isNotEmpty ? Uri.encodeComponent(title.split(' ').first) : 'nature';
+    setState(() {
+      _imageUrlController.text = 'https://source.unsplash.com/featured/1200x800/?$keyword';
+    });
+  }
+
   Future<void> _submitExperience() async {
     final title = _titleController.text.trim();
+    final manualImageUrl = _imageUrlController.text.trim();
     final shortDesc = _shortDescController.text.trim();
     final desc = _descController.text.trim();
     final priceStr = _priceController.text.trim();
@@ -91,8 +158,14 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     final address = _addressController.text.trim();
     final city = _cityController.text.trim();
 
-    if (title.isEmpty || shortDesc.isEmpty || desc.isEmpty || priceStr.isEmpty ||
-        durationStr.isEmpty || maxGuestsStr.isEmpty || address.isEmpty || city.isEmpty) {
+    if (title.isEmpty ||
+        shortDesc.isEmpty ||
+        desc.isEmpty ||
+        priceStr.isEmpty ||
+        durationStr.isEmpty ||
+        maxGuestsStr.isEmpty ||
+        address.isEmpty ||
+        city.isEmpty) {
       _showSnackbar("All fields are required.");
       return;
     }
@@ -112,21 +185,37 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not logged in");
 
-      // Generate a new document ID
       final docRef = FirebaseFirestore.instance.collection('experiences').doc();
+      final experienceId = docRef.id;
+
+      // Upload to Cloudinary first if an image is selected
+      String? finalImageUrl;
+      if (_selectedImage != null) {
+        finalImageUrl = await _uploadToCloudinary();
+        if (finalImageUrl == null) {
+          _showSnackbar("Image upload failed. Please try again.");
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      // Fallback: 1. Cloudinary URL, 2. Manual URL, 3. Placeholder
+      finalImageUrl ??= manualImageUrl.isNotEmpty
+          ? manualImageUrl
+          : 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200';
 
       await docRef.set({
-        'id': docRef.id,
+        'id': experienceId,
         'title': title,
         'shortDescription': shortDesc,
         'description': desc,
         'hostId': user.uid,
         'hostName': user.displayName ?? 'Zeylo Host',
         'hostPhotoUrl': user.photoURL ?? '',
-        'category': 'Activities', // Default for now
+        'category': 'Activities',
         'subcategory': 'General',
-        'images': [], 
-        'coverImage': 'https://firebasestorage.googleapis.com/v0/b/zeylo-app.appspot.com/o/placeholders%2Fplaceholder_experience.jpg?alt=media', // placeholder
+        'images': [finalImageUrl],
+        'coverImage': finalImageUrl,
         'price': price,
         'currency': 'USD',
         'duration': duration,
@@ -135,7 +224,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
           'address': address,
           'city': city,
           'country': 'Sri Lanka',
-          'geoPoint': {'latitude': 6.9271, 'longitude': 79.8612}, // Default Colombo
+          'geoPoint': {'latitude': 6.9271, 'longitude': 79.8612},
         },
         'includes': [],
         'requirements': [],
@@ -152,7 +241,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
       if (mounted) {
         _showSnackbar("Experience created successfully!", isError: false);
-        Navigator.pop(context); // Return to Dashboard
+        Navigator.pop(context);
       }
     } catch (e) {
       _showSnackbar("Failed to create experience: $e");
@@ -178,14 +267,95 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text('Cover Image', style: AppTypography.titleLarge),
+            const SizedBox(height: AppSpacing.md),
+
+            // Image Picker Box (uploads to Cloudinary)
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                width: double.infinity,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: _selectedImage != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.add_photo_alternate,
+                              size: 40, color: AppColors.primary),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text('Upload Cover Photo',
+                              style: AppTypography.titleMedium),
+                          Text('Tap to pick from gallery',
+                              style: AppTypography.bodySmallSecondary),
+                        ],
+                      ),
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+            const Center(
+              child: Text('OR',
+                  style: TextStyle(
+                      color: Colors.grey, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Manual URL Fallback
+            TextField(
+              controller: _imageUrlController,
+              onChanged: (val) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: 'Paste Image Link Instead',
+                hintText: 'https://...',
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm)),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.auto_awesome,
+                      color: AppColors.secondary),
+                  onPressed: _generateRandomImage,
+                  tooltip: 'Get random image based on title',
+                ),
+              ),
+            ),
+
+            if (_imageUrlController.text.isNotEmpty && _selectedImage == null) ...[
+              const SizedBox(height: AppSpacing.md),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: Image.network(
+                  _imageUrlController.text,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => Container(
+                    height: 200,
+                    color: AppColors.surface,
+                    child: const Center(child: Text('Invalid Image URL')),
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: AppSpacing.xl),
             Text('Basic Info', style: AppTypography.titleLarge),
             const SizedBox(height: AppSpacing.md),
-            
-            _buildTextField(_titleController, 'Experience Title', 'e.g., Sunset Surfing'),
+
+            _buildTextField(_titleController, 'Experience Title',
+                'e.g., Sunset Surfing'),
             const SizedBox(height: AppSpacing.sm),
-            _buildTextField(_shortDescController, 'Short Description', 'A catchy one liner...'),
+            _buildTextField(_shortDescController, 'Short Description',
+                'A catchy one liner...'),
             const SizedBox(height: AppSpacing.sm),
-            
+
             // Description with AI Button
             TextField(
               controller: _descController,
@@ -194,41 +364,57 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
                 labelText: 'Full Description',
                 hintText: 'What will guests do?',
                 alignLabelWithHint: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.sm)),
                 suffixIcon: IconButton(
-                  icon: _isAIEnhancing 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.auto_awesome, color: AppColors.secondary),
-                  onPressed: _isAIEnhancing ? null : _enhanceDescriptionWithAI,
+                  icon: _isAIEnhancing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child:
+                              CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.auto_awesome,
+                          color: AppColors.secondary),
+                  onPressed:
+                      _isAIEnhancing ? null : _enhanceDescriptionWithAI,
                   tooltip: 'Enhance with AI',
                 ),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
             Text('Details', style: AppTypography.titleLarge),
             const SizedBox(height: AppSpacing.md),
-            
+
             Row(
               children: [
-                Expanded(child: _buildTextField(_priceController, 'Price (USD)', 'e.g., 50', isNumber: true)),
+                Expanded(
+                    child: _buildTextField(_priceController, 'Price (USD)',
+                        'e.g., 50',
+                        isNumber: true)),
                 const SizedBox(width: AppSpacing.sm),
-                Expanded(child: _buildTextField(_durationController, 'Duration (mins)', 'e.g., 120', isNumber: true)),
+                Expanded(
+                    child: _buildTextField(_durationController,
+                        'Duration (mins)', 'e.g., 120',
+                        isNumber: true)),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            _buildTextField(_maxGuestsController, 'Max Guests allowed', 'e.g., 4', isNumber: true),
+            _buildTextField(_maxGuestsController, 'Max Guests allowed',
+                'e.g., 4',
+                isNumber: true),
 
             const SizedBox(height: AppSpacing.lg),
             Text('Location', style: AppTypography.titleLarge),
             const SizedBox(height: AppSpacing.md),
-            
-            _buildTextField(_addressController, 'Street Address', '123 Beach Rd'),
+
+            _buildTextField(
+                _addressController, 'Street Address', '123 Beach Rd'),
             const SizedBox(height: AppSpacing.sm),
             _buildTextField(_cityController, 'City', 'Weligama'),
 
             const SizedBox(height: AppSpacing.xl),
-            
+
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -236,11 +422,14 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
                 onPressed: _isLoading ? null : _submitExperience,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md)),
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : Text('Publish Experience', style: AppTypography.labelLarge.copyWith(color: Colors.white)),
+                    : Text('Publish Experience',
+                        style: AppTypography.labelLarge
+                            .copyWith(color: Colors.white)),
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -250,14 +439,20 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, String hint, {bool isNumber = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    String hint, {
+    bool isNumber = false,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+        border:
+            OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
       ),
     );
   }

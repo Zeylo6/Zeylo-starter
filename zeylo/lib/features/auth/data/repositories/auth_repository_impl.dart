@@ -42,6 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String phone,
     required String password,
+    String role = 'seeker',
   }) async {
     try {
       return await dataSource.signUpWithEmail(
@@ -49,6 +50,7 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email,
         phone: phone,
         password: password,
+        role: role,
       );
     } catch (e) {
       rethrow;

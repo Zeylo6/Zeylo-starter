@@ -84,18 +84,14 @@ class ProfileScreen extends ConsumerWidget {
             onEditPressed: isCurrentUser ? onEditPressed : null,
           ),
           
-          // Debug Role Display
-          if (isCurrentUser)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  'DEBUG: Your current role is "${currentUserData?.role.name ?? 'unknown'}"',
-                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            
+          // Premium Role Badge
+          if (isCurrentUser && currentUserData != null)
+            _buildRoleBadge(currentUserData.role.name),
+
+          // Dashboard Cards Section
+          if (isCurrentUser && currentUserData != null)
+            _buildDashboardSection(context, currentUserData),
+
           const Divider(height: 1),
 
           // Posts section
@@ -242,9 +238,6 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showMoreMenu(BuildContext context, WidgetRef ref) {
-    final currentUserAsync = ref.read(currentUserProvider);
-    final currentUserData = currentUserAsync.value;
-
     showModalBottomSheet(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -252,42 +245,6 @@ class ProfileScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isCurrentUser) ...[
-              // Admin Route
-              if (currentUserData?.role == UserRole.admin)
-                ListTile(
-                  leading: const Icon(Icons.admin_panel_settings, color: AppColors.primary),
-                  title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    context.push('/admin-dashboard');
-                  },
-                ),
-              // Business Route
-              if (currentUserData?.role == UserRole.business)
-                ListTile(
-                  leading: const Icon(Icons.storefront, color: AppColors.primary),
-                  title: const Text('Business Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    // For now, mapping this to the registration/management screen
-                    context.push('/business-registration');
-                  },
-                ),
-              // Host Route
-              if (currentUserData?.role == UserRole.host)
-                ListTile(
-                  leading: const Icon(Icons.home_work_outlined, color: AppColors.primary),
-                  title: const Text('Host Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    context.push('/host-dashboard', extra: {
-                      'hostId': currentUserData?.uid,
-                      'hostName': currentUserData?.displayName ?? 'Host',
-                      'hostPhotoUrl': currentUserData?.photoUrl,
-                      'isSuperhost': false,
-                    });
-                  },
-                ),
               // Developer/Admin - Clear Bookings
               ListTile(
                 leading: const Icon(Icons.delete_sweep, color: AppColors.error),
@@ -354,6 +311,181 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => Navigator.pop(sheetContext),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardSection(BuildContext context, UserEntity user) {
+    if (user.role == UserRole.seeker) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'My Bookings',
+        subtitle: 'View all your experiences',
+        icon: Icons.calendar_today_rounded,
+        colors: [const Color(0xFF6C63FF), const Color(0xFF48CAE4)],
+        onTap: () => context.push('/seeker-dashboard'),
+      );
+    } else if (user.role == UserRole.host) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'Host Dashboard',
+        subtitle: 'Manage your listings & bookings',
+        icon: Icons.home_work_rounded,
+        colors: [const Color(0xFFFF9A3C), const Color(0xFFFF6B6B)],
+        onTap: () => context.push('/host-dashboard', extra: {
+          'hostId': user.uid,
+          'hostName': user.displayName,
+          'hostPhotoUrl': user.photoUrl,
+          'isSuperhost': false,
+        }),
+      );
+    } else if (user.role == UserRole.business) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'Business Dashboard',
+        subtitle: 'Manage your verified business',
+        icon: Icons.storefront_rounded,
+        colors: [const Color(0xFF11998E), const Color(0xFF38EF7D)],
+        onTap: () => context.push('/business-registration'),
+      );
+    } else if (user.role == UserRole.admin) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'Admin Panel',
+        subtitle: 'System management & oversight',
+        icon: Icons.admin_panel_settings_rounded,
+        colors: [const Color(0xFF8E2DE2), const Color(0xFF4A00E0)],
+        onTap: () => context.push('/admin-dashboard'),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildDashboardCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: [
+              BoxShadow(
+                color: colors[0].withAlpha(60),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(50),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.white.withOpacity(0.85),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white70,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(String roleName) {
+    final roleData = {
+      'seeker':  {'emoji': '🔍', 'label': 'Seeker',   'start': const Color(0xFF6C63FF), 'end': const Color(0xFF48CAE4)},
+      'host':    {'emoji': '🏡', 'label': 'Host',     'start': const Color(0xFFFF9A3C), 'end': const Color(0xFFFF6B6B)},
+      'business':{'emoji': '💼', 'label': 'Business', 'start': const Color(0xFF11998E), 'end': const Color(0xFF38EF7D)},
+      'admin':   {'emoji': '🛡️', 'label': 'Admin',   'start': const Color(0xFF8E2DE2), 'end': const Color(0xFF4A00E0)},
+    };
+    final data = roleData[roleName] ?? roleData['seeker']!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [data['start'] as Color, data['end'] as Color],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: (data['start'] as Color).withAlpha(77),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(data['emoji'] as String, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Text(
+              data['label'] as String,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: 0.5,
+              ),
+            ),
           ],
         ),
       ),
