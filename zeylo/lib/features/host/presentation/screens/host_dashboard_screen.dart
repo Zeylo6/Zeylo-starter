@@ -15,6 +15,7 @@ import '../widgets/active_experience_tile.dart';
 import '../widgets/host_stats_header.dart';
 import '../widgets/performance_section.dart';
 import '../widgets/pending_booking_tile.dart';
+import '../../../../features/booking/presentation/widgets/report_sheet.dart';
 
 /// Host dashboard screen
 class HostDashboardScreen extends ConsumerWidget {
@@ -475,12 +476,29 @@ class HostDashboardScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const Spacer(),
-                                  Text(
-                                    '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                    style: AppTypography.labelMedium.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () => _showReportSheet(context, doc.id, data['userId']),
+                                        child: Container(
+                                          margin: const EdgeInsets.only(right: AppSpacing.sm),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.error.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                                            border: Border.all(color: AppColors.error.withOpacity(0.5)),
+                                          ),
+                                          child: const Icon(Icons.flag_rounded, size: 16, color: AppColors.error),
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                        style: AppTypography.labelMedium.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -819,6 +837,20 @@ class HostDashboardScreen extends ConsumerWidget {
 
           const SizedBox(height: AppSpacing.lg),
         ],
+      ),
+    );
+  }
+
+  void _showReportSheet(BuildContext context, String bookingId, String reportedUserId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReportSheet(
+        reportedUserId: reportedUserId, // Host is reporting the Seeker
+        bookingId: bookingId,
+        reporterRole: 'host',
+        reportedRole: 'seeker',
       ),
     );
   }

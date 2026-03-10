@@ -1,0 +1,137 @@
+Compiling lib\main.dart for the Web...                          
+flutter : Wasm dry run succeeded. Consider 
+building and testing your application with the 
+`--wasm` flag. See docs for more info: https://do
+cs.flutter.dev/platform-integration/web/wasm
+At line:1 char:1
++ flutter build web > buildlog7.txt 2>&1 ; 
+powershell -Command "Get-Con ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Was 
+   m dry run su...ration/web/wasm:String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Use --no-wasm-dry-run to disable these warnings.
+Target dart2js failed: ProcessException: Process 
+exited abnormally with exit code 1:
+lib/features/booking/presentation/widgets/report_
+sheet.dart:225:31:
+Error: Required named parameter 'controller' 
+must be provided.
+                ZeyloTextField(
+                              ^
+lib/core/widgets/custom_text_field.dart:88:9:
+Info: Found this candidate, but the arguments 
+don't match.
+  const ZeyloTextField({
+        ^^^^^^^^^^^^^^
+lib/features/booking/presentation/widgets/report_
+sheet.dart:234:15:
+Error: The method 'CustomButton' isn't defined 
+for the type '_ReportSheetState'.
+ - '_ReportSheetState' is from 'package:zeylo/fea
+tures/booking/presentation/widgets/report_sheet.d
+art' ('lib/features/booking/presentation/widgets/
+report_sheet.dart').
+              CustomButton(
+              ^^^^^^^^^^^^
+Error: Compilation failed.
+  Command: 
+D:\Zeylo\flutter\bin\cache\dart-sdk\bin\dart.exe 
+compile js --platform-binaries=D:\Zeylo\flutter\b
+in\cache\flutter_web_sdk\kernel 
+--invoker=flutter_tool -Ddart.vm.product=true 
+-DFLUTTER_VERSION=3.41.1 
+-DFLUTTER_CHANNEL=stable -DFLUTTER_GIT_URL=https:
+//github.com/flutter/flutter.git 
+-DFLUTTER_FRAMEWORK_REVISION=582a0e7c55 
+-DFLUTTER_ENGINE_REVISION=3452d735bd 
+-DFLUTTER_DART_VERSION=3.11.0 
+-DFLUTTER_WEB_USE_SKIA=true 
+-DFLUTTER_WEB_USE_SKWASM=false -DFLUTTER_WEB_CANV
+ASKIT_URL=https://www.gstatic.com/flutter-canvask
+it/3452d735bd38224ef2db85ca763d862d6326b17f/ 
+--native-null-assertions --no-source-maps -O4 
+--minify -o E:\IIT resources\Project Zeylo\Zeylo-
+starter\zeylo\.dart_tool\flutter_build\b59e14a2f0
+5005f79e081965d7814ce7\app.dill 
+--packages=E:\IIT resources\Project Zeylo\Zeylo-s
+tarter\zeylo\.dart_tool\package_config.json 
+--cfe-only E:\IIT resources\Project Zeylo\Zeylo-s
+tarter\zeylo\.dart_tool\flutter_build\b59e14a2f05
+005f79e081965d7814ce7\main.dart
+#0      RunResult.throwException (package:flutter
+_tools/src/base/process.dart:153:5)
+#1      _DefaultProcessUtils.run (package:flutter
+_tools/src/base/process.dart:379:19)
+<asynchronous suspension>
+#2      Dart2JSTarget.build (package:flutter_tool
+s/src/build_system/targets/web.dart:208:5)
+<asynchronous suspension>
+#3      _BuildInstance._invokeInternal (package:f
+lutter_tools/src/build_system/build_system.dart:9
+37:9)
+<asynchronous suspension>
+#4      Future.wait.<anonymous closure> 
+(dart:async/future.dart:546:21)
+<asynchronous suspension>
+#5      _BuildInstance.invokeTarget (package:flut
+ter_tools/src/build_system/build_system.dart:875:
+32)
+<asynchronous suspension>
+#6      Future.wait.<anonymous closure> 
+(dart:async/future.dart:546:21)
+<asynchronous suspension>
+#7      _BuildInstance.invokeTarget (package:flut
+ter_tools/src/build_system/build_system.dart:875:
+32)
+<asynchronous suspension>
+#8      FlutterBuildSystem.build (package:flutter
+_tools/src/build_system/build_system.dart:684:16)
+<asynchronous suspension>
+#9      WebBuilder.buildWeb (package:flutter_tool
+s/src/web/compile.dart:101:34)
+<asynchronous suspension>
+#10     BuildWebCommand.runCommand (package:flutt
+er_tools/src/commands/build_web.dart:299:5)
+<asynchronous suspension>
+#11     FlutterCommand.run.<anonymous closure> (p
+ackage:flutter_tools/src/runner/flutter_command.d
+art:1590:27)
+<asynchronous suspension>
+#12     AppContext.run.<anonymous closure> (packa
+ge:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#13     CommandRunner.runCommand 
+(package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#14     
+FlutterCommandRunner.runCommand.<anonymous 
+closure> (package:flutter_tools/src/runner/flutte
+r_command_runner.dart:496:9)
+<asynchronous suspension>
+#15     AppContext.run.<anonymous closure> (packa
+ge:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#16     FlutterCommandRunner.runCommand (package:
+flutter_tools/src/runner/flutter_command_runner.d
+art:431:5)
+<asynchronous suspension>
+#17     FlutterCommandRunner.run.<anonymous 
+closure> (package:flutter_tools/src/runner/flutte
+r_command_runner.dart:307:33)
+<asynchronous suspension>
+#18     run.<anonymous closure>.<anonymous 
+closure> 
+(package:flutter_tools/runner.dart:104:11)
+<asynchronous suspension>
+#19     AppContext.run.<anonymous closure> (packa
+ge:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#20     main 
+(package:flutter_tools/executable.dart:103:3)
+<asynchronous suspension>
+
+Compiling lib\main.dart for the Web...                             34.5s
+Error: Failed to compile application for the Web.
