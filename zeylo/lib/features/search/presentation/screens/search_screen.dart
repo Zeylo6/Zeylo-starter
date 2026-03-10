@@ -37,6 +37,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   @override
+  void deactivate() {
+    // Reset search query when leaving the screen so it doesn't persist
+    ref.read(searchQueryProvider.notifier).state = '';
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -110,6 +117,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         autofocus: true,
         onSubmitted: _performSearch,
         onChanged: (value) {
+          ref.read(searchQueryProvider.notifier).state = value;
           setState(() {});
         },
         style: AppTypography.bodyMedium,
@@ -131,6 +139,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ? GestureDetector(
                   onTap: () {
                     _controller.clear();
+                    ref.read(searchQueryProvider.notifier).state = '';
                     setState(() {});
                   },
                   child: Padding(
