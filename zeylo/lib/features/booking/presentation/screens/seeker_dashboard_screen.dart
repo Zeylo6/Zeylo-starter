@@ -462,6 +462,19 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         'paymentStatus': 'paid',
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Notify the host
+      final activityRef = db.collection('activities').doc();
+      batch.set(activityRef, {
+        'userId': widget.booking.hostId, // The recipient is the host
+        'title': 'Payment Received! 💰',
+        'message': 'A seeker has completed the payment for "${widget.booking.experienceTitle}".',
+        'createdAt': FieldValue.serverTimestamp(),
+        'type': 'payment_received',
+        'isRead': false,
+        'bookingId': widget.booking.id,
+      });
+
       await batch.commit();
 
       if (mounted) {
