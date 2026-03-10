@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -272,6 +273,42 @@ class ProfileScreen extends ConsumerWidget {
                     context.push('/business-registration');
                   },
                 ),
+              // Host Route
+              if (currentUserData?.role == UserRole.host)
+                ListTile(
+                  leading: const Icon(Icons.home_work_outlined, color: AppColors.primary),
+                  title: const Text('Host Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.push('/host-dashboard', extra: {
+                      'hostId': currentUserData?.uid,
+                      'hostName': currentUserData?.displayName ?? 'Host',
+                      'hostPhotoUrl': currentUserData?.photoUrl,
+                      'isSuperhost': false,
+                    });
+                  },
+                ),
+              // Developer/Admin - Clear Bookings
+              ListTile(
+                leading: const Icon(Icons.delete_sweep, color: AppColors.error),
+                title: const Text('Clear All Bookings (Dev)', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  try {
+                    final snapshot = await FirebaseFirestore.instance.collection('bookings').get();
+                    for (var doc in snapshot.docs) {
+                      await doc.reference.delete();
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All bookings cleared successfully.')));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to clear bookings: $e')));
+                    }
+                  }
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.settings_outlined),
                 title: const Text('Settings'),

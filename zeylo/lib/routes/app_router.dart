@@ -28,6 +28,8 @@ import '../features/booking/presentation/screens/booking_screen.dart';
 // Host
 import '../features/host/presentation/screens/host_dashboard_screen.dart';
 import '../features/host/presentation/screens/earnings_screen.dart';
+import '../features/host/presentation/screens/create_experience_screen.dart';
+import '../features/host/presentation/screens/host_calendar_screen.dart';
 
 // Mystery
 import '../features/mystery/presentation/screens/create_mystery_screen.dart';
@@ -59,10 +61,14 @@ import '../features/profile/presentation/screens/followers_screen.dart';
 import '../features/profile/presentation/screens/following_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
 
+// Notifications
+import '../features/notifications/presentation/screens/notifications_screen.dart';
+
 // Map Discovery
 import '../features/map_discovery/presentation/screens/join_experience_screen.dart';
 import '../features/map_discovery/presentation/screens/live_experience_screen.dart';
 import '../features/map_discovery/presentation/screens/map_screen.dart';
+
 
 // Reviews
 import '../features/reviews/presentation/screens/rate_host_screen.dart';
@@ -176,18 +182,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
+          // Home route (Default)
           GoRoute(
             path: '/home',
             builder: (context, state) => const HomeScreen(),
           ),
+          
+          // Discover route
           GoRoute(
             path: '/discover',
             builder: (context, state) => const MapScreen(),
           ),
+          
+          // Explore route
           GoRoute(
             path: '/explore',
             builder: (context, state) => const ExploreScreen(),
           ),
+          
+          // Profile route
           GoRoute(
             path: '/profile',
             builder: (context, state) {
@@ -197,6 +210,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 isCurrentUser: true,
               );
             },
+          ),
+
+          // Notifications route
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
           ),
           // Admin Dashboard route
           GoRoute(
@@ -208,6 +227,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/business-registration',
             builder: (context, state) => const BusinessRegistrationScreen(),
+          ),
+          // Host Dashboard route
+          GoRoute(
+            path: '/host-dashboard',
+            builder: (context, state) {
+              // HostDashboardScreen requires host details passed via extra.
+              final extra = state.extra as Map<String, dynamic>?;
+              return HostDashboardScreen(
+                hostId: extra?['hostId'] ?? '',
+                hostName: extra?['hostName'] ?? '',
+                hostPhotoUrl: extra?['hostPhotoUrl'],
+                isSuperhost: extra?['isSuperhost'] ?? false,
+              );
+            },
+          ),
+          // Create Experience route
+          GoRoute(
+            path: '/create-experience',
+            builder: (context, state) => const CreateExperienceScreen(),
+          ),
+          // Host Calendar route
+          GoRoute(
+            path: '/host-calendar',
+            builder: (context, state) => const HostCalendarScreen(),
           ),
         ],
       ),
@@ -515,6 +558,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       if (location.startsWith('/discover')) return 1;
       if (location.startsWith('/explore')) return 2;
       if (location.startsWith('/profile')) return 3;
+      if (location.startsWith('/notifications')) return 4;
       return 0;
     }
 
@@ -531,6 +575,9 @@ class _MainScaffoldState extends State<MainScaffold> {
           break;
         case 3:
           context.go('/profile');
+          break;
+        case 4:
+          context.go('/notifications');
           break;
       }
     }
@@ -561,6 +608,11 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_none_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Notifications',
           ),
         ],
       ),

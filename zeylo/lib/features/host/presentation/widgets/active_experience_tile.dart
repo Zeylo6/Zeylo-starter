@@ -11,12 +11,14 @@ class ActiveExperienceTile extends StatelessWidget {
   final String title;
   final String? thumbnailUrl;
   final VoidCallback? onEditPressed;
+  final VoidCallback? onDeletePressed;
 
   const ActiveExperienceTile({
     required this.experienceId,
     required this.title,
     this.thumbnailUrl,
     this.onEditPressed,
+    this.onDeletePressed,
     super.key,
   });
 
@@ -91,6 +93,11 @@ class ActiveExperienceTile extends StatelessWidget {
               ],
             ),
           ),
+          if (onDeletePressed != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: onDeletePressed,
+            ),
         ],
       ),
     );

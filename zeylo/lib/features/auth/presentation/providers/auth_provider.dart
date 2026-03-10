@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/datasources/firebase_auth_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../data/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/google_sign_in_usecase.dart';
 import '../../domain/usecases/sign_in_usecase.dart';
@@ -72,10 +74,24 @@ final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
 });
 
-/// Current user provider - fetches current user from database
-final currentUserProvider = FutureProvider<UserEntity?>((ref) async {
-  final repository = ref.watch(authRepositoryProvider);
-  return repository.getCurrentUser();
+/// Current user provider - fetches real-time current user from database
+final currentUserProvider = StreamProvider<UserEntity?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) {
+      if (user == null) return Stream.value(null);
+      return FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots()
+          .map((doc) {
+        if (!doc.exists) return null;
+        return UserModel.fromFirestore(doc.data() ?? {}, doc.id);
+      });
+    },
+    loading: () => const Stream.empty(),
+    error: (_, __) => Stream.value(null),
+  );
 });
 
 /// Is logged in provider

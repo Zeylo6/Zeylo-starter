@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/experience_card.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/category_chip_list.dart';
@@ -43,6 +45,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isHost = currentUserAsync.value?.role == UserRole.host;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -91,6 +96,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          if (isHost) ...[
+            FloatingActionButton.extended(
+              heroTag: 'create_experience',
+              onPressed: () {
+                context.push('/create-experience');
+              },
+              backgroundColor: AppColors.success,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Create Experience',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
           FloatingActionButton.extended(
             heroTag: 'create_chain',
             onPressed: () {
