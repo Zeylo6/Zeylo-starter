@@ -9,60 +9,83 @@ import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/theme/app_typography.dart';
 import 'package:intl/intl.dart';
 
-class AdminReportsTab extends StatelessWidget {
+class AdminReportsTab extends StatefulWidget {
   const AdminReportsTab({super.key});
 
   @override
+  State<AdminReportsTab> createState() => _AdminReportsTabState();
+}
+
+class _AdminReportsTabState extends State<AdminReportsTab> {
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'User Reports',
-            style: AppTypography.headlineMedium
-                .copyWith(fontWeight: FontWeight.w800),
-          ),
-          SizedBox(height: AppSpacing.sm),
-          Text(
-            'Monitor and manage platform moderation reports',
-            style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.textSecondary),
-          ),
-          SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  border: Border.all(color: AppColors.error.withOpacity(0.5)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded,
-                        size: 16, color: AppColors.error),
-                    SizedBox(width: 8),
-                    Text('Pending Review',
-                        style: TextStyle(
-                            color: AppColors.error,
-                            fontWeight: FontWeight.bold)),
-                  ],
-                ),
+    return DefaultTabController(
+      length: 2,
+      child: Padding(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'User Reports',
+              style: AppTypography.headlineMedium
+                  .copyWith(fontWeight: FontWeight.w800),
+            ),
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              'Monitor and manage platform moderation reports',
+              style: AppTypography.bodyMedium
+                  .copyWith(color: AppColors.textSecondary),
+            ),
+            SizedBox(height: AppSpacing.xl),
+            
+            // Tab Bar
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
-            ],
-          ),
-          SizedBox(height: AppSpacing.lg),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('reports')
-                  .where('status', isEqualTo: 'pending')
-                  .snapshots(),
-              builder: (context, snapshot) {
+              child: TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  color: AppColors.primary,
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: AppColors.textSecondary,
+                tabs: const [
+                  Tab(text: 'Pending Review'),
+                  Tab(text: 'Monitoring'),
+                ],
+              ),
+            ),
+            
+            SizedBox(height: AppSpacing.lg),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildReportList('pending'),
+                  _buildReportList('action_taken'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportList(String status) {
+    final isMonitoring = status == 'action_taken';
+    final primaryColor = isMonitoring ? Colors.indigo : AppColors.error;
+    
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('reports')
+          .where('status', isEqualTo: status)
+          .snapshots(),
+      builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -89,13 +112,21 @@ class AdminReportsTab extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.check_circle_outline,
-                            size: 60, color: AppColors.success),
+                        Icon(
+                          isMonitoring ? Icons.verified_user_outlined : Icons.check_circle_outline,
+                          size: 60, 
+                          color: isMonitoring ? Colors.indigo : AppColors.success
+                        ),
                         const SizedBox(height: AppSpacing.md),
-                        Text('All clear!', style: AppTypography.titleLarge),
-                        Text('No pending reports to review.',
-                            style: AppTypography.bodyMedium
-                                .copyWith(color: AppColors.textSecondary)),
+                        Text(
+                          isMonitoring ? 'No users in monitoring' : 'All clear!', 
+                          style: AppTypography.titleLarge
+                        ),
+                        Text(
+                          isMonitoring ? 'Records will appear here after a warning is issued.' : 'No pending reports to review.',
+                          style: AppTypography.bodyMedium
+                                .copyWith(color: AppColors.textSecondary)
+                        ),
                       ],
                     ),
                   );
@@ -128,15 +159,17 @@ class AdminReportsTab extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: primaryColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: primaryColor.withOpacity(0.2)),
                                   ),
                                   child: Text(
                                     data['reporterRole']
                                             ?.toString()
                                             .toUpperCase() ??
                                         'UNKNOWN',
-                                    style: const TextStyle(
+                                    style: TextStyle(
+                                        color: primaryColor,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600),
                                   ),
@@ -149,15 +182,17 @@ class AdminReportsTab extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: primaryColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: primaryColor.withOpacity(0.2)),
                                   ),
                                   child: Text(
                                     data['reportedRole']
                                             ?.toString()
                                             .toUpperCase() ??
                                         'UNKNOWN',
-                                    style: const TextStyle(
+                                    style: TextStyle(
+                                        color: primaryColor,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600),
                                   ),
@@ -229,27 +264,74 @@ class AdminReportsTab extends StatelessWidget {
                               ),
                               SizedBox(height: AppSpacing.md),
                             ],
+
+                            // History Tag for Monitoring
+                            if (isMonitoring) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.history, size: 14, color: Colors.indigo),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Last Action: ${data['actionType'] == 'warning_email' ? 'Warning Sent' : 'Restricted'}',
+                                      style: const TextStyle(
+                                        color: Colors.indigo,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    if (data['updatedAt'] != null)
+                                      Text(
+                                        DateFormat.yMMMd().format((data['updatedAt'] as Timestamp).toDate()),
+                                        style: TextStyle(color: Colors.indigo.withOpacity(0.6), fontSize: 10),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: AppSpacing.md),
+                            ],
+
                             const Divider(height: 32),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                TextButton(
-                                  onPressed: () =>
-                                      _dismissReport(context, doc.id),
-                                  child: Text('Dismiss',
-                                      style: TextStyle(
-                                          color: AppColors.textSecondary)),
-                                ),
+                                if (!isMonitoring)
+                                  TextButton(
+                                    onPressed: () =>
+                                        _dismissReport(context, doc.id),
+                                    child: Text('Dismiss',
+                                        style: TextStyle(
+                                            color: AppColors.textSecondary)),
+                                  ),
+                                if (isMonitoring)
+                                  TextButton.icon(
+                                    onPressed: () => _deleteReport(context, doc.id),
+                                    icon: const Icon(Icons.delete_outline, size: 18),
+                                    label: const Text('Delete'),
+                                    style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                  ),
                                 SizedBox(width: AppSpacing.sm),
                                 ElevatedButton.icon(
                                   onPressed: () =>
-                                      _takeActionDialog(context, doc.id, data),
-                                  icon: const Icon(Icons.gavel_rounded,
-                                      size: 18, color: Colors.white),
-                                  label: const Text('Take Action',
-                                      style: TextStyle(color: Colors.white)),
+                                      _showActionSheet(context, doc.id, data, isMonitoring),
+                                  icon: Icon(
+                                    isMonitoring ? Icons.verified_rounded : Icons.gavel_rounded,
+                                    size: 18, 
+                                    color: Colors.white
+                                  ),
+                                  label: Text(
+                                    isMonitoring ? 'Management' : 'Take Action',
+                                    style: const TextStyle(color: Colors.white)
+                                  ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.error,
+                                    backgroundColor: primaryColor,
                                     shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(
                                             AppRadius.md)),
@@ -264,11 +346,7 @@ class AdminReportsTab extends StatelessWidget {
                   },
                 );
               },
-            ),
-          ),
-        ],
-      ),
-    );
+        );
   }
 
   Future<void> _dismissReport(BuildContext context, String reportId) async {
@@ -292,41 +370,184 @@ class AdminReportsTab extends StatelessWidget {
     }
   }
 
-  void _takeActionDialog(
-      BuildContext context, String reportId, Map<String, dynamic> reportData) {
-    showDialog(
+  Future<void> _deleteReport(BuildContext context, String reportId) async {
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-          title: const Text('Take Action Against User'),
-          content: const Text(
-            'Select the disciplinary action to take. For now, "Send Warning Email" will simulate sending an email and push a notification warning to the user.',
+        title: const Text('Delete Report?'),
+        content: const Text('This will permanently remove the record from monitoring.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true), 
+            child: const Text('Delete', style: TextStyle(color: AppColors.error))
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).delete();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report deleted.')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+      }
+    }
+  }
+
+  Future<void> _resolveReport(BuildContext context, String reportId) async {
+    try {
+      await FirebaseFirestore.instance.collection('reports').doc(reportId).update({
+        'status': 'resolved',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Report marked as Resolved.'),
+          backgroundColor: AppColors.success,
+        ));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      }
+    }
+  }
+
+  void _showActionSheet(BuildContext context, String reportId, Map<String, dynamic> reportData, bool isMonitoring) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () async {
+            const SizedBox(height: AppSpacing.xl),
+            Text(isMonitoring ? 'Manage Monitoring' : 'Take Disciplinary Action',
+                style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              isMonitoring 
+                ? 'Review user progress after warning or finalize the status.'
+                : 'Choose the appropriate response for this report. Action will be logged permanently.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            
+            if (!isMonitoring) ...[
+              _buildActionTile(
+                icon: Icons.alternate_email_rounded,
+                title: 'Send Warning Email',
+                subtitle: 'Notifies user of violation and moves to Monitoring.',
+                color: AppColors.error,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _executeAction(context, reportId, reportData, 'warning_email');
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
+            if (isMonitoring) ...[
+              _buildActionTile(
+                icon: Icons.check_circle_outline,
+                title: 'Mark as Resolved',
+                subtitle: 'The issue is no longer a concern. Cleared from dashboard.',
+                color: AppColors.success,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _resolveReport(context, reportId);
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
+            _buildActionTile(
+              icon: Icons.block_flipped,
+              title: 'Ban User Account',
+              subtitle: 'Permanent platform restriction. High impact action.',
+              color: Colors.black,
+              onTap: () {
                 Navigator.pop(ctx);
-                await _executeAction(
-                    context, reportId, reportData, 'warning_email');
+                _executeAction(context, reportId, reportData, 'ban_user');
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-              child: const Text('Send Warning Email',
-                  style: TextStyle(color: Colors.white)),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                await _executeAction(
-                    context, reportId, reportData, 'ban_user');
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
-              child: const Text('Ban User Account',
-                  style: TextStyle(color: Colors.white)),
+            const SizedBox(height: AppSpacing.xxl),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
             ),
-          ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                  Text(subtitle, style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
     );
   }
 
@@ -416,7 +637,7 @@ class AdminReportsTab extends StatelessWidget {
       if (context.mounted) {
         final message = actionType == 'ban_user'
             ? 'User Account Banned successfully.'
-            : 'Action executed: Warning Email & Notification sent.';
+            : 'Action executed: Report moved to Monitoring.';
         
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(message),
