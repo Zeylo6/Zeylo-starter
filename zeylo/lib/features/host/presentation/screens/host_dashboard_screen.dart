@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -402,9 +406,25 @@ class HostDashboardScreen extends ConsumerWidget {
 
   void _showEditExperienceSheet(BuildContext context, String expId, Map<String, dynamic> data) {
     final titleController = TextEditingController(text: data['title'] ?? '');
+    final shortDescController = TextEditingController(text: data['shortDescription'] ?? '');
     final descController = TextEditingController(text: data['description'] ?? '');
     final priceController = TextEditingController(text: (data['price'] ?? 0).toString());
+    final durationController = TextEditingController(text: (data['duration'] ?? 0).toString());
+    final maxGuestsController = TextEditingController(text: (data['maxGuests'] ?? 0).toString());
+    
+    // Handle location structure
+    final location = data['location'] as Map<String, dynamic>?;
+    final addressController = TextEditingController(text: location?['address'] ?? '');
+    final cityController = TextEditingController(text: location?['city'] ?? '');
+    
+    String currentImageUrl = data['coverImage'] ?? '';
+    File? selectedImage;
     bool isSaving = false;
+    final ImagePicker picker = ImagePicker();
+
+    // Cloudinary credentials (same as CreateExperienceScreen)
+    const cloudName = 'deukwmcoi';
+    const uploadPreset = 'Zeylo_images';
 
     showModalBottomSheet(
       context: context,
@@ -416,88 +436,200 @@ class HostDashboardScreen extends ConsumerWidget {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
-            return Padding(
+            Future<void> pickImage() async {
+              try {
+                final XFile? image = await picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 1080,
+                  maxHeight: 1080,
+                  imageQuality: 85,
+                );
+                if (image != null) {
+                  setSheetState(() => selectedImage = File(image.path));
+                }
+              } catch (e) {
+                debugPrint("Picker error: $e");
+              }
+            }
+
+            Future<String?> uploadToCloudinary() async {
+              if (selectedImage == null) return currentImageUrl;
+              try {
+                final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+                final request = http.MultipartRequest('POST', url)
+                  ..fields['upload_preset'] = uploadPreset
+                  ..files.add(await http.MultipartFile.fromPath('file', selectedImage!.path));
+
+                final response = await request.send();
+                final responseData = await response.stream.toBytes();
+                final responseString = String.fromCharCodes(responseData);
+                final jsonMap = jsonDecode(responseString);
+
+                if (response.statusCode == 200) {
+                  return jsonMap['secure_url'];
+                }
+                return null;
+              } catch (e) {
+                debugPrint("Upload error: $e");
+                return null;
+              }
+            }
+
+            return Container(
+              height: MediaQuery.of(ctx).size.height * 0.85,
               padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 AppSpacing.lg,
                 AppSpacing.lg,
                 MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.lg,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text('Edit Experience', style: AppTypography.titleLarge),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(sheetContext),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: priceController,
-                    decoration: const InputDecoration(labelText: 'Price (USD)', prefixText: '\$'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isSaving
-                          ? null
-                          : () async {
-                              setSheetState(() => isSaving = true);
-                              try {
-                                await FirebaseFirestore.instance
-                                    .collection('experiences')
-                                    .doc(expId)
-                                    .update({
-                                  'title': titleController.text.trim(),
-                                  'description': descController.text.trim(),
-                                  'price': double.tryParse(priceController.text.trim()) ?? 0,
-                                  'updatedAt': FieldValue.serverTimestamp(),
-                                });
-                                if (context.mounted) {
-                                  Navigator.pop(sheetContext);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Experience updated successfully!')),
-                                  );
-                                }
-                              } catch (e) {
-                                setSheetState(() => isSaving = false);
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to save: $e')),
-                                  );
-                                }
-                              }
-                            },
-                      child: isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Save Changes'),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text('Edit Experience', style: AppTypography.titleLarge),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(sheetContext),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    // Image Picker Logic
+                    GestureDetector(
+                      onTap: pickImage,
+                      child: Container(
+                        width: double.infinity,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: selectedImage != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                child: Image.file(selectedImage!, fit: BoxFit.cover),
+                              )
+                            : (currentImageUrl.isNotEmpty
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(AppRadius.md),
+                                    child: Image.network(currentImageUrl, fit: BoxFit.cover),
+                                  )
+                                : const Center(child: Icon(Icons.add_a_photo, size: 40, color: AppColors.textSecondary))),
+                      ),
+                    ),
+                    const Center(child: Text('Tap to change photo', style: TextStyle(fontSize: 12, color: Colors.grey))),
+                    const SizedBox(height: AppSpacing.md),
+
+                    _buildEditField(titleController, 'Experience Title'),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildEditField(shortDescController, 'Short Description'),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildEditField(descController, 'Full Description', maxLines: 5),
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    Row(
+                      children: [
+                        Expanded(child: _buildEditField(priceController, 'Price (USD)', isNumber: true)),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(child: _buildEditField(durationController, 'Duration (mins)', isNumber: true)),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildEditField(maxGuestsController, 'Max Guests', isNumber: true),
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    Text('Location', style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildEditField(addressController, 'Street Address'),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildEditField(cityController, 'City'),
+                    
+                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                        ),
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                setSheetState(() => isSaving = true);
+                                try {
+                                  // 1. Upload new image if selected
+                                  final finalImageUrl = await uploadToCloudinary();
+                                  if (finalImageUrl == null && selectedImage != null) {
+                                    throw Exception("Image upload failed");
+                                  }
+
+                                  // 2. Update Firestore
+                                  await FirebaseFirestore.instance
+                                      .collection('experiences')
+                                      .doc(expId)
+                                      .update({
+                                    'title': titleController.text.trim(),
+                                    'shortDescription': shortDescController.text.trim(),
+                                    'description': descController.text.trim(),
+                                    'price': double.tryParse(priceController.text.trim()) ?? 0,
+                                    'duration': int.tryParse(durationController.text.trim()) ?? 0,
+                                    'maxGuests': int.tryParse(maxGuestsController.text.trim()) ?? 0,
+                                    'coverImage': finalImageUrl,
+                                    'images': [finalImageUrl], // Resetting images list for now
+                                    'location.address': addressController.text.trim(),
+                                    'location.city': cityController.text.trim(),
+                                    'updatedAt': FieldValue.serverTimestamp(),
+                                  });
+
+                                  if (context.mounted) {
+                                    Navigator.pop(sheetContext);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Experience updated successfully!')),
+                                    );
+                                  }
+                                } catch (e) {
+                                  setSheetState(() => isSaving = false);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Failed to save: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                        child: isSaving
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+                ),
               ),
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildEditField(TextEditingController controller, String label, {int maxLines = 1, bool isNumber = false}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
     );
   }
 }
