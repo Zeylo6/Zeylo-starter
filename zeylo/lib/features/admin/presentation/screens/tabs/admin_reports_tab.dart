@@ -316,6 +316,16 @@ class AdminReportsTab extends StatelessWidget {
               child: const Text('Send Warning Email',
                   style: TextStyle(color: Colors.white)),
             ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await _executeAction(
+                    context, reportId, reportData, 'ban_user');
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+              child: const Text('Ban User Account',
+                  style: TextStyle(color: Colors.white)),
+            ),
           ]),
     );
   }
@@ -362,40 +372,54 @@ class AdminReportsTab extends StatelessWidget {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // 4. Send actual warning email via backend
+      // 4. Call backend for specific action
       try {
         final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
         if (idToken != null) {
+          final endpoint = actionType == 'ban_user' 
+              ? '/api/admin/ban-user'
+              : '/api/admin/send-warning-email';
+          
+          final body = actionType == 'ban_user'
+              ? {
+                  'targetUserId': reportedUserId,
+                  'reason': reportData['reason'] ?? 'Policy violation',
+                }
+              : {
+                  'reportedUserId': reportedUserId,
+                  'reason': reportData['reason'] ?? 'Policy violation',
+                  'details': reportData['details'] ?? '',
+                };
+
           final response = await http
               .post(
-                Uri.parse('$_backendUrl/api/admin/send-warning-email'),
+                Uri.parse('$_backendUrl$endpoint'),
                 headers: {
                   'Content-Type': 'application/json',
                   'Authorization': 'Bearer $idToken',
                 },
-                body: jsonEncode({
-                  'reportedUserId': reportedUserId,
-                  'reason': reportData['reason'] ?? 'Policy violation',
-                  'details': reportData['details'] ?? '',
-                }),
+                body: jsonEncode(body),
               )
               .timeout(const Duration(seconds: 15));
 
           if (response.statusCode == 200) {
-            debugPrint('Warning email sent successfully');
+            debugPrint('$actionType executed successfully on backend');
           } else {
             debugPrint(
-                'Email API responded with error: ${response.statusCode} - ${response.body}');
+                'Backend API responded with error: ${response.statusCode} - ${response.body}');
           }
         }
-      } catch (emailError) {
-        // Don't fail the entire action if just the email fails
-        debugPrint('Email sending failed (non-critical): $emailError');
+      } catch (backendError) {
+        debugPrint('Backend call failed: $backendError');
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Action executed: Warning Email & Notification sent.'),
+        final message = actionType == 'ban_user'
+            ? 'User Account Banned successfully.'
+            : 'Action executed: Warning Email & Notification sent.';
+        
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(message),
           backgroundColor: AppColors.success,
         ));
       }

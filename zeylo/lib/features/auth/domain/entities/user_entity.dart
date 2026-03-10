@@ -56,6 +56,12 @@ class UserEntity {
   /// User settings/preferences
   final Map<String, dynamic> settings;
 
+  /// Whether the user is banned
+  final bool isBanned;
+
+  /// The reason for the ban
+  final String? banReason;
+
   const UserEntity({
     required this.uid,
     required this.email,
@@ -73,6 +79,8 @@ class UserEntity {
     this.fcmToken,
     this.favorites = const [],
     this.settings = const {},
+    this.isBanned = false,
+    this.banReason,
   });
 
   /// Create a copy of this user entity with some fields replaced
@@ -93,6 +101,8 @@ class UserEntity {
     String? fcmToken,
     List<String>? favorites,
     Map<String, dynamic>? settings,
+    bool? isBanned,
+    String? banReason,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -111,6 +121,8 @@ class UserEntity {
       fcmToken: fcmToken ?? this.fcmToken,
       favorites: favorites ?? this.favorites,
       settings: settings ?? this.settings,
+      isBanned: isBanned ?? this.isBanned,
+      banReason: banReason ?? this.banReason,
     );
   }
 

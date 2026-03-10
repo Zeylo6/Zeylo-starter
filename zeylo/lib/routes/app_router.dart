@@ -12,6 +12,7 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../features/auth/presentation/screens/verify_success_screen.dart';
+import '../features/auth/presentation/screens/banned_screen.dart';
 
 // Onboarding
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -141,6 +142,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         if (!isEmailVerified && !isVerificationRoute && !isPublicAuthRoute) {
           return '/verify-email';
         }
+
+        // Check for ban status
+        final userEntity = ref.watch(currentUserProvider).value;
+        if (userEntity != null && userEntity.isBanned) {
+          if (location != '/banned') {
+            return '/banned';
+          }
+        } else if (location == '/banned') {
+          // If not banned but on banned screen, go home
+          return '/home';
+        }
       }
 
       return null;
@@ -176,6 +188,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/verify-success',
         builder: (context, state) => const VerifySuccessScreen(),
+      ),
+      GoRoute(
+        path: '/banned',
+        builder: (context, state) {
+          final user = ref.read(currentUserProvider).value;
+          return BannedScreen(reason: user?.banReason);
+        },
       ),
 
       // Main app with bottom navigation
