@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -11,6 +12,7 @@ import '../providers/profile_provider.dart';
 import '../widgets/past_experience_tile.dart';
 import '../widgets/photo_grid.dart';
 import '../widgets/profile_header.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 
 /// User profile screen
 class ProfileScreen extends ConsumerWidget {
@@ -68,6 +70,10 @@ class ProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     UserProfileEntity profile,
   ) {
+    // Read the current user model persistently loaded from Firestore
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserData = currentUserAsync.value;
+    
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,6 +83,19 @@ class ProfileScreen extends ConsumerWidget {
             profile: profile,
             onEditPressed: isCurrentUser ? onEditPressed : null,
           ),
+          
+          // Debug Role Display
+          if (isCurrentUser)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  'DEBUG: Your current role is "${currentUserData?.role.name ?? 'unknown'}"',
+                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            
           const Divider(height: 1),
 
           // Posts section
@@ -223,6 +242,9 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showMoreMenu(BuildContext context, WidgetRef ref) {
+    final currentUserAsync = ref.read(currentUserProvider);
+    final currentUserData = currentUserAsync.value;
+
     showModalBottomSheet(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -230,6 +252,63 @@ class ProfileScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isCurrentUser) ...[
+              // Admin Route
+              if (currentUserData?.role == UserRole.admin)
+                ListTile(
+                  leading: const Icon(Icons.admin_panel_settings, color: AppColors.primary),
+                  title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.push('/admin-dashboard');
+                  },
+                ),
+              // Business Route
+              if (currentUserData?.role == UserRole.business)
+                ListTile(
+                  leading: const Icon(Icons.storefront, color: AppColors.primary),
+                  title: const Text('Business Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    // For now, mapping this to the registration/management screen
+                    context.push('/business-registration');
+                  },
+                ),
+              // Host Route
+              if (currentUserData?.role == UserRole.host)
+                ListTile(
+                  leading: const Icon(Icons.home_work_outlined, color: AppColors.primary),
+                  title: const Text('Host Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.push('/host-dashboard', extra: {
+                      'hostId': currentUserData?.uid,
+                      'hostName': currentUserData?.displayName ?? 'Host',
+                      'hostPhotoUrl': currentUserData?.photoUrl,
+                      'isSuperhost': false,
+                    });
+                  },
+                ),
+              // Developer/Admin - Clear Bookings
+              ListTile(
+                leading: const Icon(Icons.delete_sweep, color: AppColors.error),
+                title: const Text('Clear All Bookings (Dev)', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  try {
+                    final snapshot = await FirebaseFirestore.instance.collection('bookings').get();
+                    for (var doc in snapshot.docs) {
+                      await doc.reference.delete();
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All bookings cleared successfully.')));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to clear bookings: $e')));
+                    }
+                  }
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.settings_outlined),
                 title: const Text('Settings'),
@@ -281,3 +360,4 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
+

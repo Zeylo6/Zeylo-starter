@@ -6,6 +6,6 @@ const verifyToken = require('../middleware/auth');
 router.get('/health', (req, res) => res.status(200).send('OK'));
 
 // Using verifyToken to protect the surprise generation endpoint
-router.post('/surprises/generate', surprisesController.generateSurprise);
+router.post('/surprises/generate', verifyToken, surprisesController.generateSurprise);
 
 module.exports = router;
