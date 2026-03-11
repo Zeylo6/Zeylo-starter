@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/mood_entity.dart';
+import '../../../../core/services/ai_service.dart';
+import '../../../chain/presentation/providers/chain_provider.dart' show aiServiceProvider;
 
 /// State for mood selection
 class MoodState {
@@ -69,7 +71,9 @@ class MoodState {
 
 /// Mood state notifier
 class MoodNotifier extends StateNotifier<MoodState> {
-  MoodNotifier() : super(const MoodState());
+  final AIService aiService;
+  
+  MoodNotifier({required this.aiService}) : super(const MoodState());
 
   /// Select a predefined mood
   void selectPredefinedMood(String mood) {
@@ -95,13 +99,20 @@ class MoodNotifier extends StateNotifier<MoodState> {
   }
 
   /// Enhance description with AI
-  void _enhanceDescription() {
-    // TODO: Call AI service to enhance description
-    // For now, just append some text
-    state = state.copyWith(
-      enhancedDescription:
-          '${state.description} This experience will be perfect for your mood!',
-    );
+  Future<void> _enhanceDescription() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final enhanced = await (aiService as dynamic).enhanceText(state.description, 'mood');
+      state = state.copyWith(
+        enhancedDescription: enhanced,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        error: 'Failed to enhance mood description',
+        isLoading: false,
+      );
+    }
   }
 
   /// Set location preference
@@ -157,7 +168,8 @@ class MoodNotifier extends StateNotifier<MoodState> {
 /// Mood provider
 final moodProvider =
     StateNotifierProvider<MoodNotifier, MoodState>((ref) {
-  return MoodNotifier();
+  final aiService = ref.watch(aiServiceProvider);
+  return MoodNotifier(aiService: aiService);
 });
 
 /// Mood matches provider

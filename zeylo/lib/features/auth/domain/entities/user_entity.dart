@@ -6,6 +6,14 @@ enum UserRole {
   admin,
 }
 
+/// Verification status for host applications
+enum HostVerificationStatus {
+  unverified,
+  pending,
+  verified,
+  rejected,
+}
+
 /// User entity representing a user in the Zeylo application
 class UserEntity {
   /// Unique identifier for the user
@@ -31,6 +39,9 @@ class UserEntity {
 
   /// The user's role, determining permissions and app behavior
   final UserRole role;
+
+  /// The host's verification status
+  final HostVerificationStatus hostVerificationStatus;
 
   /// Whether the user's email is verified
   final bool isVerified;
@@ -71,6 +82,7 @@ class UserEntity {
     this.bio,
     this.location,
     this.role = UserRole.seeker,
+    this.hostVerificationStatus = HostVerificationStatus.unverified,
     this.isVerified = false,
     required this.createdAt,
     this.followersCount = 0,
@@ -93,6 +105,7 @@ class UserEntity {
     String? bio,
     Map<String, String>? location,
     UserRole? role,
+    HostVerificationStatus? hostVerificationStatus,
     bool? isVerified,
     DateTime? createdAt,
     int? followersCount,
@@ -113,6 +126,8 @@ class UserEntity {
       bio: bio ?? this.bio,
       location: location ?? this.location,
       role: role ?? this.role,
+      hostVerificationStatus:
+          hostVerificationStatus ?? this.hostVerificationStatus,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
       followersCount: followersCount ?? this.followersCount,

@@ -59,6 +59,9 @@ class ExperienceCard extends StatefulWidget {
   /// Optional title for the experience
   final String? title;
 
+  /// Whether the host is an officially verified host
+  final bool isHostVerified;
+
   /// Rating value (1-5)
   final double? rating;
 
@@ -95,6 +98,7 @@ class ExperienceCard extends StatefulWidget {
     this.ratingCount,
     this.isFavorite = false,
     this.matchPercentage,
+    this.isHostVerified = false,
     this.height = 320,
     this.width,
     this.onTap,
@@ -276,11 +280,25 @@ class _ExperienceCardState extends State<ExperienceCard> {
         const SizedBox(width: AppSpacing.sm),
         // Host name
         Expanded(
-          child: Text(
-            widget.hostName,
-            style: AppTypography.titleMedium,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  widget.hostName,
+                  style: AppTypography.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (widget.isHostVerified) ...[
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.verified, 
+                  color: AppColors.primary, 
+                  size: 16
+                ),
+              ],
+            ],
           ),
         ),
         // Rating badge

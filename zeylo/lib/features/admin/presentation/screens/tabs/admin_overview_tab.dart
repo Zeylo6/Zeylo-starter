@@ -4,6 +4,7 @@ import '../../../../../core/theme/app_radius.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/theme/app_typography.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminOverviewTab extends StatelessWidget {
   const AdminOverviewTab({super.key});
@@ -39,13 +40,17 @@ class AdminOverviewTab extends StatelessWidget {
                       color: Colors.blue)),
               SizedBox(width: AppSpacing.md),
               Expanded(
-                  child: _MetricCard(
-                      title: 'Active Experiences',
-                      streamQuery: FirebaseFirestore.instance
-                          .collection('experiences')
-                          .snapshots(),
-                      icon: Icons.explore_rounded,
-                      color: Colors.green)),
+                  child: InkWell(
+                    onTap: () => context.push('/admin/experiences'),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    child: _MetricCard(
+                        title: 'Active Experiences',
+                        streamQuery: FirebaseFirestore.instance
+                            .collection('experiences')
+                            .snapshots(),
+                        icon: Icons.explore_rounded,
+                        color: Colors.green),
+                  )),
             ],
           ),
           const SizedBox(height: AppSpacing.md),

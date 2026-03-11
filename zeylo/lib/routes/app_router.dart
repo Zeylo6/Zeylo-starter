@@ -91,7 +91,12 @@ import '../features/favorites/presentation/screens/favorites_screen.dart';
 
 // Admin & Business
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../features/admin/presentation/screens/admin_experiences_screen.dart';
 import '../features/business/presentation/screens/business_registration_screen.dart';
+
+// Host Verification
+import '../features/host_verification/presentation/screens/host_verification_screen.dart';
+import '../features/host_verification/presentation/screens/steps/pending_step.dart';
 
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -240,6 +245,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/admin-dashboard',
             builder: (context, state) => const AdminDashboardScreen(),
           ),
+          
+          // Admin Experiences route
+          GoRoute(
+            path: '/admin/experiences',
+            builder: (context, state) => const AdminExperiencesScreen(),
+          ),
 
           // Business Registration route
           GoRoute(
@@ -264,6 +275,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/create-experience',
             builder: (context, state) => const CreateExperienceScreen(),
+          ),
+          // Host Verification routes
+          GoRoute(
+            path: '/host-verification',
+            builder: (context, state) => const HostVerificationScreen(),
+          ),
+          GoRoute(
+            path: '/host-verification-pending',
+            builder: (context, state) => const HostVerificationPendingScreen(),
           ),
           // Host Calendar route
           GoRoute(

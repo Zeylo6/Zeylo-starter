@@ -11,6 +11,11 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../features/chain/presentation/providers/chain_provider.dart'; // Contains aiServiceProvider
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/location_picker.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CreateExperienceScreen extends ConsumerStatefulWidget {
   const CreateExperienceScreen({super.key});
@@ -33,6 +38,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
   bool _isLoading = false;
   bool _isAIEnhancing = false;
+  LatLng? _selectedLatLng;
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
@@ -70,10 +76,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     setState(() => _isAIEnhancing = true);
     try {
       final aiService = ref.read(aiServiceProvider);
-      final prompt =
-          "Make this experience description sound highly professional, extremely exciting, and incredibly immersive for a premium discovery app. Return ONLY the enhanced description without conversational padding: $currentDesc";
-
-      final enhancedDesc = await aiService.enhancePrompt(prompt);
+      final enhancedDesc = await aiService.enhanceText(currentDesc, 'host_experience');
 
       if (mounted) {
         setState(() {
@@ -188,6 +191,9 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
       final docRef = FirebaseFirestore.instance.collection('experiences').doc();
       final experienceId = docRef.id;
 
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final isHostVerified = userDoc.data()?['hostVerificationStatus'] == 'verified';
+
       // Upload to Cloudinary first if an image is selected
       String? finalImageUrl;
       if (_selectedImage != null) {
@@ -212,6 +218,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         'hostId': user.uid,
         'hostName': user.displayName ?? 'Zeylo Host',
         'hostPhotoUrl': user.photoURL ?? '',
+        'isHostVerified': isHostVerified,
         'category': 'Activities',
         'subcategory': 'General',
         'images': [finalImageUrl],
@@ -224,7 +231,9 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
           'address': address,
           'city': city,
           'country': 'Sri Lanka',
-          'geoPoint': {'latitude': 6.9271, 'longitude': 79.8612},
+          'geoPoint': _selectedLatLng != null 
+            ? {'latitude': _selectedLatLng!.latitude, 'longitude': _selectedLatLng!.longitude}
+            : {'latitude': 6.9271, 'longitude': 79.8612},
         },
         'includes': [],
         'requirements': [],
@@ -254,6 +263,8 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
   @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(currentUserProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -262,8 +273,79 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
+      body: userAsync.when(
+        data: (user) {
+          if (user == null || user.hostVerificationStatus != HostVerificationStatus.verified) {
+            return _buildVerificationRequiredView(context, user?.hostVerificationStatus);
+          }
+          return _buildForm(context);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => const Center(child: Text('Error loading user data')),
+      ),
+    );
+  }
+
+  Widget _buildVerificationRequiredView(BuildContext context, HostVerificationStatus? status) {
+    String title = 'Verification Required';
+    String message = 'You must verify your identity before you can create an experience listing.';
+    String actionParams = '/host-verification';
+    String actionLabel = 'Start Verification';
+
+    if (status == HostVerificationStatus.pending) {
+      title = 'Verification Pending';
+      message = 'Your identity documents are currently under review. We will notify you once approved.';
+      actionParams = '/host-verification-pending';
+      actionLabel = 'View Status';
+    } else if (status == HostVerificationStatus.rejected) {
+      title = 'Verification Rejected';
+      message = 'Your previous verification attempt was rejected. Please review our policies and try again.';
+      actionLabel = 'Try Again';
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Icon(Icons.gpp_bad_outlined, size: 80, color: AppColors.error),
+            const SizedBox(height: AppSpacing.lg),
+            Text(title, style: AppTypography.headlineMedium, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              message,
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => context.push(actionParams),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                ),
+                child: Text(actionLabel, style: AppTypography.labelLarge.copyWith(color: Colors.white)),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Go Back', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -412,6 +494,35 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
                 _addressController, 'Street Address', '123 Beach Rd'),
             const SizedBox(height: AppSpacing.sm),
             _buildTextField(_cityController, 'City', 'Weligama'),
+            const SizedBox(height: AppSpacing.md),
+            
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push<LocationResult>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ZeyloLocationPicker(),
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _addressController.text = result.address;
+                      _cityController.text = result.city;
+                      _selectedLatLng = result.latLng;
+                    });
+                  }
+                },
+                icon: const Icon(Icons.map),
+                label: Text(_selectedLatLng == null ? 'Pick on Map' : 'Change Location'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                ),
+              ),
+            ),
 
             const SizedBox(height: AppSpacing.xl),
 
@@ -435,8 +546,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildTextField(

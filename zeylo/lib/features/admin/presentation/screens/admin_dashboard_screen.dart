@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +13,7 @@ import 'tabs/admin_overview_tab.dart';
 import 'tabs/admin_users_tab.dart';
 import 'tabs/admin_reports_tab.dart';
 import 'tabs/admin_businesses_tab.dart';
+import 'tabs/admin_host_verification_tab.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -80,8 +80,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             const SizedBox(height: AppSpacing.xl),
             _buildNavItem(0, Icons.dashboard_rounded, 'Overview'),
             _buildNavItem(1, Icons.storefront_rounded, 'Business Approvals'),
-            _buildNavItem(2, Icons.flag_rounded, 'User Reports'),
-            _buildNavItem(3, Icons.people_rounded, 'User Management'),
+            _buildNavItem(2, Icons.verified_user_rounded, 'Host Approvals'),
+            _buildNavItem(3, Icons.flag_rounded, 'User Reports'),
+            _buildNavItem(4, Icons.people_rounded, 'User Management'),
             const Spacer(),
             const Divider(),
             ListTile(
@@ -134,8 +135,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       case 1:
         return const AdminBusinessesTab();
       case 2:
-        return const AdminReportsTab();
+        return const AdminHostVerificationTab();
       case 3:
+        return const AdminReportsTab();
+      case 4:
         return const AdminUsersTab();
       default:
         return const AdminOverviewTab();

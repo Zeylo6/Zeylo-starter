@@ -110,4 +110,91 @@ const banUser = async (req, res) => {
   }
 };
 
-module.exports = { sendWarning, banUser };
+/**
+ * POST /api/admin/delete-experience
+ * Body: { experienceId, hostId, title }
+ *
+ * - Verifies the caller is an admin
+ * - Deletes the experience document
+ * - Cancels related bookings
+ * - Sends notifications to host and seekers
+ */
+const deleteExperience = async (req, res) => {
+  try {
+    const callerUid = req.user.uid;
+
+    // 1. Verify the caller is an admin
+    const callerDoc = await db.collection('users').doc(callerUid).get();
+    if (!callerDoc.exists || callerDoc.data().role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Only admins can perform this action.' });
+    }
+
+    const { experienceId, hostId, title } = req.body;
+
+    if (!experienceId) {
+      return res.status(400).json({ error: 'Missing required field: experienceId' });
+    }
+
+    const batch = db.batch();
+
+    // 2. Delete Experience Document
+    const expRef = db.collection('experiences').doc(experienceId);
+    batch.delete(expRef);
+
+    // 3. Fetch all upcoming/active Bookings related to this experience
+    const bookingsSnapshot = await db.collection('bookings')
+        .where('experienceId', '==', experienceId)
+        .get();
+
+    const uniqueSeekerIds = new Set();
+
+    bookingsSnapshot.forEach(doc => {
+      batch.update(doc.ref, {
+        status: 'cancelled',
+        cancellationReason: 'Experience Removed by Administrator',
+      });
+      const data = doc.data();
+      if (data.userId) {
+        uniqueSeekerIds.add(data.userId);
+      }
+    });
+
+    // 4. Queue Notification to Host
+    if (hostId) {
+      const hostNotifRef = db.collection('activities').doc();
+      batch.set(hostNotifRef, {
+        userId: hostId,
+        type: 'admin_action',
+        title: 'Listing Removed',
+        message: `Your experience "${title || 'Untitled'}" was removed by an Administrator.`,
+        isRead: false,
+        createdAt: new Date(),
+      });
+    }
+
+    // 5. Queue Notifications to Affected Seekers
+    for (const seekerId of uniqueSeekerIds) {
+      const seekerNotifRef = db.collection('activities').doc();
+      batch.set(seekerNotifRef, {
+        userId: seekerId,
+        type: 'booking_cancelled',
+        title: 'Experience Cancelled',
+        message: `Unfortunately, the experience "${title || 'Untitled'}" was removed from the platform and your booking has been cancelled.`,
+        isRead: false,
+        createdAt: new Date(),
+      });
+    }
+
+    await batch.commit();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Experience successfully deleted and notifications dispatched.',
+    });
+  } catch (error) {
+    console.error('Error deleting experience:', error);
+    return res.status(500).json({ error: 'Failed to delete experience.', details: error.message });
+  }
+};
+
+module.exports = { sendWarning, banUser, deleteExperience };
