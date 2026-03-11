@@ -13,6 +13,7 @@ class UserModel extends UserEntity {
     super.bio,
     super.location,
     super.role,
+    super.hostVerificationStatus,
     super.isVerified,
     required super.createdAt,
     super.followersCount,
@@ -41,6 +42,19 @@ class UserModel extends UserEntity {
     return UserRole.seeker;
   }
 
+  /// Parse the host verification status from string
+  static HostVerificationStatus _parseHostVerificationStatus(
+      Map<String, dynamic> data) {
+    if (data.containsKey('hostVerificationStatus')) {
+      final statusString = data['hostVerificationStatus'] as String;
+      return HostVerificationStatus.values.firstWhere(
+        (e) => e.name == statusString,
+        orElse: () => HostVerificationStatus.unverified,
+      );
+    }
+    return HostVerificationStatus.unverified;
+  }
+
   /// Create UserModel from JSON (for API responses)
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -54,6 +68,7 @@ class UserModel extends UserEntity {
           ? Map<String, String>.from(json['location'] as Map)
           : null,
       role: _parseRole(json),
+      hostVerificationStatus: _parseHostVerificationStatus(json),
       isVerified: json['isVerified'] as bool? ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
@@ -84,6 +99,7 @@ class UserModel extends UserEntity {
           ? Map<String, String>.from(data['location'] as Map)
           : null,
       role: _parseRole(data),
+      hostVerificationStatus: _parseHostVerificationStatus(data),
       isVerified: data['isVerified'] as bool? ?? false,
       createdAt: data['createdAt'] != null
           ? (data['createdAt'] as dynamic).toDate() as DateTime
@@ -112,6 +128,7 @@ class UserModel extends UserEntity {
       'bio': bio,
       'location': location,
       'role': role.name,
+      'hostVerificationStatus': hostVerificationStatus.name,
       'isVerified': isVerified,
       'createdAt': createdAt.toIso8601String(),
       'followersCount': followersCount,
@@ -135,6 +152,7 @@ class UserModel extends UserEntity {
       'bio': bio,
       'location': location,
       'role': role.name,
+      'hostVerificationStatus': hostVerificationStatus.name,
       'isVerified': isVerified,
       'createdAt': createdAt,
       'followersCount': followersCount,
@@ -159,6 +177,7 @@ class UserModel extends UserEntity {
     String? bio,
     Map<String, String>? location,
     UserRole? role,
+    HostVerificationStatus? hostVerificationStatus,
     bool? isVerified,
     DateTime? createdAt,
     int? followersCount,
@@ -179,6 +198,8 @@ class UserModel extends UserEntity {
       bio: bio ?? this.bio,
       location: location ?? this.location,
       role: role ?? this.role,
+      hostVerificationStatus:
+          hostVerificationStatus ?? this.hostVerificationStatus,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
       followersCount: followersCount ?? this.followersCount,

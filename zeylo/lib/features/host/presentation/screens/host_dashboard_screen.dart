@@ -10,6 +10,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../providers/host_provider.dart';
 import '../widgets/active_experience_tile.dart';
 import '../widgets/host_stats_header.dart';
@@ -99,6 +101,23 @@ class HostDashboardScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: AppSpacing.md),
+
+          // Host Verification Status Section
+          Consumer(
+            builder: (context, ref, child) {
+              final userAsync = ref.watch(currentUserProvider);
+              return userAsync.when(
+                data: (user) {
+                  if (user == null || user.hostVerificationStatus == HostVerificationStatus.verified) {
+                    return const SizedBox.shrink(); // Hide if verified
+                  }
+                  return _buildVerificationBanner(context, user.hostVerificationStatus);
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              );
+            },
+          ),
 
           // Profile completion section
           _buildProfileCompletionSection(context, stats.profileCompletion),
@@ -901,6 +920,94 @@ class HostDashboardScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationBanner(BuildContext context, HostVerificationStatus status) {
+    Color bannerColor;
+    IconData iconData;
+    String title;
+    String description;
+    String actionText;
+    VoidCallback onTap;
+
+    switch (status) {
+      case HostVerificationStatus.unverified:
+        bannerColor = AppColors.error;
+        iconData = Icons.gpp_bad_outlined;
+        title = 'Verification Required';
+        description = 'You must verify your identity to list experiences and accept bookings.';
+        actionText = 'Verify Now';
+        onTap = () => context.push('/host-verification');
+        break;
+      case HostVerificationStatus.pending:
+        bannerColor = AppColors.warning;
+        iconData = Icons.hourglass_empty;
+        title = 'Verification Pending';
+        description = 'Your identity documents are currently under review by our team.';
+        actionText = 'View Status';
+        onTap = () => context.push('/host-verification-pending');
+        break;
+      case HostVerificationStatus.rejected:
+        bannerColor = AppColors.error;
+        iconData = Icons.error_outline;
+        title = 'Verification Rejected';
+        description = 'Your previous verification attempt was rejected. Please review and try again.';
+        actionText = 'Try Again';
+        onTap = () => context.push('/host-verification');
+        break;
+      case HostVerificationStatus.verified:
+        return const SizedBox.shrink(); // Handled above
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: bannerColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: bannerColor.withOpacity(0.5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(iconData, color: bannerColor, size: 28),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: bannerColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Text(
+                    actionText,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: bannerColor,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

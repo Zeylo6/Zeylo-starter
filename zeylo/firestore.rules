@@ -33,6 +33,14 @@ service cloud.firestore {
       }
     }
 
+    // Host verifications collection
+    match /host_verifications/{verificationId} {
+      // Users can read/write their own
+      allow read, create, update: if request.auth != null && request.auth.uid == verificationId;
+      // Admins can read/update all
+      allow read, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Calendar blocks collection
     match /calendar_blocks/{blockId} {
       allow read: if request.auth != null;

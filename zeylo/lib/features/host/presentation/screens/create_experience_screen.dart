@@ -11,6 +11,9 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../features/chain/presentation/providers/chain_provider.dart'; // Contains aiServiceProvider
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
+import 'package:go_router/go_router.dart';
 
 class CreateExperienceScreen extends ConsumerStatefulWidget {
   const CreateExperienceScreen({super.key});
@@ -254,6 +257,8 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
   @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(currentUserProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -262,8 +267,79 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
+      body: userAsync.when(
+        data: (user) {
+          if (user == null || user.hostVerificationStatus != HostVerificationStatus.verified) {
+            return _buildVerificationRequiredView(context, user?.hostVerificationStatus);
+          }
+          return _buildForm(context);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => const Center(child: Text('Error loading user data')),
+      ),
+    );
+  }
+
+  Widget _buildVerificationRequiredView(BuildContext context, HostVerificationStatus? status) {
+    String title = 'Verification Required';
+    String message = 'You must verify your identity before you can create an experience listing.';
+    String actionParams = '/host-verification';
+    String actionLabel = 'Start Verification';
+
+    if (status == HostVerificationStatus.pending) {
+      title = 'Verification Pending';
+      message = 'Your identity documents are currently under review. We will notify you once approved.';
+      actionParams = '/host-verification-pending';
+      actionLabel = 'View Status';
+    } else if (status == HostVerificationStatus.rejected) {
+      title = 'Verification Rejected';
+      message = 'Your previous verification attempt was rejected. Please review our policies and try again.';
+      actionLabel = 'Try Again';
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Icon(Icons.gpp_bad_outlined, size: 80, color: AppColors.error),
+            const SizedBox(height: AppSpacing.lg),
+            Text(title, style: AppTypography.headlineMedium, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              message,
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => context.push(actionParams),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                ),
+                child: Text(actionLabel, style: AppTypography.labelLarge.copyWith(color: Colors.white)),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Go Back', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -435,8 +511,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildTextField(
