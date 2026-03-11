@@ -482,6 +482,17 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                 },
               ),
               const SizedBox(height: AppSpacing.md),
+              _buildActionTile(
+                icon: Icons.alternate_email_rounded,
+                title: 'Send Warning Email Again',
+                subtitle: 'Re-issues a formal warning to the reported user.',
+                color: AppColors.error,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _executeAction(context, reportId, reportData, 'warning_email');
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
             ],
 
             _buildActionTile(
@@ -637,8 +648,9 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
       if (context.mounted) {
         final message = actionType == 'ban_user'
             ? 'User Account Banned successfully.'
-            : 'Action executed: Report moved to Monitoring.';
-        
+            : actionType == 'warning_email'
+                ? 'Warning Email Sent.'
+                : 'User Restricted successfully.';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(message),
           backgroundColor: AppColors.success,
