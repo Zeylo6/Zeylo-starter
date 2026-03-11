@@ -12,5 +12,6 @@ router.post('/surprises/generate', verifyToken, surprisesController.generateSurp
 // Admin actions
 router.post('/admin/send-warning-email', verifyToken, adminController.sendWarning);
 router.post('/admin/ban-user', verifyToken, adminController.banUser);
+router.post('/admin/delete-experience', verifyToken, adminController.deleteExperience);
 
 module.exports = router;

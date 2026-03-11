@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_radius.dart';
 import '../../../../../../core/theme/app_spacing.dart';
@@ -246,67 +248,35 @@ class _AdminExperienceDetailSheetState
     setState(() => _isDeleting = true);
 
     try {
-      final batch = FirebaseFirestore.instance.batch();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Admin not authenticated');
 
-      // 1. Delete Experience Document
-      final expRef = FirebaseFirestore.instance.collection('experiences').doc(widget.experienceId);
-      batch.delete(expRef);
+      final idToken = await user.getIdToken();
+      // Connect to the proxy Node backend
+      const String backendUrl = 'http://10.0.2.2:3000'; 
 
-      // 2. Fetch all upcoming/active Bookings related to this experience
-      final bookingsSnapshot = await FirebaseFirestore.instance
-          .collection('bookings')
-          .where('experienceId', isEqualTo: widget.experienceId)
-          .get();
+      final response = await http.post(
+        Uri.parse('$backendUrl/api/admin/delete-experience'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: json.encode({
+          'experienceId': widget.experienceId,
+          'hostId': hostId,
+          'title': widget.data['title'],
+        }),
+      );
 
-      // Track unique seekers to prevent duplicate notifications if they booked multiple times
-      final Set<String> uniqueSeekerIds = {};
-
-      for (var booking in bookingsSnapshot.docs) {
-        // We will optionally delete the booking or just mark it cancelled. Marks cancelled for history.
-        batch.update(booking.reference, {
-          'status': 'cancelled',
-          'cancellationReason': 'Experience Removed by Administrator',
-        });
-        
-        final bookingData = booking.data();
-        if (bookingData['userId'] != null) {
-          uniqueSeekerIds.add(bookingData['userId'] as String);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          Navigator.pop(context); // Close the sheet
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Experience successfully deleted and notifications dispatched.'), backgroundColor: AppColors.success),
+          );
         }
-      }
-
-      // 3. Queue Notification to Host
-      if (hostId.isNotEmpty) {
-        final hostNotifRef = FirebaseFirestore.instance.collection('activities').doc();
-        batch.set(hostNotifRef, {
-          'userId': hostId,
-          'type': 'admin_action',
-          'title': 'Listing Removed',
-          'message': 'Your experience "${widget.data['title']}" was removed by an Administrator.',
-          'isRead': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      // 4. Queue Notifications to Affected Seekers
-      for (var seekerId in uniqueSeekerIds) {
-        final seekerNotifRef = FirebaseFirestore.instance.collection('activities').doc();
-        batch.set(seekerNotifRef, {
-          'userId': seekerId,
-          'type': 'booking_cancelled',
-          'title': 'Experience Cancelled',
-          'message': 'Unfortunately, the experience "${widget.data['title']}" was removed from the platform and your booking has been cancelled.',
-          'isRead': false,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      await batch.commit();
-
-      if (mounted) {
-        Navigator.pop(context); // Close the sheet
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Experience successfully deleted and notifications dispatched.'), backgroundColor: AppColors.success),
-        );
+      } else {
+        throw Exception('Server error ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
       if (mounted) {
