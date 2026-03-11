@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class HostVerificationState {
   final int currentStep;
   final String fullName;
   final DateTime? dateOfBirth;
-  final File? nicFile;
-  final File? passportFile;
-  final File? driverLicenseFile;
+  final XFile? nicFile;
+  final XFile? passportFile;
+  final XFile? driverLicenseFile;
   final bool isSubmitting;
   final String? error;
   final bool isSuccess;
@@ -28,9 +28,9 @@ class HostVerificationState {
     int? currentStep,
     String? fullName,
     DateTime? dateOfBirth,
-    File? nicFile,
-    File? passportFile,
-    File? driverLicenseFile,
+    XFile? nicFile,
+    XFile? passportFile,
+    XFile? driverLicenseFile,
     bool? isSubmitting,
     String? error,
     bool? isSuccess,
@@ -68,7 +68,7 @@ class HostVerificationNotifier extends StateNotifier<HostVerificationState> {
     state = state.copyWith(fullName: fullName, dateOfBirth: dateOfBirth);
   }
 
-  void updateDocuments({File? nic, File? passport, File? license}) {
+  void updateDocuments({XFile? nic, XFile? passport, XFile? license}) {
     state = state.copyWith(
       nicFile: nic ?? state.nicFile,
       passportFile: passport ?? state.passportFile,

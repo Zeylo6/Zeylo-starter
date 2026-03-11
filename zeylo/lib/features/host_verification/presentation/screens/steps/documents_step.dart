@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../../core/theme/app_colors.dart';
@@ -24,18 +25,17 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     
     if (image != null) {
-      final file = File(image.path);
       final notifier = ref.read(hostVerificationFlowProvider.notifier);
       
       switch (type) {
         case 'nic':
-          notifier.updateDocuments(nic: file);
+          notifier.updateDocuments(nic: image);
           break;
         case 'passport':
-          notifier.updateDocuments(passport: file);
+          notifier.updateDocuments(passport: image);
           break;
         case 'license':
-          notifier.updateDocuments(license: file);
+          notifier.updateDocuments(license: image);
           break;
       }
     }
@@ -158,7 +158,7 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
   Widget _buildDocumentPicker({
     required String title,
     required String subtitle,
-    required File? file,
+    required XFile? file,
     required bool isRequired,
     required VoidCallback onTap,
   }) {
@@ -189,7 +189,9 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
               color: file != null ? AppColors.primary.withOpacity(0.05) : AppColors.surface,
               image: file != null
                   ? DecorationImage(
-                      image: FileImage(file),
+                      image: kIsWeb 
+                          ? NetworkImage(file.path) as ImageProvider
+                          : FileImage(File(file.path)),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
                         Colors.black.withOpacity(0.4),

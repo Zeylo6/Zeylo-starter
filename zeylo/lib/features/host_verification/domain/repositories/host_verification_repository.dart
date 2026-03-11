@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../entities/host_verification_entity.dart';
 
 abstract class HostVerificationRepository {
@@ -14,9 +14,9 @@ abstract class HostVerificationRepository {
     required String uid,
     required String fullName,
     required DateTime dateOfBirth,
-    required File nicFile,
-    File? passportFile,
-    File? driverLicenseFile,
+    required XFile nicFile,
+    XFile? passportFile,
+    XFile? driverLicenseFile,
   });
 
   /// Check if the user has a pending or approved verification request

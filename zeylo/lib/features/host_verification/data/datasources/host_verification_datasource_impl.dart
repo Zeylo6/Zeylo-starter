@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
@@ -14,9 +14,9 @@ class HostVerificationDatasourceImpl implements HostVerificationDatasource {
   Future<void> submitVerificationRequest({
     required String uid,
     required Map<String, dynamic> data,
-    required File nicFile,
-    File? passportFile,
-    File? driverLicenseFile,
+    required XFile nicFile,
+    XFile? passportFile,
+    XFile? driverLicenseFile,
   }) async {
     // 1. Upload Images to Firebase Storage
     final String nicUrl = await _uploadImage(uid, 'nic', nicFile);
@@ -52,15 +52,17 @@ class HostVerificationDatasourceImpl implements HostVerificationDatasource {
     return null;
   }
 
-  Future<String> _uploadImage(String uid, String docType, File file) async {
+  Future<String> _uploadImage(String uid, String docType, XFile file) async {
     const cloudName = 'deukwmcoi';
     const uploadPreset = 'Zeylo_images';
 
     try {
       final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+      final bytes = await file.readAsBytes();
+      
       final request = http.MultipartRequest('POST', url)
         ..fields['upload_preset'] = uploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', file.path));
+        ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: file.name));
 
       final response = await request.send();
       final responseData = await response.stream.toBytes();

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/host_verification_entity.dart';
 import '../../domain/repositories/host_verification_repository.dart';
 import '../datasources/host_verification_datasource.dart';
@@ -14,9 +14,9 @@ class HostVerificationRepositoryImpl implements HostVerificationRepository {
     required String uid,
     required String fullName,
     required DateTime dateOfBirth,
-    required File nicFile,
-    File? passportFile,
-    File? driverLicenseFile,
+    required XFile nicFile,
+    XFile? passportFile,
+    XFile? driverLicenseFile,
   }) async {
     final data = {
       'uid': uid,
