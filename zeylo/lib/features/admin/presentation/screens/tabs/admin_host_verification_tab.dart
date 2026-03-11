@@ -208,6 +208,18 @@ class _AdminHostVerificationTabState extends State<AdminHostVerificationTab> {
       'hostVerificationStatus': status,
     });
 
+    // 2.5 Sync existing experiences
+    final experiencesQuery = await FirebaseFirestore.instance
+        .collection('experiences')
+        .where('hostId', isEqualTo: hostId)
+        .get();
+        
+    for (var doc in experiencesQuery.docs) {
+      batch.update(doc.reference, {
+        'isHostVerified': status == 'verified'
+      });
+    }
+
     // 3. Send Notification to Host
     final notificationRef = FirebaseFirestore.instance.collection('activities').doc();
     batch.set(notificationRef, {

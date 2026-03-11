@@ -191,6 +191,9 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
       final docRef = FirebaseFirestore.instance.collection('experiences').doc();
       final experienceId = docRef.id;
 
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final isHostVerified = userDoc.data()?['hostVerificationStatus'] == 'verified';
+
       // Upload to Cloudinary first if an image is selected
       String? finalImageUrl;
       if (_selectedImage != null) {
@@ -215,6 +218,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         'hostId': user.uid,
         'hostName': user.displayName ?? 'Zeylo Host',
         'hostPhotoUrl': user.photoURL ?? '',
+        'isHostVerified': isHostVerified,
         'category': 'Activities',
         'subcategory': 'General',
         'images': [finalImageUrl],
