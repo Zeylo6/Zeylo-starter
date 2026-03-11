@@ -117,4 +117,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<UserProfileEntity>>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
+    try {
+      final suggestions = await _datasource.getSuggestedUsers(currentUserId, limit: limit);
+      return Right(suggestions);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }
