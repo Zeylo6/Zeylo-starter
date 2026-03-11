@@ -8,6 +8,7 @@ import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_radius.dart';
 import '../../../../../../core/theme/app_spacing.dart';
 import '../../../../../../core/theme/app_typography.dart';
+import '../../../../../../core/config/app_config.dart';
 
 class AdminExperienceDetailSheet extends StatefulWidget {
   final String experienceId;
@@ -253,7 +254,7 @@ class _AdminExperienceDetailSheetState
 
       final idToken = await user.getIdToken();
       // Connect to the proxy Node backend
-      const String backendUrl = 'http://10.0.2.2:3000'; 
+      final String backendUrl = AppConfig.baseUrl; 
 
       final response = await http.post(
         Uri.parse('$backendUrl/api/admin/delete-experience'),
