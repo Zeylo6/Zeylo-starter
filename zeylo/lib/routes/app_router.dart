@@ -91,6 +91,7 @@ import '../features/favorites/presentation/screens/favorites_screen.dart';
 
 // Admin & Business
 import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../features/admin/presentation/screens/admin_experiences_screen.dart';
 import '../features/business/presentation/screens/business_registration_screen.dart';
 
 // Host Verification
@@ -243,6 +244,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin-dashboard',
             builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          
+          // Admin Experiences route
+          GoRoute(
+            path: '/admin/experiences',
+            builder: (context, state) => const AdminExperiencesScreen(),
           ),
 
           // Business Registration route
