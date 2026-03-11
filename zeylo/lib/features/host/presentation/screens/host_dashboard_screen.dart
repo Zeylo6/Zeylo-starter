@@ -18,6 +18,7 @@ import '../widgets/host_stats_header.dart';
 import '../widgets/performance_section.dart';
 import '../widgets/pending_booking_tile.dart';
 import '../../../../features/booking/presentation/widgets/report_sheet.dart';
+import '../../../../features/home/presentation/providers/home_provider.dart';
 
 /// Host dashboard screen
 class HostDashboardScreen extends ConsumerWidget {
@@ -61,6 +62,7 @@ class HostDashboardScreen extends ConsumerWidget {
         data: (stats) => thisMonthAsync.when(
           data: (thisMonth) => _buildContent(
             context,
+            ref,
             stats,
             thisMonth,
           ),
@@ -83,6 +85,7 @@ class HostDashboardScreen extends ConsumerWidget {
 
   Widget _buildContent(
     BuildContext context,
+    WidgetRef ref,
     dynamic stats,
     double thisMonth,
   ) {
@@ -685,6 +688,10 @@ class HostDashboardScreen extends ConsumerWidget {
                                           .collection('experiences')
                                           .doc(expId)
                                           .delete();
+
+                                      // Refetch home and search
+                                      ref.invalidate(featuredExperiencesProvider);
+                                      ref.invalidate(experiencesByFilterProvider);
 
                                       // 2. Cancel active bookings & notify seekers
                                       final bookingsSnap =
