@@ -76,6 +76,7 @@ class Experience extends Equatable {
   final List<Availability> availability;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isHostVerified;
 
   const Experience({
     required this.id,
@@ -105,6 +106,7 @@ class Experience extends Equatable {
     required this.availability,
     required this.createdAt,
     required this.updatedAt,
+    this.isHostVerified = false,
   });
 
   @override
@@ -136,5 +138,6 @@ class Experience extends Equatable {
         availability,
         createdAt,
         updatedAt,
+        isHostVerified,
       ];
 }

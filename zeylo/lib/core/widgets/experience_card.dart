@@ -56,6 +56,12 @@ class ExperienceCard extends StatefulWidget {
   /// Description preview text
   final String description;
 
+  /// Optional title for the experience
+  final String? title;
+
+  /// Whether the host is an officially verified host
+  final bool isHostVerified;
+
   /// Rating value (1-5)
   final double? rating;
 
@@ -86,11 +92,13 @@ class ExperienceCard extends StatefulWidget {
     required this.location,
     required this.price,
     required this.description,
+    this.title,
     this.hostAvatarUrl,
     this.rating,
     this.ratingCount,
     this.isFavorite = false,
     this.matchPercentage,
+    this.isHostVerified = false,
     this.height = 320,
     this.width,
     this.onTap,
@@ -140,6 +148,18 @@ class _ExperienceCardState extends State<ExperienceCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Title (if provided)
+                      if (widget.title != null && widget.title!.isNotEmpty) ...[
+                        Text(
+                          widget.title!,
+                          style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
                       // Host info
                       _buildHostInfo(),
                       const SizedBox(height: AppSpacing.sm),
@@ -260,11 +280,25 @@ class _ExperienceCardState extends State<ExperienceCard> {
         const SizedBox(width: AppSpacing.sm),
         // Host name
         Expanded(
-          child: Text(
-            widget.hostName,
-            style: AppTypography.titleMedium,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  widget.hostName,
+                  style: AppTypography.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (widget.isHostVerified) ...[
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.verified, 
+                  color: AppColors.primary, 
+                  size: 16
+                ),
+              ],
+            ],
           ),
         ),
         // Rating badge

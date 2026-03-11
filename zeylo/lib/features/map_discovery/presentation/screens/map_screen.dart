@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/map_provider.dart';
 import '../widgets/map_filter_tabs.dart';
 import '../widgets/nearby_item_tile.dart';
+import 'fullscreen_map_screen.dart';
 
 /// Screen displaying nearby locations and activities on a map
 class MapScreen extends ConsumerStatefulWidget {
@@ -16,6 +19,7 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
+  GoogleMapController? _mapController;
   @override
   void initState() {
     super.initState();
@@ -23,6 +27,29 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(mapProvider.notifier).loadNearbyItems();
     });
+  }
+
+  Set<Marker> _buildMarkers(MapState state) {
+    return state.nearbyItems.map((item) {
+      return Marker(
+        markerId: MarkerId(item.id),
+        position: LatLng(item.latitude ?? 0.0, item.longitude ?? 0.0),
+        infoWindow: InfoWindow(
+          title: item.title,
+          snippet: item.subtitle,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          item.type == NearbyItemType.event
+              ? BitmapDescriptor.hueViolet
+              : item.type == NearbyItemType.people
+                  ? BitmapDescriptor.hueGreen
+                  : BitmapDescriptor.hueBlue,
+        ),
+        onTap: () {
+          _panToItem(item);
+        },
+      );
+    }).toSet();
   }
 
   @override
@@ -36,7 +63,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           // Location header
           _buildLocationHeader(context, state),
           // Map placeholder
-          _buildMapPlaceholder(),
+          _buildMapPlaceholder(state),
           // Filter tabs
           MapFilterTabs(
             filters: MapFilterType.values,
@@ -50,6 +77,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: _buildNearbyList(state),
           ),
         ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          onPressed: () {
+            ref.read(mapProvider.notifier).updateCurrentLocation();
+          },
+          backgroundColor: Colors.white,
+          child: const Icon(Icons.my_location, color: AppColors.primary),
+        ),
       ),
       bottomNavigationBar: _buildBottomBar(),
     );
@@ -107,71 +144,70 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
-  Widget _buildMapPlaceholder() {
-    return Container(
-      height: 200,
-      margin: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Map background
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F4FF),
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildMapPlaceholder(MapState state) {
+    final markers = _buildMarkers(state);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FullscreenMapScreen(
+              items: state.nearbyItems,
+              userLat: state.currentLat,
+              userLng: state.currentLng,
             ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.map,
-                    size: 48,
-                    color: AppColors.textSecondary.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'Map View',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary.withOpacity(0.5),
-                    ),
-                  ),
-                ],
+          ),
+        );
+      },
+      child: Container(
+        height: 250,
+        margin: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: GoogleMap(
+                onMapCreated: (controller) => _mapController = controller,
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(
+                      state.currentLat ?? 6.9271, state.currentLng ?? 79.8612),
+                  zoom: 14.0,
+                ),
+                markers: markers,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                // Disable map gestures so tap goes to fullscreen
+                scrollGesturesEnabled: false,
+                zoomGesturesEnabled: false,
+                tiltGesturesEnabled: false,
+                rotateGesturesEnabled: false,
               ),
             ),
-          ),
-          // Pin markers
-          Positioned(
-            left: 40,
-            top: 40,
-            child: _buildPin(Colors.purple), // Events - purple
-          ),
-          Positioned(
-            right: 30,
-            top: 60,
-            child: _buildPin(Colors.green), // People - green
-          ),
-          Positioned(
-            left: 60,
-            bottom: 40,
-            child: _buildPin(Colors.blue), // Businesses - blue
-          ),
-          Positioned(
-            right: 50,
-            bottom: 50,
-            child: _buildPin(
-              const Color(0xFFEC4899),
-              size: 12, // Current user - smaller
+            // Expand icon overlay
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black12, blurRadius: 4),
+                  ],
+                ),
+                child: const Icon(Icons.open_in_full, size: 18, color: AppColors.primary),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -227,7 +263,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
     }
 
-      return ListView(
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         if (state.routeItems.isNotEmpty) ...[
@@ -243,12 +279,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               padding: const EdgeInsets.only(bottom: AppSpacing.lg),
               child: NearbyItemTile(
                 item: item,
-                onTap: () {
-                  // Navigate to item details
-                },
-                onActionTap: () {
-                  // Handle action
-                },
+                onTap: () => _panToItem(item),
+                onActionTap: () => _navigateToItem(item),
               ),
             ),
           const SizedBox(height: AppSpacing.lg),
@@ -265,12 +297,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             padding: const EdgeInsets.only(bottom: AppSpacing.lg),
             child: NearbyItemTile(
               item: item,
-              onTap: () {
-                // Navigate to item details
-              },
-              onActionTap: () {
-                // Handle action
-              },
+              onTap: () => _panToItem(item),
+              onActionTap: () => _navigateToItem(item),
             ),
           ),
       ],
@@ -313,5 +341,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         ),
       ),
     );
+  }
+
+  /// Pan the mini-map to an item's location
+  void _panToItem(NearbyItem item) {
+    if (item.latitude != null && item.longitude != null && _mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(item.latitude!, item.longitude!),
+          16,
+        ),
+      );
+    }
+  }
+
+  /// Launch Google Maps navigation to a specific item
+  Future<void> _navigateToItem(NearbyItem item) async {
+    if (item.latitude == null || item.longitude == null) return;
+    final url =
+        'https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}&travelmode=driving';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
   }
 }

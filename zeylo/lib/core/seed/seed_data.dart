@@ -123,7 +123,7 @@ class SeedData {
         'bio':
             'Sri Lankan culture expert passionate about sharing authentic local experiences and traditions with travelers from around the world.',
         'location': {'city': 'Colombo', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 365))),
@@ -143,7 +143,7 @@ class SeedData {
         'bio':
             'Adventure guide with over 10 years of experience leading hiking and trekking expeditions across Sri Lanka\'s breathtaking landscapes.',
         'location': {'city': 'Kandy', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 450))),
@@ -163,7 +163,7 @@ class SeedData {
         'bio':
             'Professional cooking instructor specializing in traditional Sri Lankan cuisine. Love sharing family recipes and culinary secrets.',
         'location': {'city': 'Galle', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 380))),
@@ -183,7 +183,7 @@ class SeedData {
         'bio':
             'Accomplished nature photographer and conservationist dedicated to capturing and preserving Sri Lanka\'s incredible biodiversity.',
         'location': {'city': 'Ella', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 300))),
@@ -203,7 +203,7 @@ class SeedData {
         'bio':
             'Professional surfing instructor with a passion for ocean sports and teaching beginners to experienced surfers in Mirissa.',
         'location': {'city': 'Mirissa', 'country': 'Sri Lanka'},
-        'isHost': true,
+        'role': 'host',
         'isVerified': true,
         'createdAt':
             Timestamp.fromDate(DateTime.now().subtract(Duration(days: 250))),
@@ -1329,7 +1329,7 @@ class SeedData {
       'bio':
           'Passionate traveler and adventure seeker exploring local experiences around the world.',
       'location': {'city': 'Colombo', 'country': 'Sri Lanka'},
-      'isHost': false,
+      'role': 'seeker',
       'isVerified': true,
       'createdAt':
           Timestamp.fromDate(DateTime.now().subtract(Duration(days: 120))),
@@ -1479,7 +1479,8 @@ class SeedData {
         'id': 'cat_1',
         'name': 'Adventure',
         'icon': 'assets/icons/adventure.svg',
-        'imageUrl': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
         'order': 1,
         'isActive': true,
       },
@@ -1487,7 +1488,8 @@ class SeedData {
         'id': 'cat_2',
         'name': 'Food & Drink',
         'icon': 'assets/icons/food.svg',
-        'imageUrl': 'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
         'order': 2,
         'isActive': true,
       },
@@ -1495,7 +1497,8 @@ class SeedData {
         'id': 'cat_3',
         'name': 'Arts & Culture',
         'icon': 'assets/icons/arts.svg',
-        'imageUrl': 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
         'order': 3,
         'isActive': true,
       },
@@ -1503,7 +1506,8 @@ class SeedData {
         'id': 'cat_4',
         'name': 'Nightlife',
         'icon': 'assets/icons/nightlife.svg',
-        'imageUrl': 'https://images.unsplash.com/photo-1514991643008-d4d4d6f5f2db?w=800',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1514991643008-d4d4d6f5f2db?w=800',
         'order': 4,
         'isActive': true,
       },
@@ -1511,7 +1515,8 @@ class SeedData {
         'id': 'cat_5',
         'name': 'Wellness',
         'icon': 'assets/icons/wellness.svg',
-        'imageUrl': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
         'order': 5,
         'isActive': true,
       },
@@ -1519,12 +1524,13 @@ class SeedData {
         'id': 'cat_6',
         'name': 'Nature',
         'icon': 'assets/icons/nature.svg',
-        'imageUrl': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+        'imageUrl':
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
         'order': 6,
         'isActive': true,
       },
     ].map((json) {
-      // Create a mock CategoryModel by using a little bit of casting magic 
+      // Create a mock CategoryModel by using a little bit of casting magic
       // since the class isn't imported here, the caller will handle it.
       // But actually, it's safer to just return the json and let the caller parse it,
       // wait, the caller expects `List<CategoryModel>`, so I must import it.
@@ -1538,17 +1544,20 @@ class SeedData {
       {
         'id': 'exp_1',
         'title': 'Hanthana Hiking Adventure',
-        'description': 'Explore the majestic Hanthana mountain range with stunning views of Kandy city.',
+        'description':
+            'Explore the majestic Hanthana mountain range with stunning views of Kandy city.',
         'shortDescription': 'Mountain hiking with panoramic views',
         'hostId': 'host_2',
         'hostName': 'Hashan Perera',
-        'hostPhotoUrl': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+        'hostPhotoUrl':
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
         'category': 'Adventure',
         'subcategory': 'hiking',
         'images': [
           'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
         ],
-        'coverImage': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+        'coverImage':
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
         'price': 45.0,
         'currency': 'USD',
         'duration': 3,
@@ -1567,23 +1576,27 @@ class SeedData {
         'isActive': true,
         'tags': ['hiking'],
         'availability': [],
-        'createdAt': DateTime.now().subtract(Duration(days: 60)).toIso8601String(),
+        'createdAt':
+            DateTime.now().subtract(Duration(days: 60)).toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       },
       {
         'id': 'exp_2',
         'title': 'Traditional Cooking Experience',
-        'description': 'Learn authentic Sri Lankan cooking from a professional instructor. Prepare traditional dishes like curry, lamprais, and hoppers in a home kitchen setting.',
+        'description':
+            'Learn authentic Sri Lankan cooking from a professional instructor. Prepare traditional dishes like curry, lamprais, and hoppers in a home kitchen setting.',
         'shortDescription': 'Cook and enjoy traditional Sri Lankan dishes',
         'hostId': 'host_3',
         'hostName': 'Amali Fernando',
-        'hostPhotoUrl': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
+        'hostPhotoUrl':
+            'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
         'category': 'Food & Drink',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
         ],
-        'coverImage': 'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
+        'coverImage':
+            'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
         'price': 45.0,
         'currency': 'USD',
         'duration': 2,
@@ -1602,23 +1615,27 @@ class SeedData {
         'isActive': true,
         'tags': ['cooking'],
         'availability': [],
-        'createdAt': DateTime.now().subtract(Duration(days: 75)).toIso8601String(),
+        'createdAt':
+            DateTime.now().subtract(Duration(days: 75)).toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       },
       {
         'id': 'exp_3',
         'title': 'Sunset Kayaking',
-        'description': 'Paddle through serene waters at sunset on a guided kayak tour. Experience breathtaking views, observe wildlife, and enjoy the tranquility of nature.',
+        'description':
+            'Paddle through serene waters at sunset on a guided kayak tour. Experience breathtaking views, observe wildlife, and enjoy the tranquility of nature.',
         'shortDescription': 'Kayak adventure at golden hour',
         'hostId': 'host_2',
         'hostName': 'Hashan Perera',
-        'hostPhotoUrl': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+        'hostPhotoUrl':
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
         'category': 'Adventure',
         'subcategory': 'kayaking',
         'images': [
           'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
         ],
-        'coverImage': 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
+        'coverImage':
+            'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
         'price': 55.0,
         'currency': 'USD',
         'duration': 2,
@@ -1637,7 +1654,8 @@ class SeedData {
         'isActive': true,
         'tags': ['kayaking'],
         'availability': [],
-        'createdAt': DateTime.now().subtract(Duration(days: 55)).toIso8601String(),
+        'createdAt':
+            DateTime.now().subtract(Duration(days: 55)).toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       },
     ];

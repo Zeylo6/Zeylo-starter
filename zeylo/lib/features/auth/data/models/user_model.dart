@@ -12,7 +12,8 @@ class UserModel extends UserEntity {
     super.phoneNumber,
     super.bio,
     super.location,
-    super.isHost,
+    super.role,
+    super.hostVerificationStatus,
     super.isVerified,
     required super.createdAt,
     super.followersCount,
@@ -21,7 +22,38 @@ class UserModel extends UserEntity {
     super.fcmToken,
     super.favorites,
     super.settings,
+    super.isBanned,
+    super.banReason,
   });
+
+  /// Parse the role from string, with fallback to old 'isHost' boolean if present
+  static UserRole _parseRole(Map<String, dynamic> data) {
+    if (data.containsKey('role')) {
+      final roleString = data['role'] as String;
+      return UserRole.values.firstWhere(
+        (e) => e.name == roleString,
+        orElse: () => UserRole.seeker,
+      );
+    }
+    // Backward compatibility for old documents
+    if (data['isHost'] == true) {
+      return UserRole.host;
+    }
+    return UserRole.seeker;
+  }
+
+  /// Parse the host verification status from string
+  static HostVerificationStatus _parseHostVerificationStatus(
+      Map<String, dynamic> data) {
+    if (data.containsKey('hostVerificationStatus')) {
+      final statusString = data['hostVerificationStatus'] as String;
+      return HostVerificationStatus.values.firstWhere(
+        (e) => e.name == statusString,
+        orElse: () => HostVerificationStatus.unverified,
+      );
+    }
+    return HostVerificationStatus.unverified;
+  }
 
   /// Create UserModel from JSON (for API responses)
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -35,7 +67,8 @@ class UserModel extends UserEntity {
       location: json['location'] != null
           ? Map<String, String>.from(json['location'] as Map)
           : null,
-      isHost: json['isHost'] as bool? ?? false,
+      role: _parseRole(json),
+      hostVerificationStatus: _parseHostVerificationStatus(json),
       isVerified: json['isVerified'] as bool? ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
@@ -48,6 +81,8 @@ class UserModel extends UserEntity {
           ? List<String>.from(json['favorites'] as List)
           : [],
       settings: json['settings'] as Map<String, dynamic>? ?? {},
+      isBanned: json['isBanned'] as bool? ?? false,
+      banReason: json['banReason'] as String?,
     );
   }
 
@@ -63,7 +98,8 @@ class UserModel extends UserEntity {
       location: data['location'] != null
           ? Map<String, String>.from(data['location'] as Map)
           : null,
-      isHost: data['isHost'] as bool? ?? false,
+      role: _parseRole(data),
+      hostVerificationStatus: _parseHostVerificationStatus(data),
       isVerified: data['isVerified'] as bool? ?? false,
       createdAt: data['createdAt'] != null
           ? (data['createdAt'] as dynamic).toDate() as DateTime
@@ -76,6 +112,8 @@ class UserModel extends UserEntity {
           ? List<String>.from(data['favorites'] as List)
           : [],
       settings: data['settings'] as Map<String, dynamic>? ?? {},
+      isBanned: data['isBanned'] as bool? ?? false,
+      banReason: data['banReason'] as String?,
     );
   }
 
@@ -89,7 +127,8 @@ class UserModel extends UserEntity {
       'phoneNumber': phoneNumber,
       'bio': bio,
       'location': location,
-      'isHost': isHost,
+      'role': role.name,
+      'hostVerificationStatus': hostVerificationStatus.name,
       'isVerified': isVerified,
       'createdAt': createdAt.toIso8601String(),
       'followersCount': followersCount,
@@ -98,6 +137,8 @@ class UserModel extends UserEntity {
       'fcmToken': fcmToken,
       'favorites': favorites,
       'settings': settings,
+      'isBanned': isBanned,
+      'banReason': banReason,
     };
   }
 
@@ -110,7 +151,8 @@ class UserModel extends UserEntity {
       'phoneNumber': phoneNumber,
       'bio': bio,
       'location': location,
-      'isHost': isHost,
+      'role': role.name,
+      'hostVerificationStatus': hostVerificationStatus.name,
       'isVerified': isVerified,
       'createdAt': createdAt,
       'followersCount': followersCount,
@@ -119,6 +161,8 @@ class UserModel extends UserEntity {
       'fcmToken': fcmToken,
       'favorites': favorites,
       'settings': settings,
+      'isBanned': isBanned,
+      'banReason': banReason,
     };
   }
 
@@ -132,7 +176,8 @@ class UserModel extends UserEntity {
     String? phoneNumber,
     String? bio,
     Map<String, String>? location,
-    bool? isHost,
+    UserRole? role,
+    HostVerificationStatus? hostVerificationStatus,
     bool? isVerified,
     DateTime? createdAt,
     int? followersCount,
@@ -141,6 +186,8 @@ class UserModel extends UserEntity {
     String? fcmToken,
     List<String>? favorites,
     Map<String, dynamic>? settings,
+    bool? isBanned,
+    String? banReason,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -150,7 +197,9 @@ class UserModel extends UserEntity {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       bio: bio ?? this.bio,
       location: location ?? this.location,
-      isHost: isHost ?? this.isHost,
+      role: role ?? this.role,
+      hostVerificationStatus:
+          hostVerificationStatus ?? this.hostVerificationStatus,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
       followersCount: followersCount ?? this.followersCount,
@@ -159,6 +208,8 @@ class UserModel extends UserEntity {
       fcmToken: fcmToken ?? this.fcmToken,
       favorites: favorites ?? this.favorites,
       settings: settings ?? this.settings,
+      isBanned: isBanned ?? this.isBanned,
+      banReason: banReason ?? this.banReason,
     );
   }
 }

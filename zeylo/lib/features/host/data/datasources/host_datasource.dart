@@ -28,13 +28,28 @@ class HostFirestoreDatasource implements HostDatasource {
 
   @override
   Future<HostStatsModel> getHostStats(String hostId) async {
-    final doc = await _firestore
-        .collection(_hostsCollection)
-        .doc(hostId)
-        .get();
+    final doc = await _firestore.collection(_hostsCollection).doc(hostId).get();
 
     if (!doc.exists) {
-      throw Exception('Host not found');
+      // Auto-initialize host stats for new hosts
+      final defaultStats = HostStatsModel(
+        hostId: hostId,
+        earnings: 0.0,
+        averageRating: 0.0,
+        responseRate: 100.0,
+        acceptanceRate: 100.0,
+        totalBookings: 0,
+        profileCompletion: 0,
+        superHostBadgeStatus: 0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await _firestore.collection(_hostsCollection).doc(hostId).set(
+            defaultStats.toFirestore(),
+          );
+
+      return defaultStats;
     }
 
     return HostStatsModel.fromFirestore(
@@ -79,7 +94,8 @@ class HostFirestoreDatasource implements HostDatasource {
           .collection(_hostsCollection)
           .doc(hostId)
           .collection(_earningsCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
           .get();
 
@@ -108,8 +124,10 @@ class HostFirestoreDatasource implements HostDatasource {
           .collection(_hostsCollection)
           .doc(hostId)
           .collection(_earningsCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(currentMonthStart))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(currentMonthEnd))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(currentMonthStart))
+          .where('date',
+              isLessThanOrEqualTo: Timestamp.fromDate(currentMonthEnd))
           .get();
 
       double currentTotal = 0;
@@ -122,8 +140,10 @@ class HostFirestoreDatasource implements HostDatasource {
           .collection(_hostsCollection)
           .doc(hostId)
           .collection(_earningsCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(previousMonthStart))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(previousMonthEnd))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(previousMonthStart))
+          .where('date',
+              isLessThanOrEqualTo: Timestamp.fromDate(previousMonthEnd))
           .get();
 
       double previousTotal = 0;

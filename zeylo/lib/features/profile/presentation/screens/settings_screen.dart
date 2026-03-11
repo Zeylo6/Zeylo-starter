@@ -124,6 +124,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
+          
+          // --- Admin Section (Only for Admins) ---
+          Consumer(
+            builder: (context, ref, child) {
+              final userAsync = ref.watch(currentUserProvider);
+              return userAsync.when(
+                data: (user) {
+                  if (user != null && user.role == 'admin') {
+                    return _buildSection(
+                      title: 'Administration',
+                      children: [
+                        _buildSettingTile(
+                          icon: Icons.admin_panel_settings_outlined,
+                          title: 'Admin Dashboard',
+                          subtitle: 'Manage platform content',
+                          titleColor: AppColors.primary,
+                          onTap: () {
+                            context.push('/admin-dashboard');
+                          },
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              );
+            },
+          ),
+          
           // Account Actions Section
           _buildSection(
             title: 'Account',

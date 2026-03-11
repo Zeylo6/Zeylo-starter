@@ -82,6 +82,7 @@ class FirebaseAuthDataSource {
     required String email,
     required String phone,
     required String password,
+    String role = 'seeker',
   }) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
@@ -104,9 +105,10 @@ class FirebaseAuthDataSource {
         createdAt: DateTime.now(),
       );
 
-      await _firestore.collection('users').doc(user.uid).set(
-            userModel.toFirestore(),
-          );
+      final data = userModel.toFirestore();
+      data['role'] = role; // Persist selected role
+
+      await _firestore.collection('users').doc(user.uid).set(data);
 
       // Send Firebase email verification link
       await user.sendEmailVerification();
@@ -178,7 +180,8 @@ class FirebaseAuthDataSource {
         throw Exception('Google sign in cancelled');
       }
       if (e.code == 'popup-blocked') {
-        throw Exception('Popup blocked. Allow popups for this site and try again.');
+        throw Exception(
+            'Popup blocked. Allow popups for this site and try again.');
       }
       throw _handleFirebaseAuthException(e);
     } catch (e) {

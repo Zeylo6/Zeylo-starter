@@ -24,6 +24,9 @@ class MysteryRevealScreen extends ConsumerStatefulWidget {
   final String experienceTitle;
   final String experienceImage;
   final String experienceDescription;
+  final String? teaserDescription;
+  final String? vibe;
+  final String? preparationNotes;
   final String dateTime;
   final String duration;
   final String location;
@@ -33,6 +36,9 @@ class MysteryRevealScreen extends ConsumerStatefulWidget {
     required this.experienceTitle,
     required this.experienceImage,
     required this.experienceDescription,
+    this.teaserDescription,
+    this.vibe,
+    this.preparationNotes,
     required this.dateTime,
     required this.duration,
     required this.location,
@@ -141,13 +147,59 @@ class _MysteryRevealScreenState extends ConsumerState<MysteryRevealScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Title
-                          Text(
-                            widget.experienceTitle,
-                            style: AppTypography.headlineSmall.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.experienceTitle,
+                                  style: AppTypography.headlineSmall.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (widget.vibe != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondary.withOpacity(0.1),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.sm),
+                                  ),
+                                  child: Text(
+                                    widget.vibe!,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.secondary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           const SizedBox(height: AppSpacing.md),
+
+                          // AI Teaser or Description
+                          if (widget.teaserDescription != null) ...[
+                            Text(
+                              'AI Teaser:',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.teaserDescription!,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textPrimary,
+                                fontStyle: FontStyle.italic,
+                                height: 1.6,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            const Divider(),
+                            const SizedBox(height: AppSpacing.md),
+                          ],
 
                           // Description
                           Text(
@@ -158,6 +210,48 @@ class _MysteryRevealScreenState extends ConsumerState<MysteryRevealScreen> {
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
+
+                          // Preparation Notes
+                          if (widget.preparationNotes != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.05),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
+                                border: Border.all(
+                                    color: AppColors.primary.withOpacity(0.1)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.info_outline,
+                                          size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Preparation Notes',
+                                        style: AppTypography.labelMedium
+                                            .copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.preparationNotes!,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
 
                           // Info rows
                           _buildInfoRow('Date & Time', widget.dateTime),

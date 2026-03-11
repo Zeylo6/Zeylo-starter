@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/ai_service.dart';
-import '../../../../core/services/mock_ai_service_impl.dart';
+import '../../../../core/services/api_ai_service.dart';
 import '../../data/datasources/chain_datasource.dart';
 import '../../data/repositories/chain_repository_impl.dart';
 import '../../domain/entities/chain_entity.dart';
@@ -17,7 +17,7 @@ final firebaseFirestoreProvider = Provider((ref) {
 
 /// AI Service provider
 final aiServiceProvider = Provider<AIService>((ref) {
-  return MockAIServiceImpl();
+  return ApiAiService();
 });
 
 /// Chain data source provider
@@ -420,6 +420,10 @@ class EditChainNotifier extends StateNotifier<EditChainState> {
         return true;
       },
     );
+  }
+
+  void setLoading(bool loading) {
+    state = state.copyWith(isLoading: loading);
   }
 }
 

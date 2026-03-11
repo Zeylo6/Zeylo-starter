@@ -308,6 +308,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         imageUrl: experience.coverImage,
                         hostName: experience.hostName,
                         hostAvatarUrl: experience.hostPhotoUrl,
+                        isHostVerified: experience.isHostVerified,
                         location:
                             '${experience.location.city}, ${experience.location.country}',
                         price:
@@ -442,6 +443,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                               imageUrl: leg.experience.coverImage,
                               hostName: leg.experience.hostName,
                               hostAvatarUrl: leg.experience.hostPhotoUrl,
+                              isHostVerified: leg.experience.isHostVerified,
                               location:
                                   '${leg.experience.location.city}, ${leg.experience.location.country}',
                               price:

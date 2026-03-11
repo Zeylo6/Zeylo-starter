@@ -12,6 +12,7 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../features/auth/presentation/screens/verify_success_screen.dart';
+import '../features/auth/presentation/screens/banned_screen.dart';
 
 // Onboarding
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -28,6 +29,11 @@ import '../features/booking/presentation/screens/booking_screen.dart';
 // Host
 import '../features/host/presentation/screens/host_dashboard_screen.dart';
 import '../features/host/presentation/screens/earnings_screen.dart';
+import '../features/host/presentation/screens/create_experience_screen.dart';
+import '../features/host/presentation/screens/host_calendar_screen.dart';
+
+// Seeker
+import '../features/booking/presentation/screens/seeker_dashboard_screen.dart';
 
 // Mystery
 import '../features/mystery/presentation/screens/create_mystery_screen.dart';
@@ -59,6 +65,9 @@ import '../features/profile/presentation/screens/followers_screen.dart';
 import '../features/profile/presentation/screens/following_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
 
+// Notifications
+import '../features/notifications/presentation/screens/notifications_screen.dart';
+
 // Map Discovery
 import '../features/map_discovery/presentation/screens/join_experience_screen.dart';
 import '../features/map_discovery/presentation/screens/live_experience_screen.dart';
@@ -79,7 +88,15 @@ import '../features/search/presentation/screens/search_screen.dart';
 
 // Favorites
 import '../features/favorites/presentation/screens/favorites_screen.dart';
-import '../features/explore/presentation/screens/explore_screen.dart';
+
+// Admin & Business
+import '../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../features/admin/presentation/screens/admin_experiences_screen.dart';
+import '../features/business/presentation/screens/business_registration_screen.dart';
+
+// Host Verification
+import '../features/host_verification/presentation/screens/host_verification_screen.dart';
+import '../features/host_verification/presentation/screens/steps/pending_step.dart';
 
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -126,10 +143,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         }
 
         // If NOT verified and trying to access app routes, go to verify
-        if (!isEmailVerified &&
-            !isVerificationRoute &&
-            !isPublicAuthRoute) {
+        if (!isEmailVerified && !isVerificationRoute && !isPublicAuthRoute) {
           return '/verify-email';
+        }
+
+        // Check for ban status
+        final userEntity = ref.watch(currentUserProvider).value;
+        if (userEntity != null && userEntity.isBanned) {
+          if (location != '/banned') {
+            return '/banned';
+          }
+        } else if (location == '/banned') {
+          // If not banned but on banned screen, go home
+          return '/home';
         }
       }
 
@@ -167,23 +193,37 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/verify-success',
         builder: (context, state) => const VerifySuccessScreen(),
       ),
+      GoRoute(
+        path: '/banned',
+        builder: (context, state) {
+          final user = ref.read(currentUserProvider).value;
+          return BannedScreen(reason: user?.banReason);
+        },
+      ),
 
       // Main app with bottom navigation
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
+          // Home route (Default)
           GoRoute(
             path: '/home',
             builder: (context, state) => const HomeScreen(),
           ),
+
+          // Discover route
           GoRoute(
             path: '/discover',
             builder: (context, state) => const MapScreen(),
           ),
+
+          // Community route (navbar tab)
           GoRoute(
-            path: '/explore',
-            builder: (context, state) => const ExploreScreen(),
+            path: '/community',
+            builder: (context, state) => const CommunityScreen(),
           ),
+
+          // Profile route
           GoRoute(
             path: '/profile',
             builder: (context, state) {
@@ -193,6 +233,67 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 isCurrentUser: true,
               );
             },
+          ),
+
+          // Notifications route
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          // Admin Dashboard route
+          GoRoute(
+            path: '/admin-dashboard',
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          
+          // Admin Experiences route
+          GoRoute(
+            path: '/admin/experiences',
+            builder: (context, state) => const AdminExperiencesScreen(),
+          ),
+
+          // Business Registration route
+          GoRoute(
+            path: '/business-registration',
+            builder: (context, state) => const BusinessRegistrationScreen(),
+          ),
+          // Host Dashboard route
+          GoRoute(
+            path: '/host-dashboard',
+            builder: (context, state) {
+              // HostDashboardScreen requires host details passed via extra.
+              final extra = state.extra as Map<String, dynamic>?;
+              return HostDashboardScreen(
+                hostId: extra?['hostId'] ?? '',
+                hostName: extra?['hostName'] ?? '',
+                hostPhotoUrl: extra?['hostPhotoUrl'],
+                isSuperhost: extra?['isSuperhost'] ?? false,
+              );
+            },
+          ),
+          // Create Experience route
+          GoRoute(
+            path: '/create-experience',
+            builder: (context, state) => const CreateExperienceScreen(),
+          ),
+          // Host Verification routes
+          GoRoute(
+            path: '/host-verification',
+            builder: (context, state) => const HostVerificationScreen(),
+          ),
+          GoRoute(
+            path: '/host-verification-pending',
+            builder: (context, state) => const HostVerificationPendingScreen(),
+          ),
+          // Host Calendar route
+          GoRoute(
+            path: '/host-calendar',
+            builder: (context, state) => const HostCalendarScreen(),
+          ),
+          // Seeker Dashboard route
+          GoRoute(
+            path: '/seeker-dashboard',
+            builder: (context, state) => const SeekerDashboardScreen(),
           ),
         ],
       ),
@@ -335,11 +436,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const MoodResultsScreen(),
       ),
 
-      // Community & social routes
-      GoRoute(
-        path: '/community',
-        builder: (context, state) => const CommunityScreen(),
-      ),
+      // Social routes
       GoRoute(
         path: '/messages',
         builder: (context, state) {
@@ -497,8 +594,9 @@ class _MainScaffoldState extends State<MainScaffold> {
     int getSelectedIndex() {
       if (location.startsWith('/home')) return 0;
       if (location.startsWith('/discover')) return 1;
-      if (location.startsWith('/explore')) return 2;
+      if (location.startsWith('/community')) return 2;
       if (location.startsWith('/profile')) return 3;
+      if (location.startsWith('/notifications')) return 4;
       return 0;
     }
 
@@ -511,10 +609,13 @@ class _MainScaffoldState extends State<MainScaffold> {
           context.go('/discover');
           break;
         case 2:
-          context.go('/explore');
+          context.go('/community');
           break;
         case 3:
           context.go('/profile');
+          break;
+        case 4:
+          context.go('/notifications');
           break;
       }
     }
@@ -537,14 +638,19 @@ class _MainScaffoldState extends State<MainScaffold> {
             label: 'Discover',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.link),
-            activeIcon: Icon(Icons.link),
-            label: 'Explore',
+            icon: Icon(Icons.groups_outlined),
+            activeIcon: Icon(Icons.groups),
+            label: 'Community',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_none_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Notifications',
           ),
         ],
       ),
@@ -564,4 +670,3 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Welcome')));
 }
-

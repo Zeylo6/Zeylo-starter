@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/location_service.dart';
 
 /// Nearby item types
 enum NearbyItemType { event, people, business }
@@ -125,58 +127,112 @@ class MapNotifier extends StateNotifier<MapState> {
     _filterItems();
   }
 
-  /// Load nearby items (mock implementation)
+  /// Update current location using GPS
+  Future<void> updateCurrentLocation() async {
+    try {
+      final position = await LocationService.getCurrentPosition();
+      state = state.copyWith(
+        currentLat: position.latitude,
+        currentLng: position.longitude,
+        location: 'Current GPS Location',
+      );
+      await loadNearbyItems();
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
+
+  /// Load nearby items from Firestore
   Future<void> loadNearbyItems() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      final experiencesSnapshot = await FirebaseFirestore.instance
+          .collection('experiences')
+          .where('isActive', isEqualTo: true)
+          .get();
 
-      final mockItems = [
-        const NearbyItem(
-          id: '1',
-          title: 'Rooftop Party Tonight',
-          subtitle: 'Live music & dancing',
-          time: '8:00 PM',
-          details: '12 going',
-          type: NearbyItemType.event,
-          actionLabel: 'Join',
-          latitude: 6.9199,
-          longitude: 79.8580,
-        ),
-        const NearbyItem(
-          id: '2',
-          title: 'Emma wants company',
-          subtitle: 'Going to Mission District',
-          type: NearbyItemType.people,
-          actionLabel: 'Connect',
-          latitude: 6.9144,
-          longitude: 79.8737,
-        ),
-        const NearbyItem(
-          id: '3',
-          title: 'Luna Coffee Roasters',
-          subtitle: 'Local cafe',
-          rating: '4.8★',
-          type: NearbyItemType.business,
-          actionLabel: 'Visit',
-          latitude: 6.9060,
-          longitude: 79.8562,
-        ),
-        const NearbyItem(
-          id: '4',
-          title: 'Photography Meetup',
-          subtitle: 'Dolores Park',
-          details: '6 members',
-          type: NearbyItemType.event,
-          actionLabel: 'Join',
-          latitude: 6.9225,
-          longitude: 79.8610,
-        ),
-      ];
+      final businessesSnapshot = await FirebaseFirestore.instance
+          .collection('businesses')
+          .get();
+
+      final List<NearbyItem> items = [];
+
+      // Add experiences
+      for (var doc in experiencesSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final locRaw = data['location'];
+          Map<String, dynamic>? geo;
+
+          if (locRaw is Map<String, dynamic>) {
+            final geoRaw = locRaw['geoPoint'];
+            if (geoRaw is Map<String, dynamic>) {
+              geo = geoRaw;
+            }
+          }
+
+          if (geo != null) {
+            items.add(NearbyItem(
+              id: doc.id,
+              title: data['title'] ?? 'Experience',
+              subtitle: data['shortDescription'] ?? '',
+              type: NearbyItemType.event,
+              latitude: (geo['latitude'] as num).toDouble(),
+              longitude: (geo['longitude'] as num).toDouble(),
+              rating: '${data['averageRating'] ?? 0.0}★',
+              actionLabel: 'Details',
+            ));
+          }
+        } catch (_) {
+          // Skip malformed documents
+        }
+      }
+
+      // Add businesses
+      for (var doc in businessesSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final locRaw = data['location'];
+          Map<String, dynamic>? geo;
+
+          // New format: location is a Map with address + geoPoint
+          if (locRaw is Map<String, dynamic>) {
+            final geoRaw = locRaw['geoPoint'];
+            if (geoRaw is Map<String, dynamic>) {
+              geo = geoRaw;
+            }
+          }
+          // Old format: location is a String like "6.92, 79.86"
+          else if (locRaw is String) {
+            final parts = locRaw.split(',');
+            if (parts.length >= 2) {
+              final lat = double.tryParse(parts[0].trim());
+              final lng = double.tryParse(parts[1].trim());
+              if (lat != null && lng != null) {
+                geo = {'latitude': lat, 'longitude': lng};
+              }
+            }
+          }
+
+          if (geo != null) {
+            items.add(NearbyItem(
+              id: doc.id,
+              title: data['name'] ?? 'Business',
+              subtitle: data['enhanced_desc'] ?? '',
+              type: NearbyItemType.business,
+              latitude: (geo['latitude'] as num).toDouble(),
+              longitude: (geo['longitude'] as num).toDouble(),
+              actionLabel: 'Visit',
+            ));
+          }
+        } catch (_) {
+          // Skip malformed documents
+        }
+      }
 
       state = state.copyWith(
-        allNearbyItems: mockItems,
+        allNearbyItems: items,
         isLoading: false,
       );
       _filterItems();
