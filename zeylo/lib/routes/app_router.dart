@@ -51,6 +51,7 @@ import '../features/mood/presentation/screens/mood_results_screen.dart';
 
 // Community
 import '../features/community/presentation/screens/community_screen.dart';
+import '../features/community/presentation/screens/create_post_screen.dart';
 
 // Messaging
 import '../features/messaging/presentation/screens/message_list_screen.dart';
@@ -437,6 +438,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Social routes
+      GoRoute(
+        path: '/create-post',
+        builder: (context, state) => const CreatePostScreen(),
+      ),
       GoRoute(
         path: '/messages',
         builder: (context, state) {

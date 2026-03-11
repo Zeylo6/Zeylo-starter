@@ -40,4 +40,10 @@ abstract class ProfileRepository {
     String currentUserId,
     String targetUserId,
   );
+
+  /// Get suggested users to follow
+  Future<Either<Failure, List<UserProfileEntity>>> getSuggestedUsers(
+    String currentUserId, {
+    int limit = 10,
+  });
 }
