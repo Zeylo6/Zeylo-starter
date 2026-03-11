@@ -10,15 +10,16 @@ import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/community_provider.dart';
 import '../widgets/community_post_card.dart';
 import '../widgets/suggested_user_card.dart';
+import 'package:go_router/go_router.dart';
 
 /// Community screen displaying community posts feed
 ///
 /// Features:
 /// - Top bar with Z logo and action icons
-/// - "Community" section label
+/// - Suggested Explorers horizontal scroll
 /// - Full-width community post cards
 /// - Pull-to-refresh support
-/// - Bottom navigation visible
+/// - FAB to create a post
 class CommunityScreen extends ConsumerStatefulWidget {
   const CommunityScreen({super.key});
 
@@ -32,11 +33,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Temporarily use naming route until /create-post is added to router
-          // We will update router in a moment
-          Navigator.of(context).pushNamed('/create-post');
-        },
+        onPressed: () => context.push('/create-post'),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: AppColors.textInverse),
       ),
@@ -106,7 +103,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'Be the first to share your experience',
+                          'Be the first to share your experience!',
                           style: AppTypography.bodyMediumSecondary,
                         ),
                       ],
@@ -152,9 +149,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                   5,
                   (index) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    child: ShimmerListTile(
-                      height: 350,
-                    ),
+                    child: ShimmerListTile(height: 350),
                   ),
                 ),
               ),
@@ -179,8 +174,17 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Please try again later',
+                      error.toString(),
                       style: AppTypography.bodyMediumSecondary,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ElevatedButton(
+                      onPressed: () => ref.refresh(communityPostsProvider),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                      ),
+                      child: const Text('Retry', style: TextStyle(color: AppColors.textInverse)),
                     ),
                   ],
                 ),
@@ -215,7 +219,8 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                     scrollDirection: Axis.horizontal,
                     itemCount: suggestions.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: AppSpacing.md),
                     itemBuilder: (context, index) {
                       return SuggestedUserCard(
                         user: suggestions[index],
@@ -229,16 +234,17 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
             );
           },
           loading: () => const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
             child: ShimmerListTile(height: 190),
           ),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (error, _) => const SizedBox.shrink(),
         );
   }
 
   Future<void> _onRefresh() async {
-    ref.refresh(communityPostsProvider);
-    await Future.delayed(const Duration(seconds: 1));
+    // StreamProvider auto-updates; just give visual feedback
+    await Future.delayed(const Duration(milliseconds: 800));
   }
 
   void _toggleLike(String postId) {

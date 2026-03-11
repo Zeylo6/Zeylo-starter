@@ -4,8 +4,11 @@ import '../entities/post_entity.dart';
 
 /// Abstract repository for community feature
 abstract class CommunityRepository {
-  /// Get community posts (feed)
+  /// Get community posts (feed) — one-time fetch
   Future<Either<Failure, List<Post>>> getCommunityPosts({int limit = 20});
+
+  /// Watch community posts (feed) — real-time stream
+  Stream<List<Post>> watchCommunityPosts({int limit = 50});
 
   /// Get user's posts
   Future<Either<Failure, List<Post>>> getUserPosts(
