@@ -73,10 +73,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     setState(() => _isAIEnhancing = true);
     try {
       final aiService = ref.read(aiServiceProvider);
-      final prompt =
-          "Make this experience description sound highly professional, extremely exciting, and incredibly immersive for a premium discovery app. Return ONLY the enhanced description without conversational padding: $currentDesc";
-
-      final enhancedDesc = await aiService.enhancePrompt(prompt);
+      final enhancedDesc = await aiService.enhanceText(currentDesc, 'host_experience');
 
       if (mounted) {
         setState(() {

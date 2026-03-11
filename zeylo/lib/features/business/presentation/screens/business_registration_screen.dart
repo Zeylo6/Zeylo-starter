@@ -69,9 +69,7 @@ class _BusinessRegistrationScreenState
 
       try {
         final aiService = ref.read(aiServiceProvider);
-        final prompt =
-            "Make this local business description sound professional and exciting for a discovery app. Return ONLY the enhanced description without any conversational padding: $description";
-        enhancedDesc = await aiService.enhancePrompt(prompt);
+        enhancedDesc = await aiService.enhanceText(description, 'business_review');
       } catch (e) {
         // Silently fallback if AI enhancement fails
         enhancedDesc = description;
