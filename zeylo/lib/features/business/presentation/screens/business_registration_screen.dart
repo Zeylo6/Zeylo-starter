@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../features/chain/presentation/providers/chain_provider.dart';
+import '../../../../core/widgets/location_picker.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class BusinessRegistrationScreen extends ConsumerStatefulWidget {
   const BusinessRegistrationScreen({super.key});
@@ -17,6 +19,7 @@ class _BusinessRegistrationScreenState
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _locationController = TextEditingController();
+  LatLng? _selectedLatLng;
   bool _isLoading = false;
 
   @override
@@ -77,7 +80,12 @@ class _BusinessRegistrationScreenState
 
       await FirebaseFirestore.instance.collection('pending_businesses').add({
         'name': name,
-        'location': location,
+        'location': {
+          'address': location,
+          'geoPoint': _selectedLatLng != null 
+            ? {'latitude': _selectedLatLng!.latitude, 'longitude': _selectedLatLng!.longitude}
+            : null,
+        },
         'original_desc': description,
         'enhanced_desc':
             enhancedDesc, // Will update with Actual AI once provider is found
@@ -114,8 +122,26 @@ class _BusinessRegistrationScreenState
             const SizedBox(height: 16),
             TextField(
               controller: _locationController,
-              decoration:
-                  const InputDecoration(labelText: 'Location/Coordinates'),
+              readOnly: true,
+              onTap: () async {
+                final result = await Navigator.push<LocationResult>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ZeyloLocationPicker(title: 'Select Business Location'),
+                  ),
+                );
+                if (result != null) {
+                  setState(() {
+                    _locationController.text = result.address;
+                    _selectedLatLng = result.latLng;
+                  });
+                }
+              },
+              decoration: const InputDecoration(
+                labelText: 'Location',
+                hintText: 'Tap to pick on map',
+                suffixIcon: Icon(Icons.map_outlined),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(

@@ -1,13 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/map_provider.dart';
 import '../widgets/map_filter_tabs.dart';
 import '../widgets/nearby_item_tile.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'fullscreen_map_screen.dart';
 
 /// Screen displaying nearby locations and activities on a map
 class MapScreen extends ConsumerStatefulWidget {
@@ -44,6 +45,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ? BitmapDescriptor.hueGreen
                   : BitmapDescriptor.hueBlue,
         ),
+        onTap: () {
+          _panToItem(item);
+        },
       );
     }).toSet();
   }
@@ -73,6 +77,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: _buildNearbyList(state),
           ),
         ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          onPressed: () {
+            ref.read(mapProvider.notifier).updateCurrentLocation();
+          },
+          backgroundColor: Colors.white,
+          child: const Icon(Icons.my_location, color: AppColors.primary),
+        ),
       ),
       bottomNavigationBar: _buildBottomBar(),
     );
@@ -131,46 +145,31 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Widget _buildMapPlaceholder(MapState state) {
-    return StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('businesses').snapshots(),
-        builder: (context, snapshot) {
-          final businessDocs = snapshot.data?.docs ?? [];
-          final businessMarkers = businessDocs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            // Basic coordinate parsing from location string (e.g. "6.92, 79.86")
-            double lat = state.currentLat ?? 6.9271;
-            double lng = state.currentLng ?? 79.8612;
-            try {
-              final locStr = data['location']?.toString() ?? '';
-              final parts = locStr.split(',');
-              if (parts.length >= 2) {
-                lat = double.parse(parts[0].trim());
-                lng = double.parse(parts[1].trim());
-              }
-            } catch (_) {}
+    final markers = _buildMarkers(state);
 
-            return Marker(
-              markerId: MarkerId('biz_${doc.id}'),
-              position: LatLng(lat, lng),
-              infoWindow: InfoWindow(
-                title: data['name'] ?? 'Local Business',
-                snippet: data['enhanced_desc'] ?? 'Special offer inside!',
-              ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueGreen),
-            );
-          }).toSet();
-
-          final allMarkers = _buildMarkers(state).union(businessMarkers);
-
-          return Container(
-            height: 250, // Increased height for better visibility
-            margin: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FullscreenMapScreen(
+              items: state.nearbyItems,
+              userLat: state.currentLat,
+              userLng: state.currentLng,
             ),
-            child: ClipRRect(
+          ),
+        );
+      },
+      child: Container(
+        height: 250,
+        margin: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: GoogleMap(
                 onMapCreated: (controller) => _mapController = controller,
@@ -179,15 +178,38 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       state.currentLat ?? 6.9271, state.currentLng ?? 79.8612),
                   zoom: 14.0,
                 ),
-                markers: allMarkers,
+                markers: markers,
                 myLocationEnabled: true,
                 myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
                 mapToolbarEnabled: false,
+                // Disable map gestures so tap goes to fullscreen
+                scrollGesturesEnabled: false,
+                zoomGesturesEnabled: false,
+                tiltGesturesEnabled: false,
+                rotateGesturesEnabled: false,
               ),
             ),
-          );
-        });
+            // Expand icon overlay
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black12, blurRadius: 4),
+                  ],
+                ),
+                child: const Icon(Icons.open_in_full, size: 18, color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildPin(Color color, {double size = 16}) {
@@ -257,12 +279,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               padding: const EdgeInsets.only(bottom: AppSpacing.lg),
               child: NearbyItemTile(
                 item: item,
-                onTap: () {
-                  // Navigate to item details
-                },
-                onActionTap: () {
-                  // Handle action
-                },
+                onTap: () => _panToItem(item),
+                onActionTap: () => _navigateToItem(item),
               ),
             ),
           const SizedBox(height: AppSpacing.lg),
@@ -279,12 +297,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             padding: const EdgeInsets.only(bottom: AppSpacing.lg),
             child: NearbyItemTile(
               item: item,
-              onTap: () {
-                // Navigate to item details
-              },
-              onActionTap: () {
-                // Handle action
-              },
+              onTap: () => _panToItem(item),
+              onActionTap: () => _navigateToItem(item),
             ),
           ),
       ],
@@ -327,5 +341,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         ),
       ),
     );
+  }
+
+  /// Pan the mini-map to an item's location
+  void _panToItem(NearbyItem item) {
+    if (item.latitude != null && item.longitude != null && _mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(item.latitude!, item.longitude!),
+          16,
+        ),
+      );
+    }
+  }
+
+  /// Launch Google Maps navigation to a specific item
+  Future<void> _navigateToItem(NearbyItem item) async {
+    if (item.latitude == null || item.longitude == null) return;
+    final url =
+        'https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}&travelmode=driving';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
   }
 }

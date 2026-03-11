@@ -14,6 +14,8 @@ import '../../../../features/chain/presentation/providers/chain_provider.dart'; 
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/location_picker.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CreateExperienceScreen extends ConsumerStatefulWidget {
   const CreateExperienceScreen({super.key});
@@ -36,6 +38,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
   bool _isLoading = false;
   bool _isAIEnhancing = false;
+  LatLng? _selectedLatLng;
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
@@ -228,7 +231,9 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
           'address': address,
           'city': city,
           'country': 'Sri Lanka',
-          'geoPoint': {'latitude': 6.9271, 'longitude': 79.8612},
+          'geoPoint': _selectedLatLng != null 
+            ? {'latitude': _selectedLatLng!.latitude, 'longitude': _selectedLatLng!.longitude}
+            : {'latitude': 6.9271, 'longitude': 79.8612},
         },
         'includes': [],
         'requirements': [],
@@ -489,6 +494,35 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
                 _addressController, 'Street Address', '123 Beach Rd'),
             const SizedBox(height: AppSpacing.sm),
             _buildTextField(_cityController, 'City', 'Weligama'),
+            const SizedBox(height: AppSpacing.md),
+            
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push<LocationResult>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ZeyloLocationPicker(),
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _addressController.text = result.address;
+                      _cityController.text = result.city;
+                      _selectedLatLng = result.latLng;
+                    });
+                  }
+                },
+                icon: const Icon(Icons.map),
+                label: Text(_selectedLatLng == null ? 'Pick on Map' : 'Change Location'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                ),
+              ),
+            ),
 
             const SizedBox(height: AppSpacing.xl),
 
