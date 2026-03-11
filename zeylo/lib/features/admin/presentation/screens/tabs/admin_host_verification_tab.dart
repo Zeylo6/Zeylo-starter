@@ -208,6 +208,19 @@ class _AdminHostVerificationTabState extends State<AdminHostVerificationTab> {
       'hostVerificationStatus': status,
     });
 
+    // 3. Send Notification to Host
+    final notificationRef = FirebaseFirestore.instance.collection('activities').doc();
+    batch.set(notificationRef, {
+      'userId': hostId,
+      'title': status == 'verified' ? 'Verification Approved' : 'Verification Rejected',
+      'message': status == 'verified' 
+          ? 'Congratulations! Your host verification request has been approved. You can now host experiences.'
+          : 'Your host verification request was rejected. Reason: ${rejectionReason ?? "Please check community guidelines."}',
+      'type': 'host_verification',
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
     try {
       await batch.commit();
       if (mounted) {

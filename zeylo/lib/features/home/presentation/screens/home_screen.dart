@@ -237,6 +237,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         imageUrl: experience.coverImage,
                         hostName: experience.hostName,
                         hostAvatarUrl: experience.hostPhotoUrl,
+                        isHostVerified: experience.isHostVerified,
                         location:
                             '${experience.location.city}, ${experience.location.country}',
                         price:

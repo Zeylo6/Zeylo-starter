@@ -12,6 +12,7 @@ class UserProfileEntity extends Equatable {
   final int followingCount;
   final int postCount;
   final bool isVerified;
+  final bool isHostVerified;
   final bool isSuperhost;
   final double? averageRating;
   final int? ratingCount;
@@ -29,6 +30,7 @@ class UserProfileEntity extends Equatable {
     this.followingCount = 0,
     this.postCount = 0,
     this.isVerified = false,
+    this.isHostVerified = false,
     this.isSuperhost = false,
     this.averageRating,
     this.ratingCount,
@@ -48,6 +50,7 @@ class UserProfileEntity extends Equatable {
         followingCount,
         postCount,
         isVerified,
+        isHostVerified,
         isSuperhost,
         averageRating,
         ratingCount,
@@ -67,6 +70,7 @@ class UserProfileEntity extends Equatable {
     int? followingCount,
     int? postCount,
     bool? isVerified,
+    bool? isHostVerified,
     bool? isSuperhost,
     double? averageRating,
     int? ratingCount,
@@ -84,6 +88,7 @@ class UserProfileEntity extends Equatable {
       followingCount: followingCount ?? this.followingCount,
       postCount: postCount ?? this.postCount,
       isVerified: isVerified ?? this.isVerified,
+      isHostVerified: isHostVerified ?? this.isHostVerified,
       isSuperhost: isSuperhost ?? this.isSuperhost,
       averageRating: averageRating ?? this.averageRating,
       ratingCount: ratingCount ?? this.ratingCount,
