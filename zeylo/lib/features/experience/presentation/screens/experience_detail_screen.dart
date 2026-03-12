@@ -11,6 +11,7 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/experience_info_section.dart';
 import '../widgets/host_info_card.dart';
+import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
 
 /// Experience detail screen
 ///
@@ -117,6 +118,10 @@ class _ExperienceDetailScreenState
                                     'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
                               ),
                               const SizedBox(height: AppSpacing.xxxl),
+
+                              // Reviews Section
+                              _buildReviewsSection(context, experience.id),
+                              const SizedBox(height: 100), // padding for bottom button
                             ],
                           ),
                         ),
@@ -244,6 +249,96 @@ class _ExperienceDetailScreenState
           child: const Icon(Icons.image_not_supported),
         ),
       ),
+    );
+  }
+
+  Widget _buildReviewsSection(BuildContext context, String experienceId) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final reviewsAsync = ref.watch(experienceReviewsProvider(experienceId));
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Guest Reviews',
+              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            reviewsAsync.when(
+          data: (reviews) {
+            if (reviews.isEmpty) {
+              return Text(
+                'No reviews yet for this experience.',
+                style: AppTypography.bodyMediumSecondary,
+              );
+            }
+            return Column(
+              children: reviews.map((review) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.person, color: AppColors.primary, size: 16),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Seeker', // Masking real name unless fetched explicitly
+                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                review.rating.toStringAsFixed(1),
+                                style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      if (review.message != null && review.message!.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          review.message!,
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
+            ),
+          ],
+        );
+      },
     );
   }
 

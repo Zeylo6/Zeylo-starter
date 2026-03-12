@@ -14,11 +14,14 @@ import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../providers/host_provider.dart';
 import '../widgets/active_experience_tile.dart';
+import '../widgets/active_experience_tile.dart';
 import '../widgets/host_stats_header.dart';
 import '../widgets/performance_section.dart';
 import '../widgets/pending_booking_tile.dart';
 import '../../../../features/booking/presentation/widgets/report_sheet.dart';
 import '../../../../features/home/presentation/providers/home_provider.dart';
+import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
+import '../../../../features/booking/domain/entities/booking_entity.dart';
 
 /// Host dashboard screen
 class HostDashboardScreen extends ConsumerWidget {
@@ -232,7 +235,7 @@ class HostDashboardScreen extends ConsumerWidget {
                             );
                           },
                         );
-                      }).toList(),
+                      }).cast<Widget>().toList(),
                     );
                   },
                 ),
@@ -850,6 +853,7 @@ class HostDashboardScreen extends ConsumerWidget {
                         final date = data['date'] is Timestamp
                             ? (data['date'] as Timestamp).toDate()
                             : DateTime.now();
+                        final bool isRatedByHost = data['isRatedByHost'] == true;
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -862,8 +866,11 @@ class HostDashboardScreen extends ConsumerWidget {
                               width: 1,
                             ),
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Row(
+                                children: [
                               Container(
                                 width: 48,
                                 height: 48,
@@ -915,10 +922,60 @@ class HostDashboardScreen extends ConsumerWidget {
                                   ),
                                 ),
                               ),
+                                ],
+                              ),
+                              if (!isRatedByHost) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  // Mock booking entity for review sheet
+                                  final mockBooking = BookingEntity(
+                                    id: doc.id,
+                                    experienceId: data['experienceId'] ?? '',
+                                    experienceTitle: data['experienceTitle'] ?? 'Experience',
+                                    experienceCoverImage: '',
+                                    userId: data['userId'] ?? '',
+                                    hostId: hostId,
+                                    date: date,
+                                    startTime: data['startTime'] ?? '',
+                                    guests: data['guests'] ?? 1,
+                                    totalPrice: (data['totalPrice'] as num?)?.toDouble() ?? 0.0,
+                                    status: data['status'] ?? 'completed',
+                                    paymentStatus: data['paymentStatus'] ?? 'paid',
+                                    createdAt: DateTime.now(),
+                                    updatedAt: DateTime.now(),
+                                  );
+                                  
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (_) => RateAndReviewSheet(
+                                      booking: mockBooking,
+                                      reviewerRole: 'host',
+                                      onSuccess: () {},
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.star_outline_rounded, size: 18),
+                                label: const Text('Rate Seeker'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         );
-                      }).toList(),
+                      }).cast<Widget>().toList(),
                     );
                   },
                 ),
