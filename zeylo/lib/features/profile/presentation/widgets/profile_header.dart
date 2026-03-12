@@ -76,6 +76,8 @@ class ProfileHeader extends StatelessWidget {
             followers: profile.followerCount,
             following: profile.followingCount,
             posts: profile.postCount,
+            rating: profile.averageRating,
+            reviews: profile.ratingCount,
           ),
           const SizedBox(height: AppSpacing.md),
 

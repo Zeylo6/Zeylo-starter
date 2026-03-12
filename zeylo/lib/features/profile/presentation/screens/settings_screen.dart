@@ -6,6 +6,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 
 /// Settings screen for user preferences and account management
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -131,7 +132,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final userAsync = ref.watch(currentUserProvider);
               return userAsync.when(
                 data: (user) {
-                  if (user != null && user.role == 'admin') {
+                  if (user != null && user.role == UserRole.admin) {
                     return _buildSection(
                       title: 'Administration',
                       children: [

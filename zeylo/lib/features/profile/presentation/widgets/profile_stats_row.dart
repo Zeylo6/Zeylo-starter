@@ -8,17 +8,15 @@ class ProfileStatsRow extends StatelessWidget {
   final int followers;
   final int following;
   final int posts;
-  final VoidCallback? onFollowersPressed;
-  final VoidCallback? onFollowingPressed;
-  final VoidCallback? onPostsPressed;
+  final double? rating;
+  final int? reviews;
 
   const ProfileStatsRow({
     required this.followers,
     required this.following,
     required this.posts,
-    this.onFollowersPressed,
-    this.onFollowingPressed,
-    this.onPostsPressed,
+    this.rating,
+    this.reviews,
     super.key,
   });
 
@@ -27,64 +25,84 @@ class ProfileStatsRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _StatItem(
-          label: 'followers',
-          value: followers.toString(),
-          onPressed: onFollowersPressed,
+        _buildStatItem(
+          value: _formatNumber(followers),
+          label: 'Followers',
         ),
-        _StatItem(
-          label: 'following',
-          value: following.toString(),
-          onPressed: onFollowingPressed,
+        _buildDivider(),
+        _buildStatItem(
+          value: _formatNumber(following),
+          label: 'Following',
         ),
-        _StatItem(
+        _buildDivider(),
+        if (rating != null && reviews != null) ...[
+          _buildStatItem(
+            value: rating!.toStringAsFixed(1),
+            label: 'Rating',
+            icon: Icons.star_rounded,
+            iconColor: const Color(0xFFFFB800),
+          ),
+          _buildDivider(),
+        ],
+        _buildStatItem(
+          value: _formatNumber(posts),
           label: 'Posts',
-          value: posts.toString().padLeft(2, '0'),
-          onPressed: onPostsPressed,
         ),
       ],
     );
   }
-}
 
-/// Individual stat item
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final VoidCallback? onPressed;
-
-  const _StatItem({
-    required this.label,
-    required this.value,
-    this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Opacity(
-        opacity: onPressed != null ? 1.0 : 0.7,
-        child: Column(
+  Widget _buildStatItem({
+    required String value,
+    required String label,
+    IconData? icon,
+    Color? iconColor,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: iconColor),
+              const SizedBox(width: 4),
+            ],
             Text(
               value,
-              style: AppTypography.headlineSmall.copyWith(
+              style: AppTypography.titleMedium.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              label,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
           ],
         ),
-      ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
     );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 24,
+      color: AppColors.border,
+    );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    }
+    if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}k';
+    }
+    return number.toString();
   }
 }

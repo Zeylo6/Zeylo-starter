@@ -40,8 +40,8 @@ class UserProfileModel extends UserProfileEntity {
       isVerified: data['isVerified'] as bool? ?? false,
       isHostVerified: data['hostVerificationStatus'] == 'verified',
       isSuperhost: data['isSuperhost'] as bool? ?? false,
-      averageRating: (data['averageRating'] as num?)?.toDouble(),
-      ratingCount: data['ratingCount'] as int?,
+      averageRating: (data['stats']?['averageRating'] as num?)?.toDouble() ?? (data['averageRating'] as num?)?.toDouble(),
+      ratingCount: (data['stats']?['totalReviews'] as num?)?.toInt() ?? data['ratingCount'] as int? ?? 0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
     );
