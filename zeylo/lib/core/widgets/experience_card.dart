@@ -321,6 +321,13 @@ class _ExperienceCardState extends State<ExperienceCard> {
                   '${widget.rating}',
                   style: AppTypography.labelMedium,
                 ),
+                const SizedBox(width: 4),
+                Text(
+                  '(${widget.ratingCount})',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),

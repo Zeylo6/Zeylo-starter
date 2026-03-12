@@ -12,6 +12,7 @@ import '../../domain/entities/booking_entity.dart';
 import '../providers/booking_provider.dart';
 import '../widgets/payment_card_input.dart';
 import '../widgets/report_sheet.dart';
+import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
 
 /// Seeker Dashboard Screen — shows a seeker's bookings in 3 tabs
 class SeekerDashboardScreen extends ConsumerStatefulWidget {
@@ -285,6 +286,54 @@ class _BookingCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (type == 'past' && booking.status == 'completed' && !booking.isRatedBySeeker)
+                  Positioned(
+                    bottom: AppSpacing.sm,
+                    left: AppSpacing.sm,
+                    child: GestureDetector(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => RateAndReviewSheet(
+                            booking: booking,
+                            reviewerRole: 'seeker',
+                            onSuccess: onPaymentComplete, // Reuse to refresh list
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star_rounded,
+                                size: 16, color: Colors.white),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Rate Now',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
             ],
           ),
 

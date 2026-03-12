@@ -18,6 +18,8 @@ class BookingModel extends BookingEntity {
     required super.paymentStatus,
     required super.createdAt,
     required super.updatedAt,
+    super.isRatedByHost = false,
+    super.isRatedBySeeker = false,
   });
 
   /// Create a BookingModel from JSON
@@ -37,6 +39,8 @@ class BookingModel extends BookingEntity {
       paymentStatus: json['paymentStatus'] as String,
       createdAt: _parseDateTime(json['createdAt']),
       updatedAt: _parseDateTime(json['updatedAt']),
+      isRatedByHost: json['isRatedByHost'] as bool? ?? false,
+      isRatedBySeeker: json['isRatedBySeeker'] as bool? ?? false,
     );
   }
 
@@ -60,6 +64,8 @@ class BookingModel extends BookingEntity {
       paymentStatus: data['paymentStatus'] as String? ?? 'pending',
       createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      isRatedByHost: data['isRatedByHost'] as bool? ?? false,
+      isRatedBySeeker: data['isRatedBySeeker'] as bool? ?? false,
     );
   }
 
@@ -80,6 +86,8 @@ class BookingModel extends BookingEntity {
       'paymentStatus': paymentStatus,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isRatedByHost': isRatedByHost,
+      'isRatedBySeeker': isRatedBySeeker,
     };
   }
 
@@ -99,6 +107,8 @@ class BookingModel extends BookingEntity {
       'paymentStatus': paymentStatus,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'isRatedByHost': isRatedByHost,
+      'isRatedBySeeker': isRatedBySeeker,
     };
   }
 
