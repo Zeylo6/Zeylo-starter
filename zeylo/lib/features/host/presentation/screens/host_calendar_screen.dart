@@ -127,12 +127,10 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                     border: Border(bottom: BorderSide(color: AppColors.border)),
                   ),
                   child: TableCalendar(
-                    firstDay: DateTime.now().subtract(const Duration(days: 30)),
+                    firstDay: DateTime.now().subtract(const Duration(days: 365)),
                     lastDay: DateTime.now().add(const Duration(days: 365)),
                     focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) {
-                      return isSameDay(_selectedDay, day);
-                    },
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     onDaySelected: (selectedDay, focusedDay) {
                       if (!isSameDay(_selectedDay, selectedDay)) {
                         setState(() {
@@ -142,24 +140,50 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                       }
                     },
                     eventLoader: _getEventsForDay,
-                    calendarStyle: const CalendarStyle(
-                      markerDecoration: BoxDecoration(
-                        color: AppColors.primary,
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
                       ),
-                      selectedDecoration: BoxDecoration(
+                      todayTextStyle: AppTypography.labelMedium.copyWith(color: AppColors.primary),
+                      selectedDecoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.primary, Color(0xFF8E2DE2)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryAlpha30,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      selectedTextStyle: AppTypography.labelMedium.copyWith(color: Colors.white),
+                      markerDecoration: const BoxDecoration(
                         color: AppColors.secondary,
                         shape: BoxShape.circle,
                       ),
-                      todayDecoration: BoxDecoration(
-                        color: AppColors.border,
-                        shape: BoxShape.circle,
-                      ),
+                      markerSize: 4.0,
+                      markersMaxCount: 1,
+                      markerMargin: const EdgeInsets.only(top: 6),
+                      outsideDaysVisible: false,
+                      weekendTextStyle: AppTypography.bodyMediumSecondary,
+                      defaultTextStyle: AppTypography.bodyMedium,
                     ),
                     headerStyle: HeaderStyle(
                       formatButtonVisible: false,
                       titleCentered: true,
-                      titleTextStyle: AppTypography.titleMedium,
+                      titleTextStyle: AppTypography.headlineSmall.copyWith(fontWeight: FontWeight.w800),
+                      leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary),
+                      rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+                    ),
+                    daysOfWeekStyle: DaysOfWeekStyle(
+                      weekdayStyle: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
+                      weekendStyle: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
                     ),
                   ),
                 ),

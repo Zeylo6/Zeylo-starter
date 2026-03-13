@@ -51,46 +51,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _onRefresh,
-          color: AppColors.primary,
-          child: CustomScrollView(
-            slivers: [
-              // Top bar with logo and actions
-              SliverAppBar(
-                backgroundColor: AppColors.background,
-                elevation: 0,
-                floating: true,
-                snap: true,
-                pinned: false,
-                toolbarHeight: 56,
-                title: const _TopBar(),
-              ),
-              // Main content
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppSpacing.md),
-                      // Search bar
-                      const HomeSearchBar(),
-                      const SizedBox(height: AppSpacing.lg),
-                      // Category chips
-                      const _CategorySection(),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                  ),
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        color: AppColors.primary,
+        edgeOffset: 80,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // Top bar with logo and actions
+            SliverAppBar(
+              backgroundColor: AppColors.background.withOpacity(0.9),
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              floating: true,
+              snap: true,
+              pinned: false,
+              toolbarHeight: 64,
+              title: const _TopBar(),
+              centerTitle: false,
+            ),
+            // Main content
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AppSpacing.sm),
+                    // Search bar
+                    const HomeSearchBar(),
+                    const SizedBox(height: AppSpacing.xl),
+                    // Category chips
+                    const _CategorySection(),
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
                 ),
               ),
-              // Experiences list
-              _buildExperiencesList(),
-            ],
-          ),
+            ),
+            // Experiences list
+            _buildExperiencesList(),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
+          ],
         ),
       ),
       floatingActionButton: _buildSpeedDial(context, isHost),
@@ -231,8 +234,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   (context, index) {
                     final experience = experiences[index];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
                       child: ExperienceCard(
+                        heroTag: 'home_experience_${experience.id}',
                         title: experience.title,
                         imageUrl: experience.coverImage,
                         hostName: experience.hostName,
@@ -255,22 +259,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             );
           },
-          loading: () => SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.lg,
-              ),
-              child: Column(
-                children: List.generate(
-                  5,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    child: ShimmerListTile(
-                      height: 300,
-                    ),
-                  ),
+          loading: () => SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.lg,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                  child: const ShimmerExperienceCard(height: 340),
                 ),
+                childCount: 3,
               ),
             ),
           ),

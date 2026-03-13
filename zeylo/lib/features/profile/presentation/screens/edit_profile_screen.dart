@@ -133,117 +133,179 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Profile image section
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primary,
-                        width: 2,
-                      ),
-                      image: _imageFile != null
-                          ? DecorationImage(
-                              image: FileImage(_imageFile!),
-                              fit: BoxFit.cover,
-                            )
-                          : (profile.photoUrl != null &&
-                                  profile.photoUrl!.isNotEmpty
+      body: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Profile image section (Hero with premium overlay)
+              Center(
+                child: Stack(
+                  children: [
+                    Hero(
+                      tag: 'profile_avatar_${widget.userId}',
+                      child: Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.surfaceContainerLow, // Fallback color
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.2),
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.12),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          image: _imageFile != null
                               ? DecorationImage(
-                                  image: CachedNetworkImageProvider(
-                                      profile.photoUrl!),
+                                  image: FileImage(_imageFile!),
                                   fit: BoxFit.cover,
                                 )
-                              : null),
-                    ),
-                    child: _imageFile == null &&
-                            (profile.photoUrl == null ||
-                                profile.photoUrl!.isEmpty)
-                        ? const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: AppColors.textHint,
-                          )
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                              : (profile.photoUrl != null &&
+                                      profile.photoUrl!.isNotEmpty
+                                  ? DecorationImage(
+                                      image: CachedNetworkImageProvider(
+                                          profile.photoUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null),
                         ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20,
+                        child: _imageFile == null &&
+                                (profile.photoUrl == null ||
+                                    profile.photoUrl!.isEmpty)
+                            ? Icon(
+                                Icons.person_rounded,
+                                size: 64,
+                                color: AppColors.primary.withOpacity(0.5),
+                              )
+                            : null,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Inputs Grouped in a Section
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    ZeyloTextField(
+                      label: 'Full Name',
+                      hint: 'Your full name',
+                      controller: _nameController,
+                      keyboardType: TextInputType.name,
+                      prefixIcon: const Icon(Icons.person_outline, size: 20),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ZeyloTextField(
+                      label: 'Email Address',
+                      hint: 'your.email@example.com',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      enabled: false,
+                      prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ZeyloTextField(
+                      label: 'Phone Number',
+                      hint: '+1 (555) 000-0000',
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      prefixIcon: const Icon(Icons.phone_outlined, size: 20),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ZeyloTextField(
+                      label: 'Short Bio',
+                      hint: 'Tell us a bit about your experiences...',
+                      controller: _bioController,
+                      maxLines: 4,
+                      prefixIcon: const Icon(Icons.description_outlined, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+
+              // Action Chips (Modern Save/Cancel)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text('Cancel', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: ZeyloButton(
+                      onPressed: _isLoading ? null : () => _handleSave(profile),
+                      label: 'Save Changes',
+                      isLoading: _isLoading,
+                      variant: ButtonVariant.filled,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Name field
-            ZeyloTextField(
-              label: 'Full Name',
-              hint: 'Your full name',
-              controller: _nameController,
-              keyboardType: TextInputType.name,
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Email field
-            ZeyloTextField(
-              label: 'Email',
-              hint: 'your.email@example.com',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              enabled: false, // Email changes usually handled separately
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Phone field
-            ZeyloTextField(
-              label: 'Phone Number',
-              hint: '+1 (555) 000-0000',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Bio field
-            ZeyloTextField(
-              label: 'Bio',
-              hint: 'Tell us about yourself',
-              controller: _bioController,
-              maxLines: 4,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Save button
-            ZeyloButton(
-              onPressed: _isLoading ? null : () => _handleSave(profile),
-              label: 'Save Changes',
-              isLoading: _isLoading,
-              variant: ButtonVariant.filled,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

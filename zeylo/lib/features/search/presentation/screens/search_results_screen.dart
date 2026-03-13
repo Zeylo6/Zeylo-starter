@@ -305,6 +305,7 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                       child: ExperienceCard(
+                        heroTag: 'search_experience_${experience.id}',
                         imageUrl: experience.coverImage,
                         hostName: experience.hostName,
                         hostAvatarUrl: experience.hostPhotoUrl,

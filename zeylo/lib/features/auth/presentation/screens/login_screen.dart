@@ -191,153 +191,166 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppSpacing.lg),
-              // Back arrow
-              GestureDetector(
-                onTap: () {
-                  if (Navigator.of(context).canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/onboarding');
-                  }
-                },
-                child: const Icon(
-                  Icons.arrow_back,
-                  color: AppColors.textPrimary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Title
-              Text(
-                'Log In',
-                style: AppTypography.displayMedium.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxxl),
-              // Email field
-              ZeyloTextField(
-                label: 'Email Address',
-                hint: 'Enter your email',
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                errorText: _emailError,
-                onChanged: (_) {
-                  setState(() {
-                    _emailError = null;
-                  });
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Password field
-              ZeyloTextField(
-                label: 'Password',
-                hint: 'Enter your password',
-                controller: _passwordController,
-                obscureText: true,
-                errorText: _passwordError,
-                onChanged: (_) {
-                  setState(() {
-                    _passwordError = null;
-                  });
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              // Forgot password link
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: _showForgotPasswordDialog,
-                  child: Text(
-                    'Forgot Password?',
-                    style: AppTypography.bodySmall.copyWith(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.background,
+              AppColors.primaryExtraLight.withOpacity(0.3),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 48),
+                // Logo or Icon Placeholder
+                Hero(
+                  tag: 'app_logo',
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.blur_on_rounded,
+                      size: 48,
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xxxl),
-              // Continue button
-              ZeyloButton(
-                onPressed: isLoading ? null : _validateAndSubmit,
-                label: 'Continue',
-                isLoading: isLoading,
-                variant: ButtonVariant.filled,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              // Divider with text
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: AppColors.border,
-                    ),
+                const SizedBox(height: 32),
+                Text(
+                  'Welcome Back',
+                  style: AppTypography.displayMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Sign in to continue your journey',
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.textSecondary,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                    ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 48),
+                
+                // Form
+                ZeyloTextField(
+                  label: 'Email',
+                  hint: 'hello@example.com',
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  errorText: _emailError,
+                  onChanged: (_) => setState(() => _emailError = null),
+                ),
+                const SizedBox(height: 20),
+                ZeyloTextField(
+                  label: 'Password',
+                  hint: '••••••••',
+                  controller: _passwordController,
+                  obscureText: true,
+                  errorText: _passwordError,
+                  onChanged: (_) => setState(() => _passwordError = null),
+                ),
+                const SizedBox(height: 12),
+                
+                // Forgot password link
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _showForgotPasswordDialog,
                     child: Text(
-                      'Or',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                      'Forgot Password?',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: AppColors.border,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              // Google login button
-              SocialLoginButton(
-                label: 'Login with Google',
-                icon: const Icon(
-                  Icons.g_mobiledata,
-                  color: AppColors.textPrimary,
-                  size: 24,
                 ),
-                onTap: isLoading ? null : _signInWithGoogle,
-                isLoading: isLoading,
-              ),
-              const SizedBox(height: AppSpacing.massive),
-              // Sign up link
-              Center(
-                child: GestureDetector(
+                const SizedBox(height: 32),
+                
+                // Continue button
+                SizedBox(
+                  width: double.infinity,
+                  child: ZeyloButton(
+                    onPressed: isLoading ? null : _validateAndSubmit,
+                    label: 'Sign In',
+                    isLoading: isLoading,
+                    variant: ButtonVariant.filled,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Divider with text
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: AppColors.border)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'or continue with',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textHint,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: AppColors.border)),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                
+                // Google login button
+                SocialLoginButton(
+                  label: 'Google',
+                  icon: const Icon(
+                    Icons.g_mobiledata,
+                    color: AppColors.textPrimary,
+                    size: 32,
+                  ),
+                  onTap: isLoading ? null : _signInWithGoogle,
+                  isLoading: isLoading,
+                ),
+                const SizedBox(height: 48),
+                
+                // Sign up link
+                GestureDetector(
                   onTap: () => context.push('/signup'),
                   child: RichText(
                     text: TextSpan(
-                      text: "New to Zeylo? ",
+                      text: "Don't have an account? ",
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
                       children: [
                         TextSpan(
-                          text: 'Sign Up',
-                          style: AppTypography.bodyMedium.copyWith(
+                          text: 'Create one',
+                          style: AppTypography.labelLarge.copyWith(
                             color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),

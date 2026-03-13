@@ -312,11 +312,11 @@ class HostDashboardScreen extends ConsumerWidget {
                             : DateTime.now();
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: AppColors.border),
                           ),
                           child: Column(
@@ -326,38 +326,40 @@ class HostDashboardScreen extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          data['experienceTitle'] ??
-                                              'Experience',
-                                          style: AppTypography.labelMedium
-                                              .copyWith(
-                                            fontWeight: FontWeight.bold,
+                                          data['experienceTitle'] ?? 'Experience',
+                                          style: AppTypography.titleMedium.copyWith(
+                                            fontWeight: FontWeight.w800,
                                             color: AppColors.textPrimary,
+                                            letterSpacing: -0.5,
                                           ),
                                         ),
-                                        Text(
-                                          '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
-                                          style:
-                                              AppTypography.bodySmall.copyWith(
-                                            color: AppColors.textSecondary,
-                                          ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.calendar_today_outlined, size: 12, color: AppColors.textSecondary),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
+                                              style: AppTypography.bodySmallSecondary,
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
                                   Text(
-                                    '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                    style: AppTypography.labelMedium.copyWith(
+                                    'LKR ${(data['totalPrice'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                                    style: AppTypography.titleMedium.copyWith(
                                       color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.sm),
+                              const SizedBox(height: 16),
                               Row(
                                 children: [
                                   _SeekerAvatar(
@@ -369,25 +371,21 @@ class HostDashboardScreen extends ConsumerWidget {
                                   _SeekerNameText(
                                     userId: data['userId'] ?? '',
                                     initialName: data['seekerName'] ?? data['seeker_name'],
-                                    style: AppTypography.bodySmall.copyWith(
+                                    style: AppTypography.labelMedium.copyWith(
                                       color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  const Text('•', style: TextStyle(color: AppColors.textSecondary)),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.person_outline,
-                                      size: 14, color: AppColors.textSecondary),
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.people_outline, size: 14, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${data['guests'] ?? 1} guest(s)',
-                                    style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary),
+                                    '${data['guests'] ?? 1}',
+                                    style: AppTypography.bodySmallSecondary,
                                   ),
                                   const Spacer(),
                                   SizedBox(
-                                    height: 36,
+                                    height: 38,
                                     child: ElevatedButton(
                                       onPressed: () async {
                                         await FirebaseFirestore.instance
@@ -396,13 +394,10 @@ class HostDashboardScreen extends ConsumerWidget {
                                             .update({'status': 'ongoing'});
 
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                          ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(
-                                              content: Text(
-                                                  'Experience started! It is now ongoing.'),
-                                              backgroundColor:
-                                                  AppColors.primary,
+                                              content: Text('Experience started! Enjoy the journey.'),
+                                              backgroundColor: AppColors.primary,
                                             ),
                                           );
                                         }
@@ -410,17 +405,13 @@ class HostDashboardScreen extends ConsumerWidget {
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.primary,
                                         foregroundColor: Colors.white,
+                                        elevation: 0,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              AppRadius.sm),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
                                       ),
-                                      child: const Text('Start Experience',
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold)),
+                                      child: const Text('Start', style: TextStyle(fontWeight: FontWeight.bold)),
                                     ),
                                   ),
                                 ],
@@ -428,6 +419,7 @@ class HostDashboardScreen extends ConsumerWidget {
                             ],
                           ),
                         );
+
                       }).toList(),
                     );
                   },
@@ -499,18 +491,21 @@ class HostDashboardScreen extends ConsumerWidget {
                     return Column(
                       children: ongoingBookings.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final date = data['date'] is Timestamp
-                            ? (data['date'] as Timestamp).toDate()
-                            : DateTime.now();
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(
-                                color: AppColors.primary.withAlpha(80)),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.04),
+                                blurRadius: 15,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,31 +513,20 @@ class HostDashboardScreen extends ConsumerWidget {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withAlpha(30),
-                                      borderRadius:
-                                          BorderRadius.circular(AppRadius.full),
+                                      color: AppColors.primaryExtraLight,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: AppColors.primary,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
+                                        const Icon(Icons.play_circle_filled_rounded, size: 14, color: AppColors.primary),
                                         const SizedBox(width: 6),
                                         Text(
                                           'ONGOING',
-                                          style:
-                                              AppTypography.labelSmall.copyWith(
+                                          style: AppTypography.labelSmall.copyWith(
                                             color: AppColors.primary,
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 10,
                                           ),
                                         ),
                                       ],
@@ -551,90 +535,69 @@ class HostDashboardScreen extends ConsumerWidget {
                                   const Spacer(),
                                   Row(
                                     children: [
-                                      GestureDetector(
-                                        onTap: () => _showReportSheet(
-                                            context, doc.id, data['userId']),
-                                        child: Container(
-                                          margin: const EdgeInsets.only(
-                                              right: AppSpacing.sm),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.error
-                                                .withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                                AppRadius.sm),
-                                            border: Border.all(
-                                                color: AppColors.error
-                                                    .withOpacity(0.5)),
-                                          ),
-                                          child: const Icon(Icons.flag_rounded,
-                                              size: 16, color: AppColors.error),
-                                        ),
+                                      IconButton(
+                                        onPressed: () => _showReportSheet(context, doc.id, data['userId']),
+                                        icon: const Icon(Icons.flag_rounded, size: 18, color: AppColors.error),
+                                        visualDensity: VisualDensity.compact,
+                                        tooltip: 'Report Seeker',
                                       ),
                                       Text(
-                                        '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                        style:
-                                            AppTypography.labelMedium.copyWith(
+                                        'LKR ${(data['totalPrice'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                                        style: AppTypography.titleMedium.copyWith(
                                           color: AppColors.primary,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w800,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.md),
+                              const SizedBox(height: 16),
                               Text(
                                 data['experienceTitle'] ?? 'Experience',
-                                style: AppTypography.labelMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                style: AppTypography.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w800,
                                   color: AppColors.textPrimary,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              Text(
-                                '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
+                              const SizedBox(height: 4),
                               Row(
                                 children: [
-                                    _SeekerAvatar(
-                                      userId: data['userId'] ?? '',
-                                      initialPhotoUrl: (data['seekerPhotoUrl'] ?? data['seeker_photo_url']),
-                                      radius: 12,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _SeekerNameText(
-                                      userId: data['userId'] ?? '',
-                                      initialName: (data['seekerName'] ?? data['seeker_name']),
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  const SizedBox(width: 8),
-                                  const Text('•', style: TextStyle(color: AppColors.textSecondary)),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.person_outline,
-                                      size: 14, color: AppColors.textSecondary),
+                                  const Icon(Icons.access_time_rounded, size: 12, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${data['guests'] ?? 1} guest(s)',
-                                    style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary),
+                                    'Started at ${data['startTime'] ?? ''}',
+                                    style: AppTypography.bodySmallSecondary,
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                'Wait for the seeker to mark this experience as complete.',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontStyle: FontStyle.italic,
-                                ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  _SeekerAvatar(
+                                    userId: data['userId'] ?? '',
+                                    initialPhotoUrl: data['seekerPhotoUrl'] ?? data['seeker_photo_url'],
+                                    radius: 12,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _SeekerNameText(
+                                    userId: data['userId'] ?? '',
+                                    initialName: data['seekerName'] ?? data['seeker_name'],
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    'Awaiting completion...',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -900,13 +863,13 @@ class HostDashboardScreen extends ConsumerWidget {
                         final bool isRatedByHost = data['isRatedByHost'] == true;
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: AppColors.success.withAlpha(60),
+                              color: const Color(0xFF10B981).withOpacity(0.1),
                               width: 1,
                             ),
                           ),
@@ -915,23 +878,23 @@ class HostDashboardScreen extends ConsumerWidget {
                             children: [
                               Row(
                                 children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: AppColors.success.withAlpha(25),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.sm),
-                                ),
-                                child: const Icon(
-                                  Icons.event_available,
-                                  color: AppColors.success,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.check_circle_rounded,
+                                      color: Color(0xFF10B981),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       data['experienceTitle'] ?? 'Experience',
@@ -1119,45 +1082,56 @@ class HostDashboardScreen extends ConsumerWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: bannerColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: bannerColor.withOpacity(0.5)),
+        color: bannerColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: bannerColor.withOpacity(0.2)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(iconData, color: bannerColor, size: 28),
-          const SizedBox(width: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: bannerColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(iconData, color: bannerColor, size: 24),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: AppTypography.labelMedium.copyWith(
+                  style: AppTypography.labelLarge.copyWith(
                     color: bannerColor,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   description,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTypography.bodySmallSecondary,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: 12),
                 GestureDetector(
                   onTap: onTap,
-                  child: Text(
-                    actionText,
-                    style: AppTypography.labelMedium.copyWith(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
                       color: bannerColor,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      actionText,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
@@ -1233,12 +1207,19 @@ class HostDashboardScreen extends ConsumerWidget {
 
   Widget _buildProfileCompletionSection(BuildContext context, int completion) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1248,41 +1229,72 @@ class HostDashboardScreen extends ConsumerWidget {
             children: [
               Text(
                 'Profile Completion',
-                style: AppTypography.labelMedium.copyWith(
+                style: AppTypography.labelLarge.copyWith(
                   color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              Text(
-                '$completion%',
-                style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryExtraLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$completion%',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 20),
 
           // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.full),
-            child: LinearProgressIndicator(
-              value: completion / 100,
-              minHeight: 8,
-              backgroundColor: AppColors.border,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
+          Stack(
+            children: [
+              Container(
+                height: 10,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(seconds: 1),
+                height: 10,
+                width: (MediaQuery.of(context).size.width - 80) * (completion / 100),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, Color(0xFF7C3AED)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 16),
 
           // Completion message
-          Text(
-            'Add 2 more photos to reach 100%',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
+          Row(
+            children: [
+              const Icon(Icons.info_outline, size: 14, color: AppColors.textHint),
+              const SizedBox(width: 8),
+              Text(
+                'Add 2 more photos to reach 100%',
+                style: AppTypography.bodySmallSecondary,
+              ),
+            ],
           ),
         ],
       ),
