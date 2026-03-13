@@ -43,6 +43,32 @@ class ProfileHeader extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
+          if (profile.isHostVerified) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.verified, color: AppColors.primary, size: 14),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Verified Host',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
 
           // Stats row
@@ -50,6 +76,8 @@ class ProfileHeader extends StatelessWidget {
             followers: profile.followerCount,
             following: profile.followingCount,
             posts: profile.postCount,
+            rating: profile.averageRating,
+            reviews: profile.ratingCount,
           ),
           const SizedBox(height: AppSpacing.md),
 

@@ -91,6 +91,18 @@ final isFollowingProvider =
   },
 );
 
+// Suggested users provider family
+final suggestedUsersProvider = FutureProvider.family<List<UserProfileEntity>, String>(
+  (ref, userId) async {
+    final repository = ref.watch(profileRepositoryProvider);
+    final result = await repository.getSuggestedUsers(userId);
+    return result.fold(
+      (failure) => throw failure.message,
+      (suggestions) => suggestions,
+    );
+  },
+);
+
 // Follow/Unfollow action
 final followActionProvider = FutureProvider.family<void, (String currentUserId, String targetUserId, bool follow)>(
   (ref, params) async {

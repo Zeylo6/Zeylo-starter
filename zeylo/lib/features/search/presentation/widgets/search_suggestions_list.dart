@@ -21,12 +21,8 @@ class SearchSuggestionsList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ref.watch(experiencesByFilterProvider).when(
           data: (experiences) {
-            final suggestions = experiences
-                .where((exp) =>
-                    exp.title.toLowerCase().contains(query.toLowerCase()) ||
-                    exp.category.toLowerCase().contains(query.toLowerCase()))
-                .take(8)
-                .toList();
+            // Results are already filtered by Firestore via searchQueryProvider
+            final suggestions = experiences.take(8).toList();
 
             if (suggestions.isEmpty) {
               return Column(

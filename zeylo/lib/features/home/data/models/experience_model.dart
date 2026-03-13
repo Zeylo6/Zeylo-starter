@@ -157,6 +157,7 @@ class ExperienceModel {
   final List<AvailabilityModel> availability;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isHostVerified;
 
   ExperienceModel({
     required this.id,
@@ -186,6 +187,7 @@ class ExperienceModel {
     required this.availability,
     required this.createdAt,
     required this.updatedAt,
+    this.isHostVerified = false,
   });
 
   factory ExperienceModel.fromJson(Map<String, dynamic> json) {
@@ -223,6 +225,7 @@ class ExperienceModel {
           [],
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isHostVerified: json['isHostVerified'] as bool? ?? false,
     );
   }
 
@@ -262,6 +265,7 @@ class ExperienceModel {
           [],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      isHostVerified: data['isHostVerified'] as bool? ?? false,
     );
   }
 
@@ -294,6 +298,7 @@ class ExperienceModel {
       'availability': availability.map((e) => e.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isHostVerified': isHostVerified,
     };
   }
 
@@ -326,6 +331,7 @@ class ExperienceModel {
       availability: availability.map((e) => e.toEntity()).toList(),
       createdAt: createdAt,
       updatedAt: updatedAt,
+      isHostVerified: isHostVerified,
     );
   }
 }

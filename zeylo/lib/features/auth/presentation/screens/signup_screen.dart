@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/validators.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/phone_input_field.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/social_login_button.dart';
 
 /// Sign up screen for user registration
 ///
@@ -34,6 +36,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   String? _passwordError;
   String? _confirmPasswordError;
   bool _agreeToTerms = false;
+  String _selectedRole = 'seeker'; // Default role
 
   @override
   void initState() {
@@ -81,7 +84,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please agree to the Terms of Service and Privacy Policy'),
+          content:
+              Text('Please agree to the Terms of Service and Privacy Policy'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -97,10 +101,41 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         email: _emailController.text,
         phone: _phoneController.text,
         password: _passwordController.text,
+        role: _selectedRole,
       );
 
       if (mounted) {
         context.go('/verify-email');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    final authNotifier = ref.read(authNotifierProvider.notifier);
+
+    try {
+      await authNotifier.signInWithGoogle();
+
+      if (mounted) {
+        final isVerified =
+            ref.read(authRepositoryProvider).isCurrentUserEmailVerified;
+        if (isVerified) {
+          context.go('/home');
+        } else {
+          try {
+            await authNotifier.sendVerificationEmail();
+          } catch (_) {}
+          if (mounted) context.go('/verify-email');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -214,6 +249,34 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
+
+              // Role Selector
+              Text(
+                'I am a...',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: AppSpacing.sm,
+                mainAxisSpacing: AppSpacing.sm,
+                childAspectRatio: 2.2,
+                children: [
+                  _buildRoleCard(
+                      'seeker', '🔍', 'Seeker', 'Discover experiences'),
+                  _buildRoleCard('host', '🏡', 'Host', 'List your experiences'),
+                  _buildRoleCard(
+                      'business', '💼', 'Business', 'Offer group packages'),
+                  _buildRoleCard(
+                      'admin', '🛡️', 'Admin', 'Manage the platform'),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
               // Terms checkbox
               Row(
                 children: [
@@ -275,7 +338,48 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 isLoading: isLoading,
                 variant: ButtonVariant.filled,
               ),
-              const SizedBox(height: AppSpacing.massive),
+              const SizedBox(height: AppSpacing.xxl),
+              // Divider with text
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: AppColors.border,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    child: Text(
+                      'Or',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: AppColors.border,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              // Google sign up button
+              SocialLoginButton(
+                label: 'Sign up with Google',
+                icon: const Icon(
+                  Icons.g_mobiledata,
+                  color: AppColors.textPrimary,
+                  size: 24,
+                ),
+                onTap: isLoading ? null : _signUpWithGoogle,
+                isLoading: isLoading,
+              ),
+              const SizedBox(height: AppSpacing.xxxl),
               // Login link
               Center(
                 child: GestureDetector(
@@ -301,6 +405,76 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleCard(
+      String role, String emoji, String label, String description) {
+    final bool isSelected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    AppColors.primary.withAlpha(51),
+                    AppColors.primary.withAlpha(25)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                      color: AppColors.primary.withAlpha(51),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

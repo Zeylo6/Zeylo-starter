@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/experience_card.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/category_chip_list.dart';
@@ -28,6 +30,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late RefreshController _refreshController;
+  bool _fabExpanded = false;
 
   @override
   void initState() {
@@ -43,6 +46,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final isHost = currentUserAsync.value?.role == UserRole.host;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -87,50 +93,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'create_chain',
-            onPressed: () {
-              context.push(
-                '/chain/create',
-                extra: {'userId': 'user_1'},
-              );
-            },
-            backgroundColor: AppColors.secondary,
-            icon: const Icon(Icons.link, color: Colors.white),
-            label: const Text(
-              'Create Chain',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          FloatingActionButton.extended(
-            heroTag: 'surprise_me',
-            onPressed: () {
-              // Provide a dummy user ID or get it from auth provider
-              context.push(
-                '/mystery/create',
-                extra: {'userId': 'user_1'}, // Using demo user ID for now
-              );
-            },
-            backgroundColor: AppColors.primary,
-            icon: const Icon(Icons.card_giftcard, color: Colors.white),
-            label: const Text(
-              'Surprise Me',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
+      floatingActionButton: _buildSpeedDial(context, isHost),
+    );
+  }
+
+  Widget _buildSpeedDial(BuildContext context, bool isHost) {
+    // Items that slide up when the FAB is expanded
+    final items = [
+      if (isHost)
+        _SpeedDialItem(
+          heroTag: 'create_experience',
+          icon: Icons.add,
+          label: 'Create Experience',
+          color: AppColors.success,
+          onTap: () {
+            setState(() => _fabExpanded = false);
+            context.push('/create-experience');
+          },
+        ),
+      _SpeedDialItem(
+        heroTag: 'create_chain',
+        icon: Icons.link,
+        label: 'Create Chain',
+        color: AppColors.secondary,
+        onTap: () {
+          setState(() => _fabExpanded = false);
+          context.push('/chain/create', extra: {'userId': 'user_1'});
+        },
       ),
+      _SpeedDialItem(
+        heroTag: 'surprise_me',
+        icon: Icons.card_giftcard,
+        label: 'Surprise Me',
+        color: AppColors.primary,
+        onTap: () {
+          setState(() => _fabExpanded = false);
+          context.push('/mystery/create', extra: {'userId': 'user_1'});
+        },
+      ),
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // Slide-up action buttons
+        ...items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          // Stagger the animation: items closer to bottom appear first
+          return AnimatedSlide(
+            duration: Duration(milliseconds: 150 + index * 60),
+            curve: Curves.easeOutBack,
+            offset: _fabExpanded ? Offset.zero : const Offset(0, 0.5),
+            child: AnimatedOpacity(
+              duration: Duration(milliseconds: 150 + index * 60),
+              opacity: _fabExpanded ? 1.0 : 0.0,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: FloatingActionButton.extended(
+                  heroTag: item.heroTag,
+                  onPressed: _fabExpanded ? item.onTap : null,
+                  backgroundColor: item.color,
+                  icon: Icon(item.icon, color: Colors.white),
+                  label: Text(
+                    item.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: AppSpacing.xs),
+        // Main toggle FAB
+        FloatingActionButton(
+          heroTag: 'main_fab_toggle',
+          onPressed: () => setState(() => _fabExpanded = !_fabExpanded),
+          backgroundColor: _fabExpanded ? AppColors.error : AppColors.primary,
+          child: AnimatedRotation(
+            turns: _fabExpanded ? 0.125 : 0,
+            duration: const Duration(milliseconds: 250),
+            child: Icon(
+              _fabExpanded ? Icons.close : Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -179,9 +233,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                       child: ExperienceCard(
+                        title: experience.title,
                         imageUrl: experience.coverImage,
                         hostName: experience.hostName,
                         hostAvatarUrl: experience.hostPhotoUrl,
+                        isHostVerified: experience.isHostVerified,
                         location:
                             '${experience.location.city}, ${experience.location.country}',
                         price:
@@ -341,4 +397,21 @@ class _CategorySection extends ConsumerWidget {
 
 class RefreshController {
   void dispose() {}
+}
+
+/// Data class for speed-dial FAB items
+class _SpeedDialItem {
+  final String heroTag;
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SpeedDialItem({
+    required this.heroTag,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 }

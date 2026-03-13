@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/datasources/booking_datasource.dart';
+import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../../domain/usecases/create_booking_usecase.dart';
@@ -127,7 +130,11 @@ class BookingFormNotifier extends Notifier<BookingFormState> {
 
 /// Booking repository provider
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
-  throw UnimplementedError('Must be overridden');
+  return BookingRepositoryImpl(
+    remoteDataSource: BookingRemoteDataSource(
+      firebaseFirestore: FirebaseFirestore.instance,
+    ),
+  );
 });
 
 /// Create booking use case provider

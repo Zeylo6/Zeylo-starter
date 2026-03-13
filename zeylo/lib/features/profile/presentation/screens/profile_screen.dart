@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../providers/profile_provider.dart';
-import '../widgets/past_experience_tile.dart';
 import '../widgets/photo_grid.dart';
 import '../widgets/profile_header.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 
 /// User profile screen
 class ProfileScreen extends ConsumerWidget {
@@ -45,7 +48,7 @@ class ProfileScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.more_vert),
             color: AppColors.textPrimary,
-            onPressed: () => _showMoreMenu(context),
+            onPressed: () => _showMoreMenu(context, ref),
           ),
         ],
       ),
@@ -66,176 +69,383 @@ class ProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     UserProfileEntity profile,
   ) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Profile header
-          ProfileHeader(
-            profile: profile,
-            onEditPressed: isCurrentUser ? onEditPressed : null,
-          ),
-          const Divider(height: 1),
+    // Read the current user model persistently loaded from Firestore
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserData = currentUserAsync.value;
 
-          // Posts section
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.md,
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(profileProvider(userId));
+        ref.invalidate(currentUserProvider);
+        // Wait a small bit to allow fresh data to stream in
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile header
+            ProfileHeader(
+              profile: profile,
+              onEditPressed: isCurrentUser ? onEditPressed : null,
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.grid_on, color: AppColors.textPrimary),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Posts',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // Photo grid
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: PhotoGrid(
-              photoUrls: const [], // Load from backend
-            ),
-          ),
+            // Premium Role Badge
+            if (isCurrentUser && currentUserData != null)
+              _buildRoleBadge(currentUserData.role.name),
 
-          const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1),
+            // Dashboard Cards Section
+            if (isCurrentUser && currentUserData != null)
+              _buildDashboardSection(context, currentUserData),
 
-          // Past experiences section
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.md,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Past Experiences',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.lock_outline,
-                            size: 12,
-                            color: AppColors.success,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            'Private',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+            const Divider(height: 1),
 
-          // Past experiences list
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Column(
-              children: [
-                PastExperienceTile(
-                  experienceId: '1',
-                  title: 'Traditional Cooking Adventure',
-                  rating: 4.9,
-                  ratingCount: 234,
-                  price: 45,
-                ),
-                PastExperienceTile(
-                  experienceId: '2',
-                  title: 'Sunrise watching',
-                  rating: 4.8,
-                  ratingCount: 156,
-                  price: 35,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // Logout button (if current user)
-          if (isCurrentUser && onLogoutPressed != null)
+            // Posts section
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: onLogoutPressed,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: AppColors.error,
-                      width: 1.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.grid_on, color: AppColors.textPrimary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Posts',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  child: Text(
-                    'Log out',
-                    style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.error,
+                ],
+              ),
+            ),
+
+            // Photo grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: PhotoGrid(
+                photoUrls: const [], // Load from backend
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // Logout button (if current user)
+            if (isCurrentUser && onLogoutPressed != null)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: onLogoutPressed,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: AppColors.error,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                    ),
+                    child: Text(
+                      'Log out',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.error,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-          const SizedBox(height: AppSpacing.md),
-        ],
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
       ),
     );
   }
 
-  void _showMoreMenu(BuildContext context) {
+  void _showMoreMenu(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SizedBox(
-        height: 150,
+      builder: (sheetContext) => SafeArea(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.report_problem),
-              title: const Text('Report'),
-              onTap: () => Navigator.pop(context),
+            if (isCurrentUser) ...[
+              // Developer/Admin - Clear Bookings
+              ListTile(
+                leading: const Icon(Icons.delete_sweep, color: AppColors.error),
+                title: const Text('Clear All Bookings (Dev)',
+                    style: TextStyle(
+                        color: AppColors.error, fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  try {
+                    final snapshot = await FirebaseFirestore.instance
+                        .collection('bookings')
+                        .get();
+                    for (var doc in snapshot.docs) {
+                      await doc.reference.delete();
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('All bookings cleared successfully.')));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Failed to clear bookings: $e')));
+                    }
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings_outlined),
+                title: const Text('Settings'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.push('/settings');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout, color: AppColors.error),
+                title: Text(
+                  'Sign Out',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  try {
+                    await ref.read(authNotifierProvider.notifier).signOut();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(e.toString()),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ] else ...[
+              ListTile(
+                leading: const Icon(Icons.report_problem),
+                title: const Text('Report'),
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: const Text('Block'),
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardSection(BuildContext context, UserEntity user) {
+    if (user.role == UserRole.seeker) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'My Bookings',
+        subtitle: 'View all your experiences',
+        icon: Icons.calendar_today_rounded,
+        colors: [const Color(0xFF6C63FF), const Color(0xFF48CAE4)],
+        onTap: () => context.push('/seeker-dashboard'),
+      );
+    } else if (user.role == UserRole.host) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'Host Dashboard',
+        subtitle: 'Manage your listings & bookings',
+        icon: Icons.home_work_rounded,
+        colors: [const Color(0xFFFF9A3C), const Color(0xFFFF6B6B)],
+        onTap: () => context.push('/host-dashboard', extra: {
+          'hostId': user.uid,
+          'hostName': user.displayName,
+          'hostPhotoUrl': user.photoUrl,
+          'isSuperhost': false,
+        }),
+      );
+    } else if (user.role == UserRole.business) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'Business Dashboard',
+        subtitle: 'Manage your verified business',
+        icon: Icons.storefront_rounded,
+        colors: [const Color(0xFF11998E), const Color(0xFF38EF7D)],
+        onTap: () => context.push('/business-registration'),
+      );
+    } else if (user.role == UserRole.admin) {
+      return _buildDashboardCard(
+        context: context,
+        title: 'Admin Panel',
+        subtitle: 'System management & oversight',
+        icon: Icons.admin_panel_settings_rounded,
+        colors: [const Color(0xFF8E2DE2), const Color(0xFF4A00E0)],
+        onTap: () => context.push('/admin-dashboard'),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildDashboardCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('Block'),
-              onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: [
+              BoxShadow(
+                color: colors[0].withAlpha(60),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(50),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.white.withOpacity(0.85),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white70,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(String roleName) {
+    final roleData = {
+      'seeker': {
+        'emoji': '🔍',
+        'label': 'Seeker',
+        'start': const Color(0xFF6C63FF),
+        'end': const Color(0xFF48CAE4)
+      },
+      'host': {
+        'emoji': '🏡',
+        'label': 'Host',
+        'start': const Color(0xFFFF9A3C),
+        'end': const Color(0xFFFF6B6B)
+      },
+      'business': {
+        'emoji': '💼',
+        'label': 'Business',
+        'start': const Color(0xFF11998E),
+        'end': const Color(0xFF38EF7D)
+      },
+      'admin': {
+        'emoji': '🛡️',
+        'label': 'Admin',
+        'start': const Color(0xFF8E2DE2),
+        'end': const Color(0xFF4A00E0)
+      },
+    };
+    final data = roleData[roleName] ?? roleData['seeker']!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [data['start'] as Color, data['end'] as Color],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: (data['start'] as Color).withAlpha(77),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(data['emoji'] as String, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Text(
+              data['label'] as String,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: 0.5,
+              ),
             ),
           ],
         ),

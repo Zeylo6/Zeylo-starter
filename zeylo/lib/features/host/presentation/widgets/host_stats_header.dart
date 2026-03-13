@@ -100,8 +100,8 @@ class HostStatsHeader extends StatelessWidget {
                   value: averageRating.toStringAsFixed(1),
                 ),
                 _StatCard(
-                  label: 'Avg Rating',
-                  value: averageRating.toStringAsFixed(1),
+                  label: 'Total Reviews',
+                  value: '${stats.totalBookings}',
                 ),
               ],
             ),

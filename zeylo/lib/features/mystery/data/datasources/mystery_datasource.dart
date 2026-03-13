@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/ai_service.dart';
 import '../models/mystery_model.dart';
 
 /// Abstract data source for mystery bookings
@@ -29,19 +30,49 @@ class MysteryDataSourceImpl implements MysteryDataSource {
   /// Firestore instance
   final FirebaseFirestore firestore;
 
+  /// AI service instance
+  final AIService aiService;
+
   /// Collection path for mysteries
   static const String _mysteryCollection = 'mysteries';
 
-  MysteryDataSourceImpl({required this.firestore});
+  MysteryDataSourceImpl({
+    required this.firestore,
+    required this.aiService,
+  });
 
   @override
   Future<MysteryModel> createMystery(MysteryModel mystery) async {
     try {
+      // 1. Generate AI mystery details
+      MysteryModel mysteryToCreate = mystery;
+      try {
+        final aiParams = {
+          'location': mystery.location,
+          'date': mystery.date,
+          'time': mystery.time.label,
+          'budget': '\$${mystery.budgetMin.toStringAsFixed(0)} - \$${mystery.budgetMax.toStringAsFixed(0)}',
+          'type': mystery.experienceType.label,
+        };
+
+        final aiResult = await aiService.generateSurprise(aiParams);
+        
+        mysteryToCreate = mystery.copyWith(
+          teaserDescription: aiResult['teaserDescription'],
+          vibe: aiResult['vibe'],
+          preparationNotes: aiResult['preparationNotes'],
+        );
+      } catch (e) {
+        // Fallback or ignore AI error and continue with basic mystery
+        print('Mystery AI generation failed: $e');
+      }
+
+      // 2. Save to Firestore
       final docRef = await firestore
           .collection(_mysteryCollection)
-          .add(mystery.toFirestore());
+          .add(mysteryToCreate.toFirestore());
 
-      return mystery.copyWith(id: docRef.id);
+      return mysteryToCreate.copyWith(id: docRef.id);
     } on FirebaseException catch (e) {
       throw Exception('Failed to create mystery: ${e.message}');
     }

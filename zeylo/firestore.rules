@@ -2,11 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection
+    // Users collection: Users can read anyone, but only edit themselves (Admins can update anyone)
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (
+        request.auth.uid == userId || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']))
+      );
     }
 
     // Categories collection
@@ -15,11 +19,56 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Experiences collection
-    match /experiences/{experienceId} {
+    // Active Experiences: Anyone can read, only Hosts can write
+    match /experiences/{expId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'host';
+      allow update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'host' ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['averageRating', 'reviewCount']))
+      );
+    }
+
+    // Host Stats and Earnings
+    match /hosts/{hostId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == hostId;
+
+      match /earnings/{earningId} {
+        allow read: if request.auth != null && request.auth.uid == hostId;
+        allow write: if false; // System generated
+      }
+    }
+
+    // Host verifications collection
+    match /host_verifications/{verificationId} {
+      // Users can read/write their own
+      allow read, create, update: if request.auth != null && request.auth.uid == verificationId;
+      // Admins can read/update all
+      allow read, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Calendar blocks collection
+    match /calendar_blocks/{blockId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.hostId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.hostId;
+    }
+
+    // Pending Businesses (The Moderation Queue)
+    match /pending_businesses/{docId} {
+      // Admins can read the queue
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Anyone authenticating as a business can submit into the queue
+      allow create: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'business';
+      // Admins manage the approvals/rejections
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Verified Businesses (Map Markers)
+    match /businesses/{bizId} {
+      allow read: if true; // Seekers need to see these on the map
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; // Only admin can move a business here
     }
 
     // Bookings collection
@@ -27,6 +76,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update: if request.auth != null;
+      allow delete: if request.auth != null;
     }
 
     // Messages collection
@@ -61,6 +111,18 @@ service cloud.firestore {
     match /mysteries/{mysteryId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null;
+    }
+
+    // Reports collection
+    match /reports/{reportId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Admin actions log
+    match /admin_actions/{actionId} {
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Activity/notifications

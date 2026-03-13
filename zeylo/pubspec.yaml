@@ -19,7 +19,7 @@ dependencies:
   firebase_messaging: ^16.1.2
 
   # State Management
-  flutter_riverpod: ^3.2.1
+  flutter_riverpod: ^2.5.1
 
   # Routing
   go_router: ^17.1.0
@@ -28,14 +28,12 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # Image Picker
-  image_picker: ^1.1.2
+  image_picker: ^1.2.1
 
-  # Location Services
+  # Location Servicesf
   geolocator: ^14.0.2
   geocoding: ^4.0.0
 
-  # Maps
-  google_maps_flutter: ^2.12.1
 
   # Internationalization & Formatting
   intl: any
@@ -70,7 +68,7 @@ dependencies:
 
   # Social Sign-In
   google_sign_in: ^6.2.0
-  sign_in_with_apple: ^7.0.1
+  sign_in_with_apple: ^6.1.3
 
   # Functional Programming
   dartz: ^0.10.1
@@ -78,7 +76,11 @@ dependencies:
 
   # Value Equality
   equatable: ^2.0.7
-  http: ^1.2.2
+  http: ^1.6.0
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  google_maps_flutter: ^2.15.0
+  table_calendar: ^3.2.0
 
 dev_dependencies:
   flutter_test:

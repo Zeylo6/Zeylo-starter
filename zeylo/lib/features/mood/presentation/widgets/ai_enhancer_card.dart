@@ -31,11 +31,15 @@ class AIEnhancerCard extends StatelessWidget {
   /// AI-enhanced description
   final String enhancedText;
 
+  /// Callback when "Apply" button is pressed
+  final VoidCallback? onApply;
+
   const AIEnhancerCard({
     required this.isEnabled,
     required this.onToggle,
     required this.originalText,
     required this.enhancedText,
+    this.onApply,
     super.key,
   });
 
@@ -105,12 +109,29 @@ class AIEnhancerCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Enhanced Description',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Enhanced Description',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (onApply != null)
+                        GestureDetector(
+                          onTap: onApply,
+                          child: Text(
+                            'Apply',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(

@@ -28,17 +28,40 @@ class HostFirestoreDatasource implements HostDatasource {
 
   @override
   Future<HostStatsModel> getHostStats(String hostId) async {
-    final doc = await _firestore
-        .collection(_hostsCollection)
-        .doc(hostId)
-        .get();
-
-    if (!doc.exists) {
-      throw Exception('Host not found');
+    // 1. Get the host document (for profile completion, etc.)
+    final hostDoc = await _firestore.collection(_hostsCollection).doc(hostId).get();
+    int profileCompletion = 0;
+    int superHostBadgeStatus = 0;
+    
+    if (hostDoc.exists) {
+      final hostData = hostDoc.data()!;
+      profileCompletion = hostData['profileCompletion'] as int? ?? 0;
+      superHostBadgeStatus = hostData['superHostBadgeStatus'] as int? ?? 0;
     }
 
-    return HostStatsModel.fromFirestore(
-      doc,
+    // 2. Get the User document for the aggregated rating stats (updated by reviews)
+    final userDoc = await _firestore.collection('users').doc(hostId).get();
+    double averageRating = 0.0;
+    int totalBookings = 0; // Or total reviews
+    
+    if (userDoc.exists) {
+      final userData = userDoc.data()!;
+      final statsMap = userData['stats'] as Map<String, dynamic>? ?? {};
+      averageRating = (statsMap['averageRating'] as num?)?.toDouble() ?? 0.0;
+      totalBookings = (statsMap['totalReviews'] as num?)?.toInt() ?? 0;
+    }
+
+    return HostStatsModel(
+      hostId: hostId,
+      earnings: 0.0, // Used to be stored in document, usually handled by earnings collection
+      averageRating: averageRating,
+      responseRate: 100.0, // Defaulting for now
+      acceptanceRate: 100.0, // Defaulting for now
+      totalBookings: totalBookings, // Showing reviews count as "bookings" stat temporarily
+      profileCompletion: profileCompletion,
+      superHostBadgeStatus: superHostBadgeStatus,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 
@@ -79,7 +102,8 @@ class HostFirestoreDatasource implements HostDatasource {
           .collection(_hostsCollection)
           .doc(hostId)
           .collection(_earningsCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
           .get();
 
@@ -108,8 +132,10 @@ class HostFirestoreDatasource implements HostDatasource {
           .collection(_hostsCollection)
           .doc(hostId)
           .collection(_earningsCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(currentMonthStart))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(currentMonthEnd))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(currentMonthStart))
+          .where('date',
+              isLessThanOrEqualTo: Timestamp.fromDate(currentMonthEnd))
           .get();
 
       double currentTotal = 0;
@@ -122,8 +148,10 @@ class HostFirestoreDatasource implements HostDatasource {
           .collection(_hostsCollection)
           .doc(hostId)
           .collection(_earningsCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(previousMonthStart))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(previousMonthEnd))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(previousMonthStart))
+          .where('date',
+              isLessThanOrEqualTo: Timestamp.fromDate(previousMonthEnd))
           .get();
 
       double previousTotal = 0;

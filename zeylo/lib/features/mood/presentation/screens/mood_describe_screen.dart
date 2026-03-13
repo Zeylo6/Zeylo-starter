@@ -128,6 +128,12 @@ class _MoodDescribeScreenState extends ConsumerState<MoodDescribeScreen> {
                     ref.read(moodProvider.notifier).toggleAIEnhancer(),
                 originalText: moodState.description,
                 enhancedText: moodState.enhancedDescription,
+                onApply: () {
+                  if (moodState.enhancedDescription.isNotEmpty) {
+                    _descriptionController.text = moodState.enhancedDescription;
+                    ref.read(moodProvider.notifier).setDescription(moodState.enhancedDescription);
+                  }
+                },
               ),
               const SizedBox(height: AppSpacing.xl),
 

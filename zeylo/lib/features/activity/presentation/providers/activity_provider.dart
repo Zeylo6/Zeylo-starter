@@ -117,7 +117,8 @@ class ActivityNotifier extends Notifier<ActivityState> {
           participants: ['url1', 'url2'],
           spotsLeft: 5,
           isMystery: true,
-          mysteryUnlockTime: DateTime.now().add(const Duration(hours: 14, minutes: 32, seconds: 45)),
+          mysteryUnlockTime: DateTime.now()
+              .add(const Duration(hours: 14, minutes: 32, seconds: 45)),
         ),
       ];
 
@@ -150,7 +151,7 @@ class ActivityNotifier extends Notifier<ActivityState> {
   }
 
   /// Get activities for the active tab
-  List<UserActivity> get activeActivities {
+  List<UserActivity> getActiveActivities() {
     switch (state.activeTab) {
       case ActivityTab.ongoing:
         return state.ongoingActivities;

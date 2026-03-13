@@ -26,6 +26,9 @@ abstract class ProfileDatasource {
 
   /// Check if current user follows target user
   Future<bool> isFollowing(String currentUserId, String targetUserId);
+
+  /// Get suggested users to follow
+  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId, {int limit = 10});
 }
 
 /// Firestore implementation of profile datasource
@@ -211,6 +214,41 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
       return doc.exists;
     } catch (e) {
       return false;
+    }
+  }
+
+  @override
+  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
+    try {
+      // Get users ordered by follower count
+      final snapshot = await _firestore
+          .collection(_usersCollection)
+          .orderBy('followerCount', descending: true)
+          .limit(limit + 5) // Fetch a few extra in case we need to filter out the current user or already followed users
+          .get();
+
+      // Get the list of users the current user is already following
+      final followingSnapshot = await _firestore
+          .collection(_usersCollection)
+          .doc(currentUserId)
+          .collection(_followingCollection)
+          .get();
+          
+      final followingIds = followingSnapshot.docs.map((doc) => doc.id).toSet();
+      followingIds.add(currentUserId); // Add current user to filter out
+
+      final suggestions = <UserProfileModel>[];
+
+      for (final doc in snapshot.docs) {
+        if (!followingIds.contains(doc.id)) {
+          suggestions.add(UserProfileModel.fromFirestore(doc));
+          if (suggestions.length >= limit) break;
+        }
+      }
+
+      return suggestions;
+    } catch (e) {
+      return [];
     }
   }
 }

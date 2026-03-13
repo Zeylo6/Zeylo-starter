@@ -5,17 +5,21 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/community_provider.dart';
 import '../widgets/community_post_card.dart';
+import '../widgets/suggested_user_card.dart';
+import 'package:go_router/go_router.dart';
 
 /// Community screen displaying community posts feed
 ///
 /// Features:
 /// - Top bar with Z logo and action icons
-/// - "Community" section label
+/// - Suggested Explorers horizontal scroll
 /// - Full-width community post cards
 /// - Pull-to-refresh support
-/// - Bottom navigation visible
+/// - FAB to create a post
 class CommunityScreen extends ConsumerStatefulWidget {
   const CommunityScreen({super.key});
 
@@ -28,6 +32,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/create-post'),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: AppColors.textInverse),
+      ),
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         color: AppColors.primary,
@@ -49,13 +58,18 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.lg,
+                  vertical: AppSpacing.md,
                 ),
                 child: Text(
                   'Community',
                   style: AppTypography.headlineLarge,
                 ),
               ),
+            ),
+
+            // Suggested Explorers section
+            SliverToBoxAdapter(
+              child: _buildSuggestedExplorers(),
             ),
 
             // Posts feed
@@ -89,7 +103,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'Be the first to share your experience',
+                          'Be the first to share your experience!',
                           style: AppTypography.bodyMediumSecondary,
                         ),
                       ],
@@ -135,9 +149,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                   5,
                   (index) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    child: ShimmerListTile(
-                      height: 350,
-                    ),
+                    child: ShimmerListTile(height: 350),
                   ),
                 ),
               ),
@@ -162,8 +174,17 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Please try again later',
+                      error.toString(),
                       style: AppTypography.bodyMediumSecondary,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ElevatedButton(
+                      onPressed: () => ref.refresh(communityPostsProvider),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                      ),
+                      child: const Text('Retry', style: TextStyle(color: AppColors.textInverse)),
                     ),
                   ],
                 ),
@@ -173,9 +194,57 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
         );
   }
 
+  Widget _buildSuggestedExplorers() {
+    final currentUser = ref.watch(currentUserProvider).value;
+    if (currentUser == null) return const SizedBox.shrink();
+
+    return ref.watch(suggestedUsersProvider(currentUser.uid)).when(
+          data: (suggestions) {
+            if (suggestions.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: Text(
+                    'Suggested Explorers',
+                    style: AppTypography.titleMedium,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  height: 190,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: suggestions.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: AppSpacing.md),
+                    itemBuilder: (context, index) {
+                      return SuggestedUserCard(
+                        user: suggestions[index],
+                        currentUserId: currentUser.uid,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+            );
+          },
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+            child: ShimmerListTile(height: 190),
+          ),
+          error: (error, _) => const SizedBox.shrink(),
+        );
+  }
+
   Future<void> _onRefresh() async {
-    ref.refresh(communityPostsProvider);
-    await Future.delayed(const Duration(seconds: 1));
+    // StreamProvider auto-updates; just give visual feedback
+    await Future.delayed(const Duration(milliseconds: 800));
   }
 
   void _toggleLike(String postId) {
