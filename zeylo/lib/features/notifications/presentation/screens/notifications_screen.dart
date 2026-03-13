@@ -28,6 +28,19 @@ class NotificationsScreen extends ConsumerWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          TextButton(
+            onPressed: () => _markAllAsRead(user.uid),
+            child: Text(
+              'Read All',
+              style: AppTypography.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -202,5 +215,27 @@ class NotificationsScreen extends ConsumerWidget {
     if (type == 'booking_cancellation') return Icons.cancel_presentation;
     if (type == 'booking_accepted') return Icons.check_circle_outline;
     return Icons.notifications;
+  }
+
+  Future<void> _markAllAsRead(String userId) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final unreadDocs = await firestore
+          .collection('activities')
+          .where('userId', isEqualTo: userId)
+          .where('isRead', isEqualTo: false)
+          .get();
+
+      if (unreadDocs.docs.isEmpty) return;
+
+      final batch = firestore.batch();
+      for (var doc in unreadDocs.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error marking all as read: $e');
+    }
   }
 }
