@@ -18,6 +18,7 @@ const _categoryIcons = <String, IconData>{
   'wellness': Icons.self_improvement,
   'nightlife': Icons.local_bar,
   'nature': Icons.forest,
+  'all': Icons.apps,
 };
 
 IconData _iconFor(String name) {
