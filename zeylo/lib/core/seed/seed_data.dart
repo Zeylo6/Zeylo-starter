@@ -60,7 +60,7 @@ class SeedData {
         'isActive': true,
       },
       {
-        'name': 'Food & Drink',
+        'name': 'Food and Drinks',
         'icon': 'assets/icons/food.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
@@ -68,7 +68,7 @@ class SeedData {
         'isActive': true,
       },
       {
-        'name': 'Arts & Culture',
+        'name': 'Culture',
         'icon': 'assets/icons/arts.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
@@ -92,7 +92,7 @@ class SeedData {
         'isActive': true,
       },
       {
-        'name': 'Nature',
+        'name': 'Outdoor',
         'icon': 'assets/icons/nature.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
@@ -286,7 +286,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
@@ -336,7 +336,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'food_tours',
         'images': [
           'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
@@ -462,7 +462,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800',
@@ -509,7 +509,7 @@ class SeedData {
         'hostName': 'Shenuka Dias',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
-        'category': 'Arts & Culture',
+        'category': 'Culture',
         'subcategory': 'photography',
         'images': [
           'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800',
@@ -558,7 +558,7 @@ class SeedData {
         'hostName': 'Hashan Perera',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-        'category': 'Nature',
+        'category': 'Outdoor',
         'subcategory': 'nature_walks',
         'images': [
           'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=800',
@@ -600,7 +600,7 @@ class SeedData {
         'hostName': 'Sarah Martinez',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
-        'category': 'Arts & Culture',
+        'category': 'Culture',
         'subcategory': 'cultural_walks',
         'images': [
           'https://images.unsplash.com/photo-1518066000714-58c45f1b773c?w=800',
@@ -697,7 +697,7 @@ class SeedData {
         'hostName': 'Shenuka Dias',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
-        'category': 'Nature',
+        'category': 'Outdoor',
         'subcategory': 'wildlife_watching',
         'images': [
           'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800',
@@ -797,7 +797,7 @@ class SeedData {
         'hostName': 'Hashan Perera',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-        'category': 'Nature',
+        'category': 'Outdoor',
         'subcategory': 'nature_walks',
         'images': [
           'https://images.unsplash.com/photo-1559056199-641a0ac8b8d4?w=800',
@@ -1486,7 +1486,7 @@ class SeedData {
       },
       {
         'id': 'cat_2',
-        'name': 'Food & Drink',
+        'name': 'Food and Drinks',
         'icon': 'assets/icons/food.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
@@ -1495,7 +1495,7 @@ class SeedData {
       },
       {
         'id': 'cat_3',
-        'name': 'Arts & Culture',
+        'name': 'Culture',
         'icon': 'assets/icons/arts.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
@@ -1522,7 +1522,7 @@ class SeedData {
       },
       {
         'id': 'cat_6',
-        'name': 'Nature',
+        'name': 'Outdoor',
         'icon': 'assets/icons/nature.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
@@ -1590,7 +1590,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',

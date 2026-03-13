@@ -9,15 +9,13 @@ import '../providers/home_provider.dart';
 
 /// Icon mapping for each category
 const _categoryIcons = <String, IconData>{
-  'outdoor': Icons.hiking,
-  'adventure': Icons.paragliding,
-  'food & drink': Icons.local_dining,
+  'food and drinks': Icons.local_dining,
   'food': Icons.local_dining,
   'culture': Icons.account_balance,
-  'arts & culture': Icons.account_balance,
   'wellness': Icons.self_improvement,
   'nightlife': Icons.local_bar,
-  'nature': Icons.forest,
+  'outdoor': Icons.hiking,
+  'adventure': Icons.paragliding,
   'all': Icons.apps,
 };
 

@@ -56,13 +56,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         return results;
       }
       
-      // Fallback to mock data if Firestore is empty
-      final mockData = await SeedData.getMockExperiences();
-      return mockData
-          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
-          .where((e) => e.isActive)
-          .take(10)
-          .toList();
+      return [];
     } catch (e) {
       // Fallback to mock data on error (e.g. missing index)
       final mockData = await SeedData.getMockExperiences();
@@ -91,12 +85,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             .toList();
       }
       
-      // Fallback
-      final mockData = await SeedData.getMockExperiences();
-      return mockData
-          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
-          .where((e) => e.category == category && e.isActive)
-          .toList();
+      return [];
     } catch (e) {
       // Fallback
       final mockData = await SeedData.getMockExperiences();
@@ -120,11 +109,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             .toList();
       }
       
-      // Fallback
-      final mockData = await SeedData.getMockCategories();
-      return mockData
-          .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
-          .toList();
+      return [];
     } catch (e) {
       // Fallback
       final mockData = await SeedData.getMockCategories();
@@ -203,12 +188,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             .toList();
       }
 
-      // Fallback
-      final mockData = await SeedData.getMockExperiences();
-      return mockData
-          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
-          .where((e) => e.isActive)
-          .toList();
+      return [];
     } catch (e) {
       // Fallback
       final mockData = await SeedData.getMockExperiences();
