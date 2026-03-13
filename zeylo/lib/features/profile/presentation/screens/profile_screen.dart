@@ -88,7 +88,7 @@ class ProfileScreen extends ConsumerWidget {
             // Profile header
             ProfileHeader(
               profile: profile,
-              onEditPressed: isCurrentUser ? onEditPressed : null,
+              onEditPressed: isCurrentUser ? (onEditPressed ?? () => context.push('/edit-profile')) : null,
             ),
 
             // Premium Role Badge

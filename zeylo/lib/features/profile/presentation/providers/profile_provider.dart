@@ -5,9 +5,10 @@ import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../profile/domain/entities/user_profile_entity.dart';
 
-// Datasource provider
-final profileDatasourceProvider = Provider((ref) {
-  return ProfileFirestoreDatasource(FirebaseFirestore.instance);
+final profileDatasourceProvider = Provider<ProfileDatasource>((ref) {
+  return ProfileFirestoreDatasource(
+    FirebaseFirestore.instance,
+  );
 });
 
 // Repository provider

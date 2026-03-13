@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -27,6 +30,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _bioController;
+  File? _imageFile;
   bool _isLoading = false;
 
   @override
@@ -47,6 +51,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider(widget.userId));
@@ -54,7 +72,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return profileAsync.when(
       data: (profile) {
         // Initialize controllers with profile data
-        if (_nameController.text.isEmpty) {
+        if (_nameController.text.isEmpty && !_isLoading) {
           _nameController.text = profile.name;
           _emailController.text = profile.email ?? '';
           _phoneController.text = profile.phone ?? '';
@@ -118,8 +136,69 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Profile image section
+            Center(
+              child: Stack(
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                      image: _imageFile != null
+                          ? DecorationImage(
+                              image: FileImage(_imageFile!),
+                              fit: BoxFit.cover,
+                            )
+                          : (profile.photoUrl != null &&
+                                  profile.photoUrl!.isNotEmpty
+                              ? DecorationImage(
+                                  image: CachedNetworkImageProvider(
+                                      profile.photoUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null),
+                    ),
+                    child: _imageFile == null &&
+                            (profile.photoUrl == null ||
+                                profile.photoUrl!.isEmpty)
+                        ? const Icon(
+                            Icons.person,
+                            size: 60,
+                            color: AppColors.textHint,
+                          )
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
             // Name field
             ZeyloTextField(
               label: 'Full Name',
@@ -135,6 +214,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               hint: 'your.email@example.com',
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              enabled: false, // Email changes usually handled separately
             ),
             const SizedBox(height: AppSpacing.md),
 
@@ -154,11 +234,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               controller: _bioController,
               maxLines: 4,
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xl),
 
             // Save button
             ZeyloButton(
-              onPressed: _isLoading ? null : _handleSave,
+              onPressed: _isLoading ? null : () => _handleSave(profile),
               label: 'Save Changes',
               isLoading: _isLoading,
               variant: ButtonVariant.filled,
@@ -169,38 +249,72 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Future<void> _handleSave() async {
+  Future<void> _handleSave(UserProfileEntity profile) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final profileAsync = ref.watch(profileProvider(widget.userId));
-      profileAsync.whenData((profile) async {
-        final updatedProfile = profile.copyWith(
-          name: _nameController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          bio: _bioController.text,
+      final repository = ref.read(profileRepositoryProvider);
+      String? updatedPhotoUrl = profile.photoUrl;
+
+      // 1. Upload new image if selected
+      if (_imageFile != null) {
+        final imageBytes = await _imageFile!.readAsBytes();
+        final uploadResult = await repository.uploadProfileImage(
+          widget.userId,
+          imageBytes,
         );
 
-        final repository = ref.watch(profileRepositoryProvider);
-        final result = await repository.updateProfile(widget.userId, updatedProfile);
-
-        result.fold(
-          (failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${failure.message}')),
-            );
-          },
-          (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile updated successfully')),
-            );
-            Navigator.pop(context);
-          },
+        uploadResult.fold(
+          (failure) => throw Exception('Failed to upload image: ${failure.message}'),
+          (url) => updatedPhotoUrl = url,
         );
-      });
+      }
+
+      // 2. Update profile
+      final updatedProfile = profile.copyWith(
+        name: _nameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        bio: _bioController.text,
+        photoUrl: updatedPhotoUrl,
+        updatedAt: DateTime.now(),
+      );
+
+      final result = await repository.updateProfile(widget.userId, updatedProfile);
+
+      await result.fold(
+        (failure) async {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${failure.message}')),
+          );
+        },
+        (_) async {
+          // 3. Sync to experiences if name or photo changed
+          if (profile.name != updatedProfile.name ||
+              profile.photoUrl != updatedProfile.photoUrl) {
+            await repository.syncHostProfileToExperiences(
+              widget.userId,
+              updatedProfile.name,
+              updatedProfile.photoUrl,
+            );
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully')),
+          );
+          
+          // Refresh profile data
+          ref.read(profileProvider(widget.userId).notifier).loadProfile();
+          
+          Navigator.pop(context);
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     } finally {
       setState(() {
         _isLoading = false;

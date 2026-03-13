@@ -62,6 +62,7 @@ import '../features/activity/presentation/screens/activity_screen.dart';
 
 // Profile
 import '../features/profile/presentation/screens/profile_screen.dart';
+import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/followers_screen.dart';
 import '../features/profile/presentation/screens/following_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
@@ -232,6 +233,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               return ProfileScreen(
                 userId: currentUser?.uid ?? '',
                 isCurrentUser: true,
+                onEditPressed: () => context.push('/edit-profile'),
+              );
+            },
+          ),
+
+          // Edit Profile route
+          GoRoute(
+            path: '/edit-profile',
+            builder: (context, state) {
+              final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
+              return EditProfileScreen(
+                userId: currentUser?.uid ?? '',
               );
             },
           ),
