@@ -664,6 +664,7 @@ class HostDashboardScreen extends ConsumerWidget {
                         return ActiveExperienceTile(
                           experienceId: doc.id,
                           title: data['title'] ?? 'Untitled Experience',
+                          thumbnailUrl: data['coverImage'] as String?,
                           onEditPressed: () {
                             _showEditExperienceSheet(context, doc.id, data);
                           },
