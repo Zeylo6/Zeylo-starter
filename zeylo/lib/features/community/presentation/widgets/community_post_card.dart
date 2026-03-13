@@ -94,6 +94,15 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
     );
   }
 
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   Widget _buildImageSection() {
     if (widget.post.images.isEmpty) {
       return SizedBox(
@@ -111,33 +120,70 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
       children: [
         // Image
         SizedBox(
-          height: 250,
+          height: 300,
           width: double.infinity,
-          child: CachedNetworkImage(
-            imageUrl: widget.post.images.first,
-            fit: BoxFit.cover,
-            placeholder: (context, url) =>
-                const ShimmerListTile(height: 250),
-            errorWidget: (context, url, error) => Container(
-              color: AppColors.surface,
-              child: const Icon(Icons.image_not_supported),
-            ),
+          child: PageView.builder(
+            controller: _pageController,
+            physics: const BouncingScrollPhysics(),
+            itemCount: widget.post.images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return CachedNetworkImage(
+                imageUrl: widget.post.images[index],
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    const ShimmerListTile(height: 300),
+                errorWidget: (context, url, error) => Container(
+                  color: AppColors.surface,
+                  child: const Icon(Icons.image_not_supported),
+                ),
+              );
+            },
           ),
         ),
         // Dark overlay
-        Container(
-          height: 250,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.4),
-              ],
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.3),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
+        // Page Indicator
+        if (widget.post.images.length > 1)
+          Positioned(
+            top: AppSpacing.md,
+            right: AppSpacing.md,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+                child: Text(
+                  '${_currentPage + 1}/${widget.post.images.length}',
+                  style: AppTypography.labelSmall.copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
