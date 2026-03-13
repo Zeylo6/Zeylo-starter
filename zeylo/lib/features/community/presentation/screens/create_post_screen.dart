@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -94,7 +93,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         },
         (postId) {
           if (mounted) {
-            ref.invalidate(communityPostsProvider);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Post published successfully!')),
             );

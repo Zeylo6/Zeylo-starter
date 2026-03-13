@@ -3,8 +3,11 @@ import '../models/post_model.dart';
 
 /// Abstract remote data source for community feature
 abstract class CommunityRemoteDataSource {
-  /// Get community posts (feed)
+  /// Get community posts (feed) — one-time fetch
   Future<List<PostModel>> getCommunityPosts({int limit = 20});
+
+  /// Watch community posts (feed) — real-time stream
+  Stream<List<PostModel>> watchCommunityPosts({int limit = 50});
 
   /// Get user's posts
   Future<List<PostModel>> getUserPosts(String userId, {int limit = 20});
@@ -27,6 +30,17 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
   final FirebaseFirestore _firestore;
 
   CommunityRemoteDataSourceImpl(this._firestore);
+
+  @override
+  Stream<List<PostModel>> watchCommunityPosts({int limit = 50}) {
+    return _firestore
+        .collection('posts')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList());
+  }
 
   @override
   Future<List<PostModel>> getCommunityPosts({int limit = 20}) async {
