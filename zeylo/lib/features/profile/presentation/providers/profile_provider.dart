@@ -119,6 +119,7 @@ final followActionProvider = FutureProvider.family<void, (String currentUserId, 
           ref.invalidate(followersProvider);
           ref.invalidate(followingProvider);
           ref.invalidate(isFollowingProvider);
+          ref.invalidate(suggestedUsersProvider);
         },
       );
     } else {
@@ -130,6 +131,7 @@ final followActionProvider = FutureProvider.family<void, (String currentUserId, 
           ref.invalidate(followersProvider);
           ref.invalidate(followingProvider);
           ref.invalidate(isFollowingProvider);
+          ref.invalidate(suggestedUsersProvider);
         },
       );
     }

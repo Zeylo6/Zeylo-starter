@@ -47,6 +47,13 @@ class PostModel {
 
   factory PostModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    
+    DateTime parseDate(dynamic date) {
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      return DateTime.now();
+    }
+
     return PostModel(
       id: doc.id,
       userId: data['userId'] as String,
@@ -56,10 +63,25 @@ class PostModel {
       caption: data['caption'] as String,
       likesCount: data['likesCount'] as int? ?? 0,
       commentsCount: data['commentsCount'] as int? ?? 0,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: parseDate(data['createdAt']),
       tags: List<String>.from(data['tags'] as List? ?? []),
       experienceTag: data['experienceTag'] as String?,
     );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'userId': userId,
+      'userName': userName,
+      'userAvatar': userAvatar,
+      'images': images,
+      'caption': caption,
+      'likesCount': likesCount,
+      'commentsCount': commentsCount,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'tags': tags,
+      'experienceTag': experienceTag,
+    };
   }
 
   Map<String, dynamic> toJson() {
