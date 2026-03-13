@@ -12,6 +12,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/category_chip_list.dart';
+import '../../../../core/widgets/role_capsule.dart';
 
 /// Home screen of the Zeylo application
 ///
@@ -327,11 +328,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 /// Top bar widget with logo and action icons
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider).value;
+    final role = user?.role ?? UserRole.seeker;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -358,6 +362,8 @@ class _TopBar extends StatelessWidget {
         // Action icons
         Row(
           children: [
+            RoleCapsule(role: role),
+            const SizedBox(width: AppSpacing.sm),
             IconButton(
               icon: const Icon(Icons.send_outlined),
               onPressed: () {},

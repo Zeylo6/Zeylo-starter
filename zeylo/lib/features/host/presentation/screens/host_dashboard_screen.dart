@@ -54,6 +54,7 @@ class HostDashboardScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
+          const SizedBox(width: AppSpacing.sm),
           IconButton(
             icon: const Icon(Icons.calendar_month),
             color: AppColors.textPrimary,
