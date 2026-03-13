@@ -6,7 +6,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 // Import the tabs we will build below
 import 'tabs/admin_overview_tab.dart';

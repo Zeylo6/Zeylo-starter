@@ -120,7 +120,7 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
   @override
   Future<String> createPost(PostModel post) async {
     try {
-      final doc = await _firestore.collection('posts').add(post.toJson());
+      final doc = await _firestore.collection('posts').add(post.toFirestore());
       return doc.id;
     } catch (e) {
       rethrow;

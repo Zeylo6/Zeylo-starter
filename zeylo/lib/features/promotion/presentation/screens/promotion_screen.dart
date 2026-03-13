@@ -24,7 +24,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
 
   final basicPlan = PromotionPlan(
     name: 'Basic Plan',
-    price: '\$29',
+    price: 'Rs. 9,000',
     features: [
       '7 days promotion',
       'Featured in local feed',
@@ -34,7 +34,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
 
   final premiumPlan = PromotionPlan(
     name: 'Premium Plan',
-    price: '\$79',
+    price: 'Rs. 24,000',
     features: [
       '14 days promotion',
       'Top of feed placement',

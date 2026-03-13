@@ -48,15 +48,16 @@ final hostEarningsProvider = FutureProvider.family<EarningsEntity, String>(
   },
 );
 
-// This month earnings provider
-final thisMonthEarningsProvider = FutureProvider.family<double, String>(
-  (ref, hostId) async {
+// This month earnings provider (Reactive)
+final thisMonthEarningsProvider = StreamProvider.family<double, String>(
+  (ref, hostId) {
     final repository = ref.watch(hostRepositoryProvider);
-    final result = await repository.getThisMonthEarnings(hostId);
-    return result.fold(
-      (failure) => throw failure.message,
-      (earnings) => earnings,
-    );
+    return repository.watchThisMonthEarnings(hostId).map((result) {
+      return result.fold(
+        (failure) => 0.0,
+        (earnings) => earnings,
+      );
+    });
   },
 );
 

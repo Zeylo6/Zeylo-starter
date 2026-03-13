@@ -27,6 +27,13 @@ class UserProfileModel extends UserProfileEntity {
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data()!;
+
+    DateTime parseDate(dynamic date) {
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      return DateTime.now();
+    }
+
     return UserProfileModel(
       id: doc.id,
       name: data['name'] as String? ?? data['displayName'] as String? ?? '',
@@ -42,8 +49,8 @@ class UserProfileModel extends UserProfileEntity {
       isSuperhost: data['isSuperhost'] as bool? ?? false,
       averageRating: (data['stats']?['averageRating'] as num?)?.toDouble() ?? (data['averageRating'] as num?)?.toDouble(),
       ratingCount: (data['stats']?['totalReviews'] as num?)?.toInt() ?? data['ratingCount'] as int? ?? 0,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      createdAt: parseDate(data['createdAt']),
+      updatedAt: data['updatedAt'] != null ? parseDate(data['updatedAt']) : null,
     );
   }
 

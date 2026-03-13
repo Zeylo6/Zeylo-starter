@@ -121,7 +121,7 @@ class AdminOverviewTab extends StatelessWidget {
                 title: Text(
                     'New booking for ${data['experienceTitle'] ?? 'Experience'}'),
                 subtitle: Text(
-                    'Status: ${data['status']} - \$${(data['totalPrice'] ?? 0).toString()}'),
+                    'Status: ${data['status']} - Rs. ${(data['totalPrice'] ?? 0).toString()}'),
               );
             }).toList(),
           );
@@ -217,7 +217,7 @@ class _RevenueCard extends StatelessWidget {
                   color: Colors.purple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
-                child: const Icon(Icons.attach_money,
+                child: const Icon(Icons.payments_rounded,
                     color: Colors.purple, size: 24),
               ),
               const Spacer(),
@@ -238,7 +238,7 @@ class _RevenueCard extends StatelessWidget {
                     total += (data['totalPrice'] as num?)?.toDouble() ?? 0.0;
                   }
                   return Text(
-                    '\$${total.toStringAsFixed(0)}',
+                    'Rs. ${total.toStringAsFixed(0)}',
                     style: AppTypography.headlineMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,

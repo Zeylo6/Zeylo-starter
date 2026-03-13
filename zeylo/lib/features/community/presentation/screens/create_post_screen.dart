@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -20,6 +24,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _captionController = TextEditingController();
   final _tagController = TextEditingController();
   final List<String> _tags = [];
+  final List<File> _images = [];
+  final ImagePicker _picker = ImagePicker();
   bool _isPublishing = false;
 
   @override
@@ -27,6 +33,64 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _captionController.dispose();
     _tagController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile> pickedFiles = await _picker.pickMultiImage(
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          _images.addAll(pickedFiles.map((file) => File(file.path)));
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking images: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _images.removeAt(index);
+    });
+  }
+
+  Future<List<String>> _uploadToCloudinary() async {
+    const cloudName = 'deukwmcoi';
+    const uploadPreset = 'Zeylo_images';
+    final List<String> imageUrls = [];
+
+    for (final file in _images) {
+      try {
+        final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+        final request = http.MultipartRequest('POST', url)
+          ..fields['upload_preset'] = uploadPreset
+          ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+        final response = await request.send();
+        final responseData = await response.stream.toBytes();
+        final responseString = String.fromCharCodes(responseData);
+        final jsonMap = jsonDecode(responseString);
+
+        if (response.statusCode == 200) {
+          imageUrls.add(jsonMap['secure_url'] as String);
+        } else {
+          debugPrint('Cloudinary Error: ${jsonMap['error']?['message'] ?? 'Unknown error'}');
+        }
+      } catch (e) {
+        debugPrint("Upload error: $e");
+      }
+    }
+
+    return imageUrls;
   }
 
   void _addTag() {
@@ -47,9 +111,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Future<void> _publishPost() async {
     final caption = _captionController.text.trim();
-    if (caption.isEmpty) {
+    if (caption.isEmpty && _images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write something to post')),
+        const SnackBar(content: Text('Please write something or add an image to post')),
       );
       return;
     }
@@ -67,12 +131,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     });
 
     try {
+      // 1. Upload images if any
+      final List<String> imageUrls = await _uploadToCloudinary();
+
+      if (_images.isNotEmpty && imageUrls.isEmpty) {
+        throw Exception("Failed to upload images");
+      }
+
       final newPost = Post(
         id: '', // Firestore will generate this
         userId: user.uid,
         userName: user.displayName,
         userAvatar: user.photoUrl ?? '',
-        images: const [], // TODO: Image uploading support later
+        images: imageUrls,
         caption: caption,
         likesCount: 0,
         commentsCount: 0,
@@ -186,8 +257,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               // Text Field
               TextField(
                 controller: _captionController,
-                maxLines: 8,
-                minLines: 4,
+                maxLines: 6,
+                minLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Share your experience...',
                   hintStyle: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
@@ -196,6 +267,54 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 style: AppTypography.bodyLarge,
               ),
               
+              const SizedBox(height: AppSpacing.md),
+
+              // Image Preview
+              if (_images.isNotEmpty)
+                SizedBox(
+                  height: 120,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _images.length,
+                    separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      return Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            child: Image.file(
+                              _images[index],
+                              height: 120,
+                              width: 120,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeImage(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+              const SizedBox(height: AppSpacing.md),
               const Divider(color: AppColors.border),
               const SizedBox(height: AppSpacing.md),
 
@@ -258,17 +377,15 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               
               const SizedBox(height: AppSpacing.xl),
               
-              // Future enhancements: Add Image picker, Add Experience link buttons
+              // Interaction Buttons
               Row(
                 children: [
-                  IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Image upload coming soon!')),
-                      );
-                    },
-                    icon: const Icon(Icons.image_outlined, color: AppColors.textSecondary),
+                  TextButton.icon(
+                    onPressed: _pickImages,
+                    icon: const Icon(Icons.image_outlined, color: AppColors.primary),
+                    label: Text('Add Photos', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
                   ),
+                  const Spacer(),
                   IconButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(

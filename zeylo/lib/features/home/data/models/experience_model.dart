@@ -231,6 +231,13 @@ class ExperienceModel {
 
   factory ExperienceModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    DateTime parseDate(dynamic date) {
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      return DateTime.now();
+    }
+
     return ExperienceModel(
       id: doc.id,
       title: data['title'] as String,
@@ -263,10 +270,42 @@ class ExperienceModel {
                   (e) => AvailabilityModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: parseDate(data['createdAt']),
+      updatedAt: parseDate(data['updatedAt']),
       isHostVerified: data['isHostVerified'] as bool? ?? false,
     );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'title': title,
+      'description': description,
+      'shortDescription': shortDescription,
+      'hostId': hostId,
+      'hostName': hostName,
+      'hostPhotoUrl': hostPhotoUrl,
+      'category': category,
+      'subcategory': subcategory,
+      'images': images,
+      'coverImage': coverImage,
+      'price': price,
+      'currency': currency,
+      'duration': duration,
+      'maxGuests': maxGuests,
+      'location': location.toJson(),
+      'includes': includes,
+      'requirements': requirements,
+      'languages': languages,
+      'averageRating': averageRating,
+      'reviewCount': reviewCount,
+      'isActive': isActive,
+      'isMysteryAvailable': isMysteryAvailable,
+      'tags': tags,
+      'availability': availability.map((e) => e.toJson()).toList(),
+      'createdAt': cloud_firestore.Timestamp.fromDate(createdAt),
+      'updatedAt': cloud_firestore.Timestamp.fromDate(updatedAt),
+      'isHostVerified': isHostVerified,
+    };
   }
 
   Map<String, dynamic> toJson() {

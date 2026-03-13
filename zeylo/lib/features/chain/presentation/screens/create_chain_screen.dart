@@ -293,7 +293,7 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
                 exp.title,
                 '${exp.startTime} - ${exp.endTime}',
                 '${exp.duration}h',
-                '\$${exp.price.toStringAsFixed(0)}',
+                'Rs. ${exp.price.toStringAsFixed(0)}',
               ),
             );
           }),

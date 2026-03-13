@@ -175,10 +175,12 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                     flex: 1,
                     child: ZeyloTextField(
                       label: 'Budget Min',
-                      hint: '\$0',
+                      hint: 'Rs. 0',
                       controller: _budgetMinController,
-                      prefixWidget: const Icon(Icons.attach_money,
-                          color: AppColors.textSecondary, size: 20),
+                      prefixWidget: const Padding(
+                        padding: EdgeInsets.only(left: 12, top: 12),
+                        child: Text('Rs. ', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                      ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
                         final val = double.tryParse(value) ?? 0;
@@ -191,10 +193,12 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                     flex: 1,
                     child: ZeyloTextField(
                       label: 'Budget Max',
-                      hint: '\$500',
+                      hint: 'Rs. 50,000',
                       controller: _budgetMaxController,
-                      prefixWidget: const Icon(Icons.attach_money,
-                          color: AppColors.textSecondary, size: 20),
+                      prefixWidget: const Padding(
+                        padding: EdgeInsets.only(left: 12, top: 12),
+                        child: Text('Rs. ', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                      ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
                         final val = double.tryParse(value) ?? 500;

@@ -15,6 +15,8 @@ import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/location_picker.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/custom_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CreateExperienceScreen extends ConsumerStatefulWidget {
@@ -216,15 +218,15 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         'shortDescription': shortDesc,
         'description': desc,
         'hostId': user.uid,
-        'hostName': user.displayName ?? 'Zeylo Host',
-        'hostPhotoUrl': user.photoURL ?? '',
+        'hostName': userDoc.data()?['displayName'] ?? user.displayName ?? 'Zeylo Host',
+        'hostPhotoUrl': userDoc.data()?['photoUrl'] ?? user.photoURL ?? '',
         'isHostVerified': isHostVerified,
         'category': 'Activities',
         'subcategory': 'General',
         'images': [finalImageUrl],
         'coverImage': finalImageUrl,
         'price': price,
-        'currency': 'USD',
+        'currency': 'LKR',
         'duration': duration,
         'maxGuests': maxGuests,
         'location': {
@@ -345,225 +347,260 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
   Widget _buildForm(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Cover Image', style: AppTypography.titleLarge),
-            const SizedBox(height: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section 1: Hero Media
+          _buildSectionHeader('Experience Identity', Icons.auto_awesome_mosaic_rounded),
+          const SizedBox(height: AppSpacing.md),
+          _buildMediaPicker(),
+          
+          const SizedBox(height: AppSpacing.lg),
+          _buildFormSection(
+            children: [
+              _buildModernTextField(_titleController, 'Experience Title', 'e.g., Sunset Surfing', Icons.title_rounded),
+              const SizedBox(height: AppSpacing.lg),
+              _buildModernTextField(_shortDescController, 'Catchy One-Liner', 'A brief, exciting hook...', Icons.short_text_rounded),
+            ],
+          ),
 
-            // Image Picker Box (uploads to Cloudinary)
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: _selectedImage != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: Image.file(_selectedImage!, fit: BoxFit.cover),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_photo_alternate,
-                              size: 40, color: AppColors.primary),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text('Upload Cover Photo',
-                              style: AppTypography.titleMedium),
-                          Text('Tap to pick from gallery',
-                              style: AppTypography.bodySmallSecondary),
-                        ],
-                      ),
-              ),
-            ),
+          const SizedBox(height: AppSpacing.xl),
+          
+          // Section 2: Narrative
+          _buildSectionHeader('The Story', Icons.description_rounded),
+          const SizedBox(height: AppSpacing.md),
+          _buildNarrativeSection(),
 
-            const SizedBox(height: AppSpacing.md),
-            const Center(
-              child: Text('OR',
-                  style: TextStyle(
-                      color: Colors.grey, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Manual URL Fallback
-            TextField(
-              controller: _imageUrlController,
-              onChanged: (val) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: 'Paste Image Link Instead',
-                hintText: 'https://...',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm)),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.auto_awesome,
-                      color: AppColors.secondary),
-                  onPressed: _generateRandomImage,
-                  tooltip: 'Get random image based on title',
-                ),
-              ),
-            ),
-
-            if (_imageUrlController.text.isNotEmpty && _selectedImage == null) ...[
-              const SizedBox(height: AppSpacing.md),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                child: Image.network(
-                  _imageUrlController.text,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, err, stack) => Container(
-                    height: 200,
-                    color: AppColors.surface,
-                    child: const Center(child: Text('Invalid Image URL')),
+          const SizedBox(height: AppSpacing.xl),
+          
+          // Section 3: Logistics
+          _buildSectionHeader('Logistics & Pricing', Icons.monetization_on_rounded),
+          const SizedBox(height: AppSpacing.md),
+          _buildFormSection(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildModernTextField(_priceController, 'Price (LKR)', '5000', Icons.payments_rounded, isNumber: true),
                   ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _buildModernTextField(_durationController, 'Mins', '120', Icons.timer_outlined, isNumber: true),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _buildModernTextField(_maxGuestsController, 'Group Size Limit', 'e.g., 4', Icons.groups_rounded, isNumber: true),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+          
+          // Section 4: Location
+          _buildSectionHeader('Location Mapping', Icons.location_on_rounded),
+          const SizedBox(height: AppSpacing.md),
+          _buildLocationSection(),
+
+          const SizedBox(height: 40),
+
+          // Action Chips (Publish)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text('Save Draft', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: ZeyloButton(
+                  onPressed: _isLoading ? null : _submitExperience,
+                  label: 'Publish Experience',
+                  isLoading: _isLoading,
+                  variant: ButtonVariant.filled,
                 ),
               ),
             ],
-
-            const SizedBox(height: AppSpacing.xl),
-            Text('Basic Info', style: AppTypography.titleLarge),
-            const SizedBox(height: AppSpacing.md),
-
-            _buildTextField(_titleController, 'Experience Title',
-                'e.g., Sunset Surfing'),
-            const SizedBox(height: AppSpacing.sm),
-            _buildTextField(_shortDescController, 'Short Description',
-                'A catchy one liner...'),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Description with AI Button
-            TextField(
-              controller: _descController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                labelText: 'Full Description',
-                hintText: 'What will guests do?',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.sm)),
-                suffixIcon: IconButton(
-                  icon: _isAIEnhancing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child:
-                              CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.auto_awesome,
-                          color: AppColors.secondary),
-                  onPressed:
-                      _isAIEnhancing ? null : _enhanceDescriptionWithAI,
-                  tooltip: 'Enhance with AI',
-                ),
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-            Text('Details', style: AppTypography.titleLarge),
-            const SizedBox(height: AppSpacing.md),
-
-            Row(
-              children: [
-                Expanded(
-                    child: _buildTextField(_priceController, 'Price (USD)',
-                        'e.g., 50',
-                        isNumber: true)),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                    child: _buildTextField(_durationController,
-                        'Duration (mins)', 'e.g., 120',
-                        isNumber: true)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _buildTextField(_maxGuestsController, 'Max Guests allowed',
-                'e.g., 4',
-                isNumber: true),
-
-            const SizedBox(height: AppSpacing.lg),
-            Text('Location', style: AppTypography.titleLarge),
-            const SizedBox(height: AppSpacing.md),
-
-            _buildTextField(
-                _addressController, 'Street Address', '123 Beach Rd'),
-            const SizedBox(height: AppSpacing.sm),
-            _buildTextField(_cityController, 'City', 'Weligama'),
-            const SizedBox(height: AppSpacing.md),
-            
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  final result = await Navigator.push<LocationResult>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ZeyloLocationPicker(),
-                    ),
-                  );
-                  if (result != null) {
-                    setState(() {
-                      _addressController.text = result.address;
-                      _cityController.text = result.city;
-                      _selectedLatLng = result.latLng;
-                    });
-                  }
-                },
-                icon: const Icon(Icons.map),
-                label: Text(_selectedLatLng == null ? 'Pick on Map' : 'Change Location'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  side: const BorderSide(color: AppColors.primary),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitExperience,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md)),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text('Publish Experience',
-                        style: AppTypography.labelLarge
-                            .copyWith(color: Colors.white)),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-          ],
-        ),
-      );
-  }
-
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    String hint, {
-    bool isNumber = false,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+        ],
       ),
     );
   }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Text(
+          title.toUpperCase(),
+          style: AppTypography.labelMedium.copyWith(
+            color: AppColors.primary,
+            letterSpacing: 1.2,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormSection({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildMediaPicker() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _pickImage,
+          child: Container(
+            width: double.infinity,
+            height: 220,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+            ),
+            child: _selectedImage != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.add_photo_alternate_rounded,
+                            size: 32, color: AppColors.primary),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text('Upload Cover Illustration',
+                          style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      Text('Tap to select from gallery',
+                          style: AppTypography.bodySmallSecondary),
+                    ],
+                  ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildModernTextField(_imageUrlController, 'Or Paste Image URL', 'https://...', Icons.link_rounded, 
+          suffix: IconButton(
+            icon: const Icon(Icons.auto_awesome, color: AppColors.secondary, size: 20),
+            onPressed: _generateRandomImage,
+            tooltip: 'Auto-generate',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNarrativeSection() {
+    return _buildFormSection(
+      children: [
+        TextField(
+          controller: _descController,
+          maxLines: 6,
+          style: AppTypography.bodyLarge,
+          decoration: InputDecoration(
+            labelText: 'Full Description',
+            hintText: 'What makes this experience unique?',
+            alignLabelWithHint: true,
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(bottom: 100),
+              child: Icon(Icons.history_edu_rounded, size: 20),
+            ),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(bottom: 100, right: 8),
+              child: IconButton(
+                icon: _isAIEnhancing
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.auto_awesome_rounded, color: AppColors.secondary),
+                onPressed: _isAIEnhancing ? null : _enhanceDescriptionWithAI,
+                tooltip: 'Enhance with AI ✨',
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return _buildFormSection(
+      children: [
+        _buildModernTextField(_addressController, 'Street Address', '123 Beach Rd', Icons.location_city_rounded),
+        const SizedBox(height: AppSpacing.lg),
+        _buildModernTextField(_cityController, 'City', 'Weligama', Icons.map_rounded),
+        const SizedBox(height: AppSpacing.xl),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              final result = await Navigator.push<LocationResult>(
+                context,
+                MaterialPageRoute(builder: (context) => const ZeyloLocationPicker()),
+              );
+              if (result != null) {
+                setState(() {
+                  _addressController.text = result.address;
+                  _cityController.text = result.city;
+                  _selectedLatLng = result.latLng;
+                });
+              }
+            },
+            icon: const Icon(Icons.explore_rounded, size: 20),
+            label: Text(_selectedLatLng == null ? 'Set Location on Map' : 'Update Map Coordinates'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.surfaceContainerLow,
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernTextField(TextEditingController controller, String label, String hint, IconData icon, {bool isNumber = false, Widget? suffix}) {
+    return ZeyloTextField(
+      controller: controller,
+      label: label,
+      hint: hint,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      prefixIcon: Icon(icon, size: 20, color: AppColors.textSecondary.withOpacity(0.7)),
+      child: suffix,
+    );
+  }
+
 }

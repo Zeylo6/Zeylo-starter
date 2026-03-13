@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -27,6 +30,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _bioController;
+  File? _imageFile;
   bool _isLoading = false;
 
   @override
@@ -47,6 +51,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider(widget.userId));
@@ -54,7 +72,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return profileAsync.when(
       data: (profile) {
         // Initialize controllers with profile data
-        if (_nameController.text.isEmpty) {
+        if (_nameController.text.isEmpty && !_isLoading) {
           _nameController.text = profile.name;
           _emailController.text = profile.email ?? '';
           _phoneController.text = profile.phone ?? '';
@@ -115,92 +133,250 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Name field
-            ZeyloTextField(
-              label: 'Full Name',
-              hint: 'Your full name',
-              controller: _nameController,
-              keyboardType: TextInputType.name,
-            ),
-            const SizedBox(height: AppSpacing.md),
+      body: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Profile image section (Hero with premium overlay)
+              Center(
+                child: Stack(
+                  children: [
+                    Hero(
+                      tag: 'profile_avatar_${widget.userId}',
+                      child: Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.surfaceContainerLow, // Fallback color
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.2),
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.12),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          image: _imageFile != null
+                              ? DecorationImage(
+                                  image: FileImage(_imageFile!),
+                                  fit: BoxFit.cover,
+                                )
+                              : (profile.photoUrl != null &&
+                                      profile.photoUrl!.isNotEmpty
+                                  ? DecorationImage(
+                                      image: CachedNetworkImageProvider(
+                                          profile.photoUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null),
+                        ),
+                        child: _imageFile == null &&
+                                (profile.photoUrl == null ||
+                                    profile.photoUrl!.isEmpty)
+                            ? Icon(
+                                Icons.person_rounded,
+                                size: 64,
+                                color: AppColors.primary.withOpacity(0.5),
+                              )
+                            : null,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
 
-            // Email field
-            ZeyloTextField(
-              label: 'Email',
-              hint: 'your.email@example.com',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: AppSpacing.md),
+              // Inputs Grouped in a Section
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    ZeyloTextField(
+                      label: 'Full Name',
+                      hint: 'Your full name',
+                      controller: _nameController,
+                      keyboardType: TextInputType.name,
+                      prefixIcon: const Icon(Icons.person_outline, size: 20),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ZeyloTextField(
+                      label: 'Email Address',
+                      hint: 'your.email@example.com',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      enabled: false,
+                      prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ZeyloTextField(
+                      label: 'Phone Number',
+                      hint: '+1 (555) 000-0000',
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      prefixIcon: const Icon(Icons.phone_outlined, size: 20),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ZeyloTextField(
+                      label: 'Short Bio',
+                      hint: 'Tell us a bit about your experiences...',
+                      controller: _bioController,
+                      maxLines: 4,
+                      prefixIcon: const Icon(Icons.description_outlined, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
 
-            // Phone field
-            ZeyloTextField(
-              label: 'Phone Number',
-              hint: '+1 (555) 000-0000',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Bio field
-            ZeyloTextField(
-              label: 'Bio',
-              hint: 'Tell us about yourself',
-              controller: _bioController,
-              maxLines: 4,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // Save button
-            ZeyloButton(
-              onPressed: _isLoading ? null : _handleSave,
-              label: 'Save Changes',
-              isLoading: _isLoading,
-              variant: ButtonVariant.filled,
-            ),
-          ],
+              // Action Chips (Modern Save/Cancel)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text('Cancel', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: ZeyloButton(
+                      onPressed: _isLoading ? null : () => _handleSave(profile),
+                      label: 'Save Changes',
+                      isLoading: _isLoading,
+                      variant: ButtonVariant.filled,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _handleSave() async {
+  Future<void> _handleSave(UserProfileEntity profile) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final profileAsync = ref.watch(profileProvider(widget.userId));
-      profileAsync.whenData((profile) async {
-        final updatedProfile = profile.copyWith(
-          name: _nameController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          bio: _bioController.text,
+      final repository = ref.read(profileRepositoryProvider);
+      String? updatedPhotoUrl = profile.photoUrl;
+
+      // 1. Upload new image if selected
+      if (_imageFile != null) {
+        final imageBytes = await _imageFile!.readAsBytes();
+        final uploadResult = await repository.uploadProfileImage(
+          widget.userId,
+          imageBytes,
         );
 
-        final repository = ref.watch(profileRepositoryProvider);
-        final result = await repository.updateProfile(widget.userId, updatedProfile);
-
-        result.fold(
-          (failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${failure.message}')),
-            );
-          },
-          (_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile updated successfully')),
-            );
-            Navigator.pop(context);
-          },
+        uploadResult.fold(
+          (failure) => throw Exception('Failed to upload image: ${failure.message}'),
+          (url) => updatedPhotoUrl = url,
         );
-      });
+      }
+
+      // 2. Update profile
+      final updatedProfile = profile.copyWith(
+        name: _nameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        bio: _bioController.text,
+        photoUrl: updatedPhotoUrl,
+        updatedAt: DateTime.now(),
+      );
+
+      final result = await repository.updateProfile(widget.userId, updatedProfile);
+
+      await result.fold(
+        (failure) async {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${failure.message}')),
+          );
+        },
+        (_) async {
+          // 3. Sync to experiences if name or photo changed
+          if (profile.name != updatedProfile.name ||
+              profile.photoUrl != updatedProfile.photoUrl) {
+            await repository.syncHostProfileToExperiences(
+              widget.userId,
+              updatedProfile.name,
+              updatedProfile.photoUrl,
+            );
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully')),
+          );
+          
+          // Refresh profile data
+          ref.read(profileProvider(widget.userId).notifier).loadProfile();
+          
+          Navigator.pop(context);
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     } finally {
       setState(() {
         _isLoading = false;

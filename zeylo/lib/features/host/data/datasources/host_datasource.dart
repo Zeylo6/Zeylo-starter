@@ -15,6 +15,9 @@ abstract class HostDatasource {
 
   /// Get earnings trend percentage
   Future<double> getEarningsTrend(String hostId);
+
+  /// Watch this month's earnings reactively
+  Stream<double> watchThisMonthEarnings(String hostId);
 }
 
 /// Firestore implementation of host datasource
@@ -165,5 +168,28 @@ class HostFirestoreDatasource implements HostDatasource {
     } catch (e) {
       return 0;
     }
+  }
+
+  @override
+  Stream<double> watchThisMonthEarnings(String hostId) {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0);
+
+    return _firestore
+        .collection(_hostsCollection)
+        .doc(hostId)
+        .collection(_earningsCollection)
+        .where('date',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
+        .snapshots()
+        .map((snapshot) {
+      double total = 0;
+      for (final doc in snapshot.docs) {
+        total += (doc.data()['amount'] as num?)?.toDouble() ?? 0;
+      }
+      return total;
+    });
   }
 }

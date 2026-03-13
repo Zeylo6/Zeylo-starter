@@ -12,7 +12,7 @@ class AppConstants {
   static const String packageName = 'com.zeylo.app';
 
   // Defaults
-  static const String defaultCurrency = 'USD';
+  static const String defaultCurrency = 'LKR';
   static const String defaultCountryCode = '+94'; // Sri Lanka
   static const String defaultLanguage = 'en';
   static const String defaultLocale = 'en_US';
@@ -99,8 +99,8 @@ class AppConstants {
 
   // Pricing
   static const double zeyloCommissionPercentage = 0.10; // 10%
-  static const double minimumPriceUSD = 1.0;
-  static const double maximumPriceUSD = 100000.0;
+  static const double minimumPriceLKR = 300.0;
+  static const double maximumPriceLKR = 1000000.0;
 
   // Social Features
   static const int maxFollowers = 999999;

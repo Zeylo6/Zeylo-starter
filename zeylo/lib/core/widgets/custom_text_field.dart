@@ -105,8 +105,13 @@ class ZeyloTextField extends StatefulWidget {
     this.readOnly = false,
     this.onTap,
     this.borderRadius = AppRadius.md,
+    this.prefixIcon,
+    this.child,
     super.key,
   });
+
+  final Widget? prefixIcon;
+  final Widget? child;
 
   @override
   State<ZeyloTextField> createState() => _ZeyloTextFieldState();
@@ -159,6 +164,7 @@ class _ZeyloTextFieldState extends State<ZeyloTextField> {
   Widget _buildTextField() {
     return Container(
       decoration: BoxDecoration(
+        color: widget.enabled ? AppColors.surfaceContainerHigh : AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(widget.borderRadius),
         border: Border.all(
           color: widget.errorText != null
@@ -196,16 +202,16 @@ class _ZeyloTextFieldState extends State<ZeyloTextField> {
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
           ),
-          prefixIcon: widget.prefixWidget != null
+          prefixIcon: widget.prefixIcon ?? (widget.prefixWidget != null
               ? Padding(
                   padding: const EdgeInsets.only(left: AppSpacing.lg),
                   child: widget.prefixWidget,
                 )
-              : null,
-          prefixIconConstraints: widget.prefixWidget != null
+              : null),
+          prefixIconConstraints: (widget.prefixIcon != null || widget.prefixWidget != null)
               ? const BoxConstraints(minHeight: 0, minWidth: 0)
               : null,
-          suffixIcon: _buildSuffixIcon(),
+          suffixIcon: widget.child ?? _buildSuffixIcon(),
           suffixIconConstraints: const BoxConstraints(minHeight: 0, minWidth: 0),
           counterText: widget.showCounter ? null : '',
         ),

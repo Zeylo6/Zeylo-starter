@@ -40,7 +40,7 @@ class _MoodResultsScreenState extends ConsumerState<MoodResultsScreen> {
       description: 'Learn to surf with experienced instructors',
       matchPercentage: 98,
       imageUrl: 'https://via.placeholder.com/300x200?text=Surfing',
-      price: '25-50',
+      price: '5000-8000',
       type: MoodResultType.event,
     ),
     MoodExperienceResult(
@@ -62,7 +62,7 @@ class _MoodResultsScreenState extends ConsumerState<MoodResultsScreen> {
       description: 'Relaxing coffee tasting and live acoustic evening',
       matchPercentage: 92,
       imageUrl: 'https://via.placeholder.com/300x200?text=Business',
-      price: '10-20',
+      price: '3000-5000',
       type: MoodResultType.business,
     ),
   ];
@@ -350,7 +350,7 @@ class _MoodResultsScreenState extends ConsumerState<MoodResultsScreen> {
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Text(
-                      '\$${result.price}',
+                      'Rs. ${result.price}',
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,

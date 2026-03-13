@@ -9,8 +9,18 @@ service cloud.firestore {
       allow update: if request.auth != null && (
         request.auth.uid == userId || 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']))
+        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['stats', 'followerCount', 'followingCount', 'postsCount']))
       );
+
+      // Followers/Following Subcollections
+      match /followers/{followerId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == followerId;
+      }
+      match /following/{followingId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // Categories collection
@@ -36,7 +46,7 @@ service cloud.firestore {
 
       match /earnings/{earningId} {
         allow read: if request.auth != null && request.auth.uid == hostId;
-        allow write: if false; // System generated
+        allow write: if request.auth != null && request.auth.uid == hostId;
       }
     }
 
@@ -75,7 +85,11 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid == data.hostId ||
+        request.auth.uid == resource.data.hostId
+      );
       allow delete: if request.auth != null;
     }
 
@@ -95,10 +109,19 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
-    // Communities collection
-    match /communities/{communityId} {
+    // Posts collection (Community Feed)
+    match /posts/{postId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount'])
+      );
+      allow delete: if request.auth != null && (
+        request.auth.uid == resource.data.userId || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
 
     // Chains collection

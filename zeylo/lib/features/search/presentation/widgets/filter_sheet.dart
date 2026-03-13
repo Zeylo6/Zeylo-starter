@@ -29,7 +29,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   @override
   void initState() {
     super.initState();
-    _priceRange = const RangeValues(0, 10000);
+    _priceRange = const RangeValues(0, 50000);
   }
 
   @override
@@ -208,11 +208,11 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
         RangeSlider(
           values: priceRange,
           min: 0,
-          max: 10000,
+          max: 50000,
           divisions: 100,
           labels: RangeLabels(
-            '\$${priceRange.start.toStringAsFixed(0)}',
-            '\$${priceRange.end.toStringAsFixed(0)}',
+            'Rs. ${priceRange.start.toStringAsFixed(0)}',
+            'Rs. ${priceRange.end.toStringAsFixed(0)}',
           ),
           onChanged: (values) {
             ref.read(priceRangeProvider.notifier).state = values;
@@ -222,7 +222,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
-          '\$${priceRange.start.toStringAsFixed(0)} - \$${priceRange.end.toStringAsFixed(0)}',
+          'Rs. ${priceRange.start.toStringAsFixed(0)} - Rs. ${priceRange.end.toStringAsFixed(0)}',
           style: AppTypography.bodyMedium,
         ),
       ],
@@ -315,7 +315,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
 
   void _resetFilters() {
     ref.read(selectedCategoryProvider.notifier).state = null;
-    ref.read(priceRangeProvider.notifier).state = const RangeValues(0, 10000);
+    ref.read(priceRangeProvider.notifier).state = const RangeValues(0, 50000);
     ref.read(selectedRatingProvider.notifier).state = null;
     setState(() {
       _maxDistance = 50;

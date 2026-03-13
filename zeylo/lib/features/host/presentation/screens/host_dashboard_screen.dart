@@ -6,14 +6,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/custom_button.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../providers/host_provider.dart';
-import '../widgets/active_experience_tile.dart';
 import '../widgets/active_experience_tile.dart';
 import '../widgets/host_stats_header.dart';
 import '../widgets/performance_section.dart';
@@ -53,6 +54,7 @@ class HostDashboardScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
+          const SizedBox(width: AppSpacing.sm),
           IconButton(
             icon: const Icon(Icons.calendar_month),
             color: AppColors.textPrimary,
@@ -311,11 +313,11 @@ class HostDashboardScreen extends ConsumerWidget {
                             : DateTime.now();
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: AppColors.border),
                           ),
                           child: Column(
@@ -325,51 +327,66 @@ class HostDashboardScreen extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          data['experienceTitle'] ??
-                                              'Experience',
-                                          style: AppTypography.labelMedium
-                                              .copyWith(
-                                            fontWeight: FontWeight.bold,
+                                          data['experienceTitle'] ?? 'Experience',
+                                          style: AppTypography.titleMedium.copyWith(
+                                            fontWeight: FontWeight.w800,
                                             color: AppColors.textPrimary,
+                                            letterSpacing: -0.5,
                                           ),
                                         ),
-                                        Text(
-                                          '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
-                                          style:
-                                              AppTypography.bodySmall.copyWith(
-                                            color: AppColors.textSecondary,
-                                          ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.calendar_today_outlined, size: 12, color: AppColors.textSecondary),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
+                                              style: AppTypography.bodySmallSecondary,
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
                                   Text(
-                                    '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                    style: AppTypography.labelMedium.copyWith(
+                                    'LKR ${(data['totalPrice'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                                    style: AppTypography.titleMedium.copyWith(
                                       color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.md),
+                              const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  const Icon(Icons.person_outline,
-                                      size: 16, color: AppColors.textSecondary),
+                                  _SeekerAvatar(
+                                    userId: data['userId'] ?? '',
+                                    initialPhotoUrl: data['seekerPhotoUrl'] ?? data['seeker_photo_url'],
+                                    radius: 12,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _SeekerNameText(
+                                    userId: data['userId'] ?? '',
+                                    initialName: data['seekerName'] ?? data['seeker_name'],
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.people_outline, size: 14, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${data['guests'] ?? 1} guest(s)',
-                                    style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary),
+                                    '${data['guests'] ?? 1}',
+                                    style: AppTypography.bodySmallSecondary,
                                   ),
                                   const Spacer(),
                                   SizedBox(
-                                    height: 36,
+                                    height: 38,
                                     child: ElevatedButton(
                                       onPressed: () async {
                                         await FirebaseFirestore.instance
@@ -378,13 +395,10 @@ class HostDashboardScreen extends ConsumerWidget {
                                             .update({'status': 'ongoing'});
 
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                          ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(
-                                              content: Text(
-                                                  'Experience started! It is now ongoing.'),
-                                              backgroundColor:
-                                                  AppColors.primary,
+                                              content: Text('Experience started! Enjoy the journey.'),
+                                              backgroundColor: AppColors.primary,
                                             ),
                                           );
                                         }
@@ -392,17 +406,13 @@ class HostDashboardScreen extends ConsumerWidget {
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.primary,
                                         foregroundColor: Colors.white,
+                                        elevation: 0,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              AppRadius.sm),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
                                       ),
-                                      child: const Text('Start Experience',
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold)),
+                                      child: const Text('Start', style: TextStyle(fontWeight: FontWeight.bold)),
                                     ),
                                   ),
                                 ],
@@ -410,6 +420,7 @@ class HostDashboardScreen extends ConsumerWidget {
                             ],
                           ),
                         );
+
                       }).toList(),
                     );
                   },
@@ -481,18 +492,21 @@ class HostDashboardScreen extends ConsumerWidget {
                     return Column(
                       children: ongoingBookings.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final date = data['date'] is Timestamp
-                            ? (data['date'] as Timestamp).toDate()
-                            : DateTime.now();
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(
-                                color: AppColors.primary.withAlpha(80)),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.04),
+                                blurRadius: 15,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,31 +514,20 @@ class HostDashboardScreen extends ConsumerWidget {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withAlpha(30),
-                                      borderRadius:
-                                          BorderRadius.circular(AppRadius.full),
+                                      color: AppColors.primaryExtraLight,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: AppColors.primary,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
+                                        const Icon(Icons.play_circle_filled_rounded, size: 14, color: AppColors.primary),
                                         const SizedBox(width: 6),
                                         Text(
                                           'ONGOING',
-                                          style:
-                                              AppTypography.labelSmall.copyWith(
+                                          style: AppTypography.labelSmall.copyWith(
                                             color: AppColors.primary,
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 10,
                                           ),
                                         ),
                                       ],
@@ -533,63 +536,67 @@ class HostDashboardScreen extends ConsumerWidget {
                                   const Spacer(),
                                   Row(
                                     children: [
-                                      GestureDetector(
-                                        onTap: () => _showReportSheet(
-                                            context, doc.id, data['userId']),
-                                        child: Container(
-                                          margin: const EdgeInsets.only(
-                                              right: AppSpacing.sm),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.error
-                                                .withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                                AppRadius.sm),
-                                            border: Border.all(
-                                                color: AppColors.error
-                                                    .withOpacity(0.5)),
-                                          ),
-                                          child: const Icon(Icons.flag_rounded,
-                                              size: 16, color: AppColors.error),
-                                        ),
+                                      IconButton(
+                                        onPressed: () => _showReportSheet(context, doc.id, data['userId']),
+                                        icon: const Icon(Icons.flag_rounded, size: 18, color: AppColors.error),
+                                        visualDensity: VisualDensity.compact,
+                                        tooltip: 'Report Seeker',
                                       ),
                                       Text(
-                                        '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                        style:
-                                            AppTypography.labelMedium.copyWith(
+                                        'LKR ${(data['totalPrice'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                                        style: AppTypography.titleMedium.copyWith(
                                           color: AppColors.primary,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w800,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.md),
+                              const SizedBox(height: 16),
                               Text(
                                 data['experienceTitle'] ?? 'Experience',
-                                style: AppTypography.labelMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                style: AppTypography.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w800,
                                   color: AppColors.textPrimary,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              Text(
-                                '${date.day}/${date.month}/${date.year} at ${data['startTime'] ?? ''}',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
+                              const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  const Icon(Icons.person_outline,
-                                      size: 16, color: AppColors.textSecondary),
+                                  const Icon(Icons.access_time_rounded, size: 12, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${data['guests'] ?? 1} guest(s)',
-                                    style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary),
+                                    'Started at ${data['startTime'] ?? ''}',
+                                    style: AppTypography.bodySmallSecondary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  _SeekerAvatar(
+                                    userId: data['userId'] ?? '',
+                                    initialPhotoUrl: data['seekerPhotoUrl'] ?? data['seeker_photo_url'],
+                                    radius: 12,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _SeekerNameText(
+                                    userId: data['userId'] ?? '',
+                                    initialName: data['seekerName'] ?? data['seeker_name'],
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    'Awaiting completion...',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -664,6 +671,7 @@ class HostDashboardScreen extends ConsumerWidget {
                         return ActiveExperienceTile(
                           experienceId: doc.id,
                           title: data['title'] ?? 'Untitled Experience',
+                          thumbnailUrl: data['coverImage'] as String?,
                           onEditPressed: () {
                             _showEditExperienceSheet(context, doc.id, data);
                           },
@@ -856,13 +864,13 @@ class HostDashboardScreen extends ConsumerWidget {
                         final bool isRatedByHost = data['isRatedByHost'] == true;
 
                         return Container(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: AppColors.success.withAlpha(60),
+                              color: const Color(0xFF10B981).withOpacity(0.1),
                               width: 1,
                             ),
                           ),
@@ -871,23 +879,23 @@ class HostDashboardScreen extends ConsumerWidget {
                             children: [
                               Row(
                                 children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: AppColors.success.withAlpha(25),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.sm),
-                                ),
-                                child: const Icon(
-                                  Icons.event_available,
-                                  color: AppColors.success,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.check_circle_rounded,
+                                      color: Color(0xFF10B981),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       data['experienceTitle'] ?? 'Experience',
@@ -897,33 +905,63 @@ class HostDashboardScreen extends ConsumerWidget {
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    Text(
-                                      '${date.day}/${date.month}/${date.year}  •  ${data['guests'] ?? 1} guest(s)',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${date.day}/${date.month}/${date.year}  •  ',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        _SeekerAvatar(
+                                          userId: data['userId'] ?? '',
+                                          initialPhotoUrl: (data['seekerPhotoUrl'] ?? data['seeker_photo_url']),
+                                          radius: 8,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        _SeekerNameText(
+                                          userId: data['userId'] ?? '',
+                                          initialName: (data['seekerName'] ?? data['seeker_name']),
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success.withAlpha(25),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadius.full),
+                                    ),
+                                    child: Text(
+                                      'LKR ${(data['totalPrice'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: AppColors.success,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.success.withAlpha(25),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.full),
-                                ),
-                                child: Text(
-                                  '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: AppColors.success,
-                                    fontWeight: FontWeight.w800,
                                   ),
-                                ),
-                              ),
                                 ],
                               ),
+                              if (data['isEarningsCollected'] != true) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ZeyloButton(
+                                    onPressed: () => _collectEarnings(context, ref, doc.id, data),
+                                    label: '💰  Collect Earnings',
+                                    variant: ButtonVariant.filled,
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                ),
+                              ],
                               if (!isRatedByHost) ...[
                                 const SizedBox(height: AppSpacing.md),
                                 SizedBox(
@@ -944,6 +982,8 @@ class HostDashboardScreen extends ConsumerWidget {
                                     totalPrice: (data['totalPrice'] as num?)?.toDouble() ?? 0.0,
                                     status: data['status'] ?? 'completed',
                                     paymentStatus: data['paymentStatus'] ?? 'paid',
+                                    seekerName: data['seekerName'],
+                                    seekerPhotoUrl: data['seekerPhotoUrl'] ?? data['seeker_photo_url'],
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                   );
@@ -960,7 +1000,23 @@ class HostDashboardScreen extends ConsumerWidget {
                                   );
                                 },
                                 icon: const Icon(Icons.star_outline_rounded, size: 18),
-                                label: const Text('Rate Seeker'),
+                                label: StreamBuilder<DocumentSnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(data['userId'] ?? '')
+                                      .snapshots(),
+                                  builder: (context, userSnapshot) {
+                                    String firstName = 'Seeker';
+                                    if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                                      final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                                      final fullName = userData?['displayName'] as String? ?? data['seekerName'] ?? data['seeker_name'] ?? 'Seeker';
+                                      firstName = fullName.split(' ').first;
+                                    } else {
+                                      firstName = (data['seekerName'] ?? data['seeker_name'] ?? 'Seeker').split(' ').first;
+                                    }
+                                    return Text('Rate $firstName');
+                                  },
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
@@ -1027,45 +1083,56 @@ class HostDashboardScreen extends ConsumerWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: bannerColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: bannerColor.withOpacity(0.5)),
+        color: bannerColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: bannerColor.withOpacity(0.2)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(iconData, color: bannerColor, size: 28),
-          const SizedBox(width: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: bannerColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(iconData, color: bannerColor, size: 24),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: AppTypography.labelMedium.copyWith(
+                  style: AppTypography.labelLarge.copyWith(
                     color: bannerColor,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   description,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTypography.bodySmallSecondary,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: 12),
                 GestureDetector(
                   onTap: onTap,
-                  child: Text(
-                    actionText,
-                    style: AppTypography.labelMedium.copyWith(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
                       color: bannerColor,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      actionText,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
@@ -1075,6 +1142,53 @@ class HostDashboardScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _collectEarnings(BuildContext context, WidgetRef ref, String bookingId, Map<String, dynamic> data) async {
+    final hostId = ref.read(currentUserProvider).value?.uid;
+    if (hostId == null) return;
+
+    try {
+      final db = FirebaseFirestore.instance;
+      final batch = db.batch();
+
+      // 1. Update booking to mark earnings as collected
+      final bookingRef = db.collection('bookings').doc(bookingId);
+      batch.update(bookingRef, {
+        'isEarningsCollected': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // 2. Record earnings in host's collection
+      final earningsRef = db.collection('hosts').doc(hostId).collection('earnings').doc(bookingId);
+      batch.set(earningsRef, {
+        'amount': (data['totalPrice'] as num?)?.toDouble() ?? 0.0,
+        'date': FieldValue.serverTimestamp(),
+        'bookingId': bookingId,
+        'experienceTitle': data['experienceTitle'],
+        'seekerName': data['seekerName'] ?? data['seeker_name'] ?? 'Seeker',
+      });
+
+      await batch.commit();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Earnings collected successfully! 💰'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to collect earnings: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _showReportSheet(
@@ -1094,12 +1208,19 @@ class HostDashboardScreen extends ConsumerWidget {
 
   Widget _buildProfileCompletionSection(BuildContext context, int completion) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1109,41 +1230,72 @@ class HostDashboardScreen extends ConsumerWidget {
             children: [
               Text(
                 'Profile Completion',
-                style: AppTypography.labelMedium.copyWith(
+                style: AppTypography.labelLarge.copyWith(
                   color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              Text(
-                '$completion%',
-                style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryExtraLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$completion%',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 20),
 
           // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.full),
-            child: LinearProgressIndicator(
-              value: completion / 100,
-              minHeight: 8,
-              backgroundColor: AppColors.border,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
+          Stack(
+            children: [
+              Container(
+                height: 10,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(seconds: 1),
+                height: 10,
+                width: (MediaQuery.of(context).size.width - 80) * (completion / 100),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, Color(0xFF7C3AED)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 16),
 
           // Completion message
-          Text(
-            'Add 2 more photos to reach 100%',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
+          Row(
+            children: [
+              const Icon(Icons.info_outline, size: 14, color: AppColors.textHint),
+              const SizedBox(width: 8),
+              Text(
+                'Add 2 more photos to reach 100%',
+                style: AppTypography.bodySmallSecondary,
+              ),
+            ],
           ),
         ],
       ),
@@ -1305,7 +1457,7 @@ class HostDashboardScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                             child: _buildEditField(
-                                priceController, 'Price (USD)',
+                                priceController, 'Price (LKR)',
                                 isNumber: true)),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
@@ -1351,33 +1503,40 @@ class HostDashboardScreen extends ConsumerWidget {
                                     throw Exception("Image upload failed");
                                   }
 
-                                  // 2. Update Firestore
-                                  await FirebaseFirestore.instance
-                                      .collection('experiences')
-                                      .doc(expId)
-                                      .update({
-                                    'title': titleController.text.trim(),
-                                    'shortDescription':
-                                        shortDescController.text.trim(),
-                                    'description': descController.text.trim(),
-                                    'price': double.tryParse(
-                                            priceController.text.trim()) ??
-                                        0,
-                                    'duration': int.tryParse(
-                                            durationController.text.trim()) ??
-                                        0,
-                                    'maxGuests': int.tryParse(
-                                            maxGuestsController.text.trim()) ??
-                                        0,
-                                    'coverImage': finalImageUrl,
-                                    'images': [
-                                      finalImageUrl
-                                    ], // Resetting images list for now
-                                    'location.address':
-                                        addressController.text.trim(),
-                                    'location.city': cityController.text.trim(),
-                                    'updatedAt': FieldValue.serverTimestamp(),
-                                  });
+                                    // 2. Fetch latest host profile data
+                                    final user = FirebaseAuth.instance.currentUser;
+                                    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user?.uid).get();
+                                    final userData = userDoc.data();
+
+                                    // 3. Update Firestore
+                                    await FirebaseFirestore.instance
+                                        .collection('experiences')
+                                        .doc(expId)
+                                        .update({
+                                      'title': titleController.text.trim(),
+                                      'shortDescription':
+                                          shortDescController.text.trim(),
+                                      'description': descController.text.trim(),
+                                      'price': double.tryParse(
+                                              priceController.text.trim()) ??
+                                          0,
+                                      'duration': int.tryParse(
+                                              durationController.text.trim()) ??
+                                          0,
+                                      'maxGuests': int.tryParse(
+                                              maxGuestsController.text.trim()) ??
+                                          0,
+                                      'coverImage': finalImageUrl,
+                                      'hostName': userData?['displayName'] ?? user?.displayName ?? 'Zeylo Host',
+                                      'hostPhotoUrl': userData?['photoUrl'] ?? user?.photoURL ?? '',
+                                      'images': [
+                                        finalImageUrl
+                                      ], // Resetting images list for now
+                                      'location.address':
+                                          addressController.text.trim(),
+                                      'location.city': cityController.text.trim(),
+                                      'updatedAt': FieldValue.serverTimestamp(),
+                                    });
 
                                   if (context.mounted) {
                                     Navigator.pop(sheetContext);
@@ -1430,6 +1589,90 @@ class HostDashboardScreen extends ConsumerWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
+    );
+  }
+}
+
+class _SeekerNameText extends StatelessWidget {
+  final String userId;
+  final String? initialName;
+  final TextStyle style;
+
+  const _SeekerNameText({
+    required this.userId,
+    this.initialName,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialName != null &&
+        initialName != 'Seeker' &&
+        initialName!.trim().isNotEmpty) {
+      return Text(initialName!, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          return Text(initialName ?? 'Seeker', style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+        }
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final name = data?['displayName'] as String? ?? initialName ?? 'Seeker';
+        return Text(name, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+      },
+    );
+  }
+}
+
+class _SeekerAvatar extends StatelessWidget {
+  final String userId;
+  final String? initialPhotoUrl;
+  final double radius;
+
+  const _SeekerAvatar({
+    required this.userId,
+    this.initialPhotoUrl,
+    this.radius = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialPhotoUrl != null && initialPhotoUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.surface,
+        backgroundImage: NetworkImage(initialPhotoUrl!),
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String? photoUrl = initialPhotoUrl;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          photoUrl = data?['photoUrl'] as String? ?? photoUrl;
+        }
+
+        return CircleAvatar(
+          radius: radius,
+          backgroundColor: AppColors.surface,
+          backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+              ? NetworkImage(photoUrl)
+              : null,
+          child: (photoUrl == null || photoUrl.isEmpty)
+              ? Icon(Icons.person, size: radius * 1.2, color: AppColors.textSecondary)
+              : null,
+        );
+      },
     );
   }
 }

@@ -62,12 +62,14 @@ import '../features/activity/presentation/screens/activity_screen.dart';
 
 // Profile
 import '../features/profile/presentation/screens/profile_screen.dart';
+import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/followers_screen.dart';
 import '../features/profile/presentation/screens/following_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
 
 // Notifications
 import '../features/notifications/presentation/screens/notifications_screen.dart';
+import '../features/notifications/presentation/providers/notifications_provider.dart';
 
 // Map Discovery
 import '../features/map_discovery/presentation/screens/join_experience_screen.dart';
@@ -232,6 +234,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               return ProfileScreen(
                 userId: currentUser?.uid ?? '',
                 isCurrentUser: true,
+                onEditPressed: () => context.push('/edit-profile'),
+              );
+            },
+          ),
+
+          // Edit Profile route
+          GoRoute(
+            path: '/edit-profile',
+            builder: (context, state) {
+              final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
+              return EditProfileScreen(
+                userId: currentUser?.uid ?? '',
               );
             },
           ),
@@ -579,7 +593,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 });
 
 /// Main scaffold widget with bottom navigation
-class MainScaffold extends StatefulWidget {
+class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
 
   const MainScaffold({
@@ -588,13 +602,14 @@ class MainScaffold extends StatefulWidget {
   });
 
   @override
-  State<MainScaffold> createState() => _MainScaffoldState();
+  ConsumerState<MainScaffold> createState() => _MainScaffoldState();
 }
 
-class _MainScaffoldState extends State<MainScaffold> {
+class _MainScaffoldState extends ConsumerState<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
+    final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
 
     int getSelectedIndex() {
       if (location.startsWith('/home')) return 0;
@@ -631,30 +646,54 @@ class _MainScaffoldState extends State<MainScaffold> {
         currentIndex: getSelectedIndex(),
         onTap: onNavTap,
         type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.favorite_outline),
             activeIcon: Icon(Icons.favorite),
             label: 'Discover',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.groups_outlined),
             activeIcon: Icon(Icons.groups),
             label: 'Community',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none_outlined),
-            activeIcon: Icon(Icons.notifications),
+            icon: Badge(
+              label: unreadCountAsync.when(
+                data: (count) => count > 0 ? Text(count.toString()) : null,
+                loading: () => null,
+                error: (_, __) => null,
+              ),
+              isLabelVisible: unreadCountAsync.when(
+                data: (count) => count > 0,
+                loading: () => false,
+                error: (_, __) => false,
+              ),
+              child: const Icon(Icons.notifications_none_outlined),
+            ),
+            activeIcon: Badge(
+              label: unreadCountAsync.when(
+                data: (count) => count > 0 ? Text(count.toString()) : null,
+                loading: () => null,
+                error: (_, __) => null,
+              ),
+              isLabelVisible: unreadCountAsync.when(
+                data: (count) => count > 0,
+                loading: () => false,
+                error: (_, __) => false,
+              ),
+              child: const Icon(Icons.notifications),
+            ),
             label: 'Notifications',
           ),
         ],
