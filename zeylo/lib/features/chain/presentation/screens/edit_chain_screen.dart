@@ -210,7 +210,7 @@ class _EditChainScreenState extends ConsumerState<EditChainScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      '\$${widget.chain.totalPrice.toStringAsFixed(0)}',
+                      'Rs. ${widget.chain.totalPrice.toStringAsFixed(0)}',
                       style: AppTypography.headlineLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,

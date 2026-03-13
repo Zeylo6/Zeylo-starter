@@ -381,8 +381,8 @@ class _ExperienceDetailScreenState
           ],
         ),
         // Price
-        Text(
-          '\$${price.toStringAsFixed(0)} $currency',
+      Text(
+        'Rs. ${price.toStringAsFixed(0)}',
           style: AppTypography.titleLarge.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w600,

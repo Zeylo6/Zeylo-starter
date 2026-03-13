@@ -226,7 +226,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         'images': [finalImageUrl],
         'coverImage': finalImageUrl,
         'price': price,
-        'currency': 'USD',
+        'currency': 'LKR',
         'duration': duration,
         'maxGuests': maxGuests,
         'location': {
@@ -382,7 +382,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
               Row(
                 children: [
                   Expanded(
-                    child: _buildModernTextField(_priceController, 'Price (USD)', '50', Icons.attach_money_rounded, isNumber: true),
+                    child: _buildModernTextField(_priceController, 'Price (LKR)', '5000', Icons.payments_rounded, isNumber: true),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

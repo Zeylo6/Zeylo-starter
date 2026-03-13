@@ -252,7 +252,7 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                                         style: AppTypography.bodySmall),
                                     Text('Guests: ${exp['guests'] ?? 1}',
                                         style: AppTypography.bodySmall),
-                                    Text('Price: \$${exp['totalPrice'] ?? 0}',
+                                    Text('Price: Rs. ${exp['totalPrice'] ?? 0}',
                                         style: AppTypography.bodySmall),
                                     const SizedBox(height: AppSpacing.sm),
                                     if (exp['status'] != 'cancelled_by_host')

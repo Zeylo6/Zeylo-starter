@@ -941,7 +941,7 @@ class HostDashboardScreen extends ConsumerWidget {
                                           BorderRadius.circular(AppRadius.full),
                                     ),
                                     child: Text(
-                                      '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                      'LKR ${(data['totalPrice'] as num?)?.toStringAsFixed(0) ?? '0'}',
                                       style: AppTypography.labelMedium.copyWith(
                                         color: AppColors.success,
                                         fontWeight: FontWeight.w800,
@@ -1457,7 +1457,7 @@ class HostDashboardScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                             child: _buildEditField(
-                                priceController, 'Price (USD)',
+                                priceController, 'Price (LKR)',
                                 isNumber: true)),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(

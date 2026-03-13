@@ -380,7 +380,7 @@ class _BookingCard extends ConsumerWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '\$${booking.totalPrice.toStringAsFixed(2)}',
+                      'Rs. ${booking.totalPrice.toStringAsFixed(0)}',
                       style: AppTypography.titleMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
@@ -738,7 +738,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                   const Divider(height: AppSpacing.lg),
                   _summaryRow(
                     'Total Amount',
-                    '\$${widget.booking.totalPrice.toStringAsFixed(2)}',
+                    'Rs. ${widget.booking.totalPrice.toStringAsFixed(0)}',
                     bold: true,
                     highlight: true,
                   ),
@@ -769,7 +769,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               onPressed: _isProcessing ? null : _processPayment,
               label: _isProcessing
                   ? 'Processing...'
-                  : 'Pay \$${widget.booking.totalPrice.toStringAsFixed(2)}',
+                  : 'Pay Rs. ${widget.booking.totalPrice.toStringAsFixed(0)}',
               isLoading: _isProcessing,
               variant: ButtonVariant.filled,
             ),

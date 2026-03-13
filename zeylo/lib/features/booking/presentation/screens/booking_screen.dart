@@ -425,7 +425,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           ),
           _summaryRow(
             'Total Price',
-            '\$${widget.totalPrice.toStringAsFixed(2)}',
+            'Rs. ${widget.totalPrice.toStringAsFixed(0)}',
             isBold: true,
           ),
         ],

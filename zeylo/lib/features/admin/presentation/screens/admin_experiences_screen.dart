@@ -219,7 +219,7 @@ class _AdminExperiencesScreenState extends State<AdminExperiencesScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      '\$$price',
+                      'Rs. $price',
                       style: AppTypography.labelMedium.copyWith(color: AppColors.primary),
                     ),
                   ],

@@ -182,8 +182,8 @@ extension DateTimeExtension on DateTime {
 extension DoubleExtension on double {
   /// Converts double to currency string with dollar sign
   /// Example: 99.99.toCurrency() → "$99.99"
-  String toCurrency({String symbol = '\$'}) {
-    return '$symbol${toStringAsFixed(2)}';
+  String toCurrency({String symbol = 'Rs. '}) {
+    return '$symbol${toStringAsFixed(0)}';
   }
 
   /// Formats as percentage

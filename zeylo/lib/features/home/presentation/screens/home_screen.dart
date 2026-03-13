@@ -246,7 +246,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         location:
                             '${experience.location.city}, ${experience.location.country}',
                         price:
-                            '\$${experience.price.toStringAsFixed(0)} ${experience.currency}',
+                            'Rs. ${experience.price.toStringAsFixed(0)}',
                         description: experience.shortDescription,
                         rating: experience.averageRating,
                         ratingCount: experience.reviewCount,
