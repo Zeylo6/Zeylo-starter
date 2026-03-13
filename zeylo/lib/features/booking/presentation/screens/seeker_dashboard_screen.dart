@@ -418,13 +418,21 @@ class _BookingCard extends ConsumerWidget {
                 ],
 
                 // Complete & Pay button (only for ongoing bookings)
-                if (type == 'ongoing' && booking.paymentStatus != 'paid') ...[
+                if (type == 'ongoing') ...[
                   const SizedBox(height: AppSpacing.md),
-                  ZeyloButton(
-                    onPressed: () => _showPaymentSheet(context),
-                    label: '💳  Complete & Pay',
-                    variant: ButtonVariant.filled,
-                  ),
+                  if (booking.paymentStatus != 'paid')
+                    ZeyloButton(
+                      onPressed: () => _showPaymentSheet(context),
+                      label: '💳  Complete & Pay',
+                      variant: ButtonVariant.filled,
+                    )
+                  else
+                    ZeyloButton(
+                      onPressed: () => _completeExperience(context, ref),
+                      label: '✅  Complete Experience',
+                      variant: ButtonVariant.filled,
+                      backgroundColor: AppColors.success,
+                    ),
                 ],
               ],
             ),
@@ -471,6 +479,35 @@ class _BookingCard extends ConsumerWidget {
         reportedRole: 'host',
       ),
     );
+  }
+
+  Future<void> _completeExperience(BuildContext context, WidgetRef ref) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('bookings').doc(booking.id).update({
+        'status': 'completed',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (context.mounted) {
+        onPaymentComplete(); // Refresh list
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Experience marked as completed! 🎉'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to complete experience: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 }
 

@@ -48,6 +48,15 @@ class BookingEntity {
   /// Whether the seeker has rated this booking
   final bool isRatedBySeeker;
 
+  /// Name of the seeker
+  final String? seekerName;
+
+  /// Photo URL of the seeker
+  final String? seekerPhotoUrl;
+
+  /// Whether the earnings for this booking have been collected by the host
+  final bool isEarningsCollected;
+
   const BookingEntity({
     required this.id,
     required this.experienceId,
@@ -65,6 +74,9 @@ class BookingEntity {
     required this.updatedAt,
     this.isRatedByHost = false,
     this.isRatedBySeeker = false,
+    this.seekerName,
+    this.seekerPhotoUrl,
+    this.isEarningsCollected = false,
   });
 
   /// Create a copy of this booking entity with some fields replaced
@@ -85,6 +97,9 @@ class BookingEntity {
     DateTime? updatedAt,
     bool? isRatedByHost,
     bool? isRatedBySeeker,
+    String? seekerName,
+    String? seekerPhotoUrl,
+    bool? isEarningsCollected,
   }) {
     return BookingEntity(
       id: id ?? this.id,
@@ -103,6 +118,9 @@ class BookingEntity {
       updatedAt: updatedAt ?? this.updatedAt,
       isRatedByHost: isRatedByHost ?? this.isRatedByHost,
       isRatedBySeeker: isRatedBySeeker ?? this.isRatedBySeeker,
+      seekerName: seekerName ?? this.seekerName,
+      seekerPhotoUrl: seekerPhotoUrl ?? this.seekerPhotoUrl,
+      isEarningsCollected: isEarningsCollected ?? this.isEarningsCollected,
     );
   }
 

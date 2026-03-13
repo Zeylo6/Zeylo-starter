@@ -64,6 +64,25 @@ class PendingBookingTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              _SeekerAvatar(
+                userId: booking['userId'] ?? '',
+                initialPhotoUrl: booking['seekerPhotoUrl'] ?? booking['seeker_photo_url'],
+                radius: 10,
+              ),
+              const SizedBox(width: 6),
+              _SeekerNameText(
+                userId: booking['userId'] ?? '',
+                initialName: booking['seekerName'] ?? booking['seeker_name'],
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
           Text(
             '$formattedDate at ${booking['startTime'] ?? ''}',
             style: AppTypography.bodySmall,
@@ -104,6 +123,90 @@ class PendingBookingTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SeekerNameText extends StatelessWidget {
+  final String userId;
+  final String? initialName;
+  final TextStyle style;
+
+  const _SeekerNameText({
+    required this.userId,
+    this.initialName,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialName != null &&
+        initialName != 'Seeker' &&
+        initialName!.trim().isNotEmpty) {
+      return Text(initialName!, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          return Text(initialName ?? 'Seeker', style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+        }
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final name = data?['displayName'] as String? ?? initialName ?? 'Seeker';
+        return Text(name, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+      },
+    );
+  }
+}
+
+class _SeekerAvatar extends StatelessWidget {
+  final String userId;
+  final String? initialPhotoUrl;
+  final double radius;
+
+  const _SeekerAvatar({
+    required this.userId,
+    this.initialPhotoUrl,
+    this.radius = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialPhotoUrl != null && initialPhotoUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.surface,
+        backgroundImage: NetworkImage(initialPhotoUrl!),
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String? photoUrl = initialPhotoUrl;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          photoUrl = data?['photoUrl'] as String? ?? photoUrl;
+        }
+
+        return CircleAvatar(
+          radius: radius,
+          backgroundColor: AppColors.surface,
+          backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+              ? NetworkImage(photoUrl)
+              : null,
+          child: (photoUrl == null || photoUrl.isEmpty)
+              ? Icon(Icons.person, size: radius * 1.2, color: AppColors.textSecondary)
+              : null,
+        );
+      },
     );
   }
 }

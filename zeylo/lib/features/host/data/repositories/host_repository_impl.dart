@@ -50,4 +50,9 @@ class HostRepositoryImpl implements HostRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Stream<Either<Failure, double>> watchThisMonthEarnings(String hostId) {
+    return _datasource.watchThisMonthEarnings(hostId).map((total) => Right(total));
+  }
 }

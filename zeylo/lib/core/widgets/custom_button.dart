@@ -50,6 +50,9 @@ class ZeyloButton extends StatelessWidget {
   /// Border radius for the button. Defaults to 16 (pill-like)
   final double borderRadius;
 
+  /// Custom background color for filled variant
+  final Color? backgroundColor;
+
   const ZeyloButton({
     required this.onPressed,
     required this.label,
@@ -60,6 +63,7 @@ class ZeyloButton extends StatelessWidget {
     this.width,
     this.height = 52,
     this.borderRadius = AppRadius.lg,
+    this.backgroundColor,
     super.key,
   });
 
@@ -91,8 +95,8 @@ class ZeyloButton extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isEnabled
-                ? AppColors.primary
-                : AppColors.primary.withOpacity(0.5),
+                ? (backgroundColor ?? AppColors.primary)
+                : (backgroundColor ?? AppColors.primary).withOpacity(0.5),
             borderRadius: BorderRadius.circular(borderRadius),
           ),
           child: Center(

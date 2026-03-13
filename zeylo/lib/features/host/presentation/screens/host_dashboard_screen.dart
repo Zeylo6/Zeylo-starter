@@ -6,14 +6,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/custom_button.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../providers/host_provider.dart';
-import '../widgets/active_experience_tile.dart';
 import '../widgets/active_experience_tile.dart';
 import '../widgets/host_stats_header.dart';
 import '../widgets/performance_section.dart';
@@ -356,11 +357,28 @@ class HostDashboardScreen extends ConsumerWidget {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.md),
+                              const SizedBox(height: AppSpacing.sm),
                               Row(
                                 children: [
+                                  _SeekerAvatar(
+                                    userId: data['userId'] ?? '',
+                                    initialPhotoUrl: data['seekerPhotoUrl'] ?? data['seeker_photo_url'],
+                                    radius: 12,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _SeekerNameText(
+                                    userId: data['userId'] ?? '',
+                                    initialName: data['seekerName'] ?? data['seeker_name'],
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('•', style: TextStyle(color: AppColors.textSecondary)),
+                                  const SizedBox(width: 8),
                                   const Icon(Icons.person_outline,
-                                      size: 16, color: AppColors.textSecondary),
+                                      size: 14, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${data['guests'] ?? 1} guest(s)',
@@ -583,8 +601,25 @@ class HostDashboardScreen extends ConsumerWidget {
                               const SizedBox(height: AppSpacing.sm),
                               Row(
                                 children: [
+                                    _SeekerAvatar(
+                                      userId: data['userId'] ?? '',
+                                      initialPhotoUrl: (data['seekerPhotoUrl'] ?? data['seeker_photo_url']),
+                                      radius: 12,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _SeekerNameText(
+                                      userId: data['userId'] ?? '',
+                                      initialName: (data['seekerName'] ?? data['seeker_name']),
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  const SizedBox(width: 8),
+                                  const Text('•', style: TextStyle(color: AppColors.textSecondary)),
+                                  const SizedBox(width: 8),
                                   const Icon(Icons.person_outline,
-                                      size: 16, color: AppColors.textSecondary),
+                                      size: 14, color: AppColors.textSecondary),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${data['guests'] ?? 1} guest(s)',
@@ -592,6 +627,14 @@ class HostDashboardScreen extends ConsumerWidget {
                                         color: AppColors.textSecondary),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'Wait for the seeker to mark this experience as complete.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ],
                           ),
@@ -898,33 +941,63 @@ class HostDashboardScreen extends ConsumerWidget {
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    Text(
-                                      '${date.day}/${date.month}/${date.year}  •  ${data['guests'] ?? 1} guest(s)',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${date.day}/${date.month}/${date.year}  •  ',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        _SeekerAvatar(
+                                          userId: data['userId'] ?? '',
+                                          initialPhotoUrl: (data['seekerPhotoUrl'] ?? data['seeker_photo_url']),
+                                          radius: 8,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        _SeekerNameText(
+                                          userId: data['userId'] ?? '',
+                                          initialName: (data['seekerName'] ?? data['seeker_name']),
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success.withAlpha(25),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadius.full),
+                                    ),
+                                    child: Text(
+                                      '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: AppColors.success,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.success.withAlpha(25),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.full),
-                                ),
-                                child: Text(
-                                  '\$${(data['totalPrice'] as num?)?.toStringAsFixed(2) ?? '0.00'}',
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: AppColors.success,
-                                    fontWeight: FontWeight.w800,
                                   ),
-                                ),
-                              ),
                                 ],
                               ),
+                              if (data['isEarningsCollected'] != true) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ZeyloButton(
+                                    onPressed: () => _collectEarnings(context, ref, doc.id, data),
+                                    label: '💰  Collect Earnings',
+                                    variant: ButtonVariant.filled,
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                ),
+                              ],
                               if (!isRatedByHost) ...[
                                 const SizedBox(height: AppSpacing.md),
                                 SizedBox(
@@ -945,6 +1018,8 @@ class HostDashboardScreen extends ConsumerWidget {
                                     totalPrice: (data['totalPrice'] as num?)?.toDouble() ?? 0.0,
                                     status: data['status'] ?? 'completed',
                                     paymentStatus: data['paymentStatus'] ?? 'paid',
+                                    seekerName: data['seekerName'],
+                                    seekerPhotoUrl: data['seekerPhotoUrl'] ?? data['seeker_photo_url'],
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                   );
@@ -961,7 +1036,23 @@ class HostDashboardScreen extends ConsumerWidget {
                                   );
                                 },
                                 icon: const Icon(Icons.star_outline_rounded, size: 18),
-                                label: const Text('Rate Seeker'),
+                                label: StreamBuilder<DocumentSnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(data['userId'] ?? '')
+                                      .snapshots(),
+                                  builder: (context, userSnapshot) {
+                                    String firstName = 'Seeker';
+                                    if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                                      final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                                      final fullName = userData?['displayName'] as String? ?? data['seekerName'] ?? data['seeker_name'] ?? 'Seeker';
+                                      firstName = fullName.split(' ').first;
+                                    } else {
+                                      firstName = (data['seekerName'] ?? data['seeker_name'] ?? 'Seeker').split(' ').first;
+                                    }
+                                    return Text('Rate $firstName');
+                                  },
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
@@ -1076,6 +1167,53 @@ class HostDashboardScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _collectEarnings(BuildContext context, WidgetRef ref, String bookingId, Map<String, dynamic> data) async {
+    final hostId = ref.read(currentUserProvider).value?.uid;
+    if (hostId == null) return;
+
+    try {
+      final db = FirebaseFirestore.instance;
+      final batch = db.batch();
+
+      // 1. Update booking to mark earnings as collected
+      final bookingRef = db.collection('bookings').doc(bookingId);
+      batch.update(bookingRef, {
+        'isEarningsCollected': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // 2. Record earnings in host's collection
+      final earningsRef = db.collection('hosts').doc(hostId).collection('earnings').doc(bookingId);
+      batch.set(earningsRef, {
+        'amount': (data['totalPrice'] as num?)?.toDouble() ?? 0.0,
+        'date': FieldValue.serverTimestamp(),
+        'bookingId': bookingId,
+        'experienceTitle': data['experienceTitle'],
+        'seekerName': data['seekerName'] ?? data['seeker_name'] ?? 'Seeker',
+      });
+
+      await batch.commit();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Earnings collected successfully! 💰'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to collect earnings: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   void _showReportSheet(
@@ -1352,33 +1490,40 @@ class HostDashboardScreen extends ConsumerWidget {
                                     throw Exception("Image upload failed");
                                   }
 
-                                  // 2. Update Firestore
-                                  await FirebaseFirestore.instance
-                                      .collection('experiences')
-                                      .doc(expId)
-                                      .update({
-                                    'title': titleController.text.trim(),
-                                    'shortDescription':
-                                        shortDescController.text.trim(),
-                                    'description': descController.text.trim(),
-                                    'price': double.tryParse(
-                                            priceController.text.trim()) ??
-                                        0,
-                                    'duration': int.tryParse(
-                                            durationController.text.trim()) ??
-                                        0,
-                                    'maxGuests': int.tryParse(
-                                            maxGuestsController.text.trim()) ??
-                                        0,
-                                    'coverImage': finalImageUrl,
-                                    'images': [
-                                      finalImageUrl
-                                    ], // Resetting images list for now
-                                    'location.address':
-                                        addressController.text.trim(),
-                                    'location.city': cityController.text.trim(),
-                                    'updatedAt': FieldValue.serverTimestamp(),
-                                  });
+                                    // 2. Fetch latest host profile data
+                                    final user = FirebaseAuth.instance.currentUser;
+                                    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user?.uid).get();
+                                    final userData = userDoc.data();
+
+                                    // 3. Update Firestore
+                                    await FirebaseFirestore.instance
+                                        .collection('experiences')
+                                        .doc(expId)
+                                        .update({
+                                      'title': titleController.text.trim(),
+                                      'shortDescription':
+                                          shortDescController.text.trim(),
+                                      'description': descController.text.trim(),
+                                      'price': double.tryParse(
+                                              priceController.text.trim()) ??
+                                          0,
+                                      'duration': int.tryParse(
+                                              durationController.text.trim()) ??
+                                          0,
+                                      'maxGuests': int.tryParse(
+                                              maxGuestsController.text.trim()) ??
+                                          0,
+                                      'coverImage': finalImageUrl,
+                                      'hostName': userData?['displayName'] ?? user?.displayName ?? 'Zeylo Host',
+                                      'hostPhotoUrl': userData?['photoUrl'] ?? user?.photoURL ?? '',
+                                      'images': [
+                                        finalImageUrl
+                                      ], // Resetting images list for now
+                                      'location.address':
+                                          addressController.text.trim(),
+                                      'location.city': cityController.text.trim(),
+                                      'updatedAt': FieldValue.serverTimestamp(),
+                                    });
 
                                   if (context.mounted) {
                                     Navigator.pop(sheetContext);
@@ -1431,6 +1576,90 @@ class HostDashboardScreen extends ConsumerWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
+    );
+  }
+}
+
+class _SeekerNameText extends StatelessWidget {
+  final String userId;
+  final String? initialName;
+  final TextStyle style;
+
+  const _SeekerNameText({
+    required this.userId,
+    this.initialName,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialName != null &&
+        initialName != 'Seeker' &&
+        initialName!.trim().isNotEmpty) {
+      return Text(initialName!, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          return Text(initialName ?? 'Seeker', style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+        }
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final name = data?['displayName'] as String? ?? initialName ?? 'Seeker';
+        return Text(name, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+      },
+    );
+  }
+}
+
+class _SeekerAvatar extends StatelessWidget {
+  final String userId;
+  final String? initialPhotoUrl;
+  final double radius;
+
+  const _SeekerAvatar({
+    required this.userId,
+    this.initialPhotoUrl,
+    this.radius = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (initialPhotoUrl != null && initialPhotoUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.surface,
+        backgroundImage: NetworkImage(initialPhotoUrl!),
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        String? photoUrl = initialPhotoUrl;
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+          photoUrl = data?['photoUrl'] as String? ?? photoUrl;
+        }
+
+        return CircleAvatar(
+          radius: radius,
+          backgroundColor: AppColors.surface,
+          backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+              ? NetworkImage(photoUrl)
+              : null,
+          child: (photoUrl == null || photoUrl.isEmpty)
+              ? Icon(Icons.person, size: radius * 1.2, color: AppColors.textSecondary)
+              : null,
+        );
+      },
     );
   }
 }
