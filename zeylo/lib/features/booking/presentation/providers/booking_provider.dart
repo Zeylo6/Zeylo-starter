@@ -151,9 +151,8 @@ final getUserBookingsUseCaseProvider = Provider((ref) {
 
 /// Booking form provider
 final bookingFormProvider =
-    NotifierProvider<BookingFormNotifier, BookingFormState>((ref) {
-  return BookingFormNotifier();
-});
+    NotifierProvider<BookingFormNotifier, BookingFormState>(
+        BookingFormNotifier.new);
 
 /// User bookings provider
 final userBookingsProvider = FutureProvider.family<List<BookingEntity>, String>(

@@ -105,10 +105,14 @@ final isLoggedInProvider = Provider<bool>((ref) {
 });
 
 /// Auth notifier for managing authentication state
-class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
-  final AuthRepository _repository;
+class AuthNotifier extends Notifier<AsyncValue<UserEntity?>> {
+  late final AuthRepository _repository;
 
-  AuthNotifier(this._repository) : super(const AsyncValue.data(null));
+  @override
+  AsyncValue<UserEntity?> build() {
+    _repository = ref.watch(authRepositoryProvider);
+    return const AsyncValue.data(null);
+  }
 
   /// Sign in with email and password
   Future<void> signInWithEmail({
@@ -234,7 +238,4 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
 
 /// Auth notifier provider
 final authNotifierProvider =
-    NotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>((ref) {
-  final repository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repository);
-});
+    NotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(AuthNotifier.new);
