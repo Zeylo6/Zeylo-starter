@@ -286,54 +286,7 @@ class _BookingCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                if (type == 'past' && booking.status == 'completed' && !booking.isRatedBySeeker)
-                  Positioned(
-                    bottom: AppSpacing.sm,
-                    left: AppSpacing.sm,
-                    child: GestureDetector(
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => RateAndReviewSheet(
-                            booking: booking,
-                            reviewerRole: 'seeker',
-                            onSuccess: onPaymentComplete, // Reuse to refresh list
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            )
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.star_rounded,
-                                size: 16, color: Colors.white),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Rate Now',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+
             ],
           ),
 
@@ -389,31 +342,28 @@ class _BookingCard extends ConsumerWidget {
                   ],
                 ),
 
-                // Payment status chip
-                if (booking.paymentStatus == 'paid') ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withAlpha(25),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.check_circle,
-                            size: 14, color: AppColors.success),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Payment Confirmed',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.success,
-                            fontWeight: FontWeight.w600,
-                          ),
+                // Rate Now button (only for completed & unrated past bookings)
+                if (type == 'past' &&
+                    booking.status == 'completed' &&
+                    !booking.isRatedBySeeker) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ZeyloButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => RateAndReviewSheet(
+                          booking: booking,
+                          reviewerRole: 'seeker',
+                          onSuccess: onPaymentComplete, // Reuse to refresh list
                         ),
-                      ],
-                    ),
+                      );
+                    },
+                    label: 'Rate Experience',
+                    variant: ButtonVariant.filled,
+                    icon: const Icon(Icons.star_rounded,
+                        size: 20, color: Colors.white),
                   ),
                 ],
 
