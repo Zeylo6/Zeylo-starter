@@ -113,8 +113,8 @@ class ChainExperienceCard extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       _buildChip(
-                        '\$${experience.price.toStringAsFixed(0)}',
-                        Icons.attach_money,
+                        'Rs. ${experience.price.toStringAsFixed(0)}',
+                        Icons.payments,
                       ),
                     ],
                   ),

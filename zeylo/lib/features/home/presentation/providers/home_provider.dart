@@ -85,7 +85,18 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 
   return result.fold(
     (failure) => throw Exception(failure.message),
-    (categories) => categories,
+    (categories) {
+      // Prepend 'All' category
+      final allCategory = Category(
+        id: 'all',
+        name: 'All',
+        icon: 'assets/icons/all.svg',
+        imageUrl: '',
+        order: 0,
+        isActive: true,
+      );
+      return [allCategory, ...categories];
+    },
   );
 });
 
@@ -107,8 +118,16 @@ final experiencesByFilterProvider =
       (failure) => throw Exception(failure.message),
       (experiences) => experiences,
     );
-  } else if (selectedCategory != null && selectedCategory.isNotEmpty) {
+  } else if (selectedCategory != null &&
+      selectedCategory.isNotEmpty &&
+      selectedCategory != 'All') {
     final result = await repository.getExperiencesByCategory(selectedCategory);
+    baseResults = result.fold(
+      (failure) => throw Exception(failure.message),
+      (experiences) => experiences,
+    );
+  } else if (selectedCategory == 'All') {
+    final result = await repository.getAllExperiences();
     baseResults = result.fold(
       (failure) => throw Exception(failure.message),
       (experiences) => experiences,

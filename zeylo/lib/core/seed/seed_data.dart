@@ -60,7 +60,7 @@ class SeedData {
         'isActive': true,
       },
       {
-        'name': 'Food & Drink',
+        'name': 'Food and Drinks',
         'icon': 'assets/icons/food.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
@@ -68,7 +68,7 @@ class SeedData {
         'isActive': true,
       },
       {
-        'name': 'Arts & Culture',
+        'name': 'Culture',
         'icon': 'assets/icons/arts.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
@@ -92,7 +92,7 @@ class SeedData {
         'isActive': true,
       },
       {
-        'name': 'Nature',
+        'name': 'Outdoor',
         'icon': 'assets/icons/nature.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
@@ -245,8 +245,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-        'price': 45.0,
-        'currency': 'USD',
+        'price': 13500.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 12,
         'location': {
@@ -286,7 +286,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
@@ -296,8 +296,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
-        'price': 45.0,
-        'currency': 'USD',
+        'price': 13500.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 8,
         'location': {
@@ -336,7 +336,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'food_tours',
         'images': [
           'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
@@ -346,8 +346,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
-        'price': 30.0,
-        'currency': 'USD',
+        'price': 9000.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 10,
         'location': {
@@ -388,8 +388,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
-        'price': 50.0,
-        'currency': 'USD',
+        'price': 15000.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 6,
         'location': {
@@ -430,8 +430,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
-        'price': 55.0,
-        'currency': 'USD',
+        'price': 16500.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 8,
         'location': {
@@ -462,7 +462,7 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800',
@@ -472,8 +472,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800',
-        'price': 40.0,
-        'currency': 'USD',
+        'price': 12000.0,
+        'currency': 'LKR',
         'duration': 1,
         'maxGuests': 6,
         'location': {
@@ -509,7 +509,7 @@ class SeedData {
         'hostName': 'Shenuka Dias',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
-        'category': 'Arts & Culture',
+        'category': 'Culture',
         'subcategory': 'photography',
         'images': [
           'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800',
@@ -519,8 +519,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800',
-        'price': 60.0,
-        'currency': 'USD',
+        'price': 18000.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 10,
         'location': {
@@ -558,7 +558,7 @@ class SeedData {
         'hostName': 'Hashan Perera',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-        'category': 'Nature',
+        'category': 'Outdoor',
         'subcategory': 'nature_walks',
         'images': [
           'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=800',
@@ -568,8 +568,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=800',
-        'price': 25.0,
-        'currency': 'USD',
+        'price': 7500.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 15,
         'location': {
@@ -600,7 +600,7 @@ class SeedData {
         'hostName': 'Sarah Martinez',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
-        'category': 'Arts & Culture',
+        'category': 'Culture',
         'subcategory': 'cultural_walks',
         'images': [
           'https://images.unsplash.com/photo-1518066000714-58c45f1b773c?w=800',
@@ -610,8 +610,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
-        'price': 35.0,
-        'currency': 'USD',
+        'price': 10500.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 12,
         'location': {
@@ -660,8 +660,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1514991643008-d4d4d6f5f2db?w=800',
-        'price': 40.0,
-        'currency': 'USD',
+        'price': 12000.0,
+        'currency': 'LKR',
         'duration': 4,
         'maxGuests': 25,
         'location': {
@@ -697,7 +697,7 @@ class SeedData {
         'hostName': 'Shenuka Dias',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
-        'category': 'Nature',
+        'category': 'Outdoor',
         'subcategory': 'wildlife_watching',
         'images': [
           'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800',
@@ -707,8 +707,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800',
-        'price': 75.0,
-        'currency': 'USD',
+        'price': 22500.0,
+        'currency': 'LKR',
         'duration': 5,
         'maxGuests': 6,
         'location': {
@@ -759,8 +759,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
-        'price': 50.0,
-        'currency': 'USD',
+        'price': 15000.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 15,
         'location': {
@@ -797,7 +797,7 @@ class SeedData {
         'hostName': 'Hashan Perera',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-        'category': 'Nature',
+        'category': 'Outdoor',
         'subcategory': 'nature_walks',
         'images': [
           'https://images.unsplash.com/photo-1559056199-641a0ac8b8d4?w=800',
@@ -807,8 +807,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1559056199-641a0ac8b8d4?w=800',
-        'price': 30.0,
-        'currency': 'USD',
+        'price': 9000.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 10,
         'location': {
@@ -858,8 +858,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800',
-        'price': 25.0,
-        'currency': 'USD',
+        'price': 7500.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 30,
         'location': {
@@ -900,8 +900,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=800',
-        'price': 65.0,
-        'currency': 'USD',
+        'price': 19500.0,
+        'currency': 'LKR',
         'duration': 24,
         'maxGuests': 8,
         'location': {
@@ -1363,7 +1363,7 @@ class SeedData {
         'date': Timestamp.fromDate(now.add(Duration(days: 5))),
         'startTime': '08:00 AM',
         'guests': 2,
-        'totalPrice': 100.0,
+        'totalPrice': 30000.0,
         'status': 'confirmed',
         'paymentStatus': 'paid',
         'createdAt': Timestamp.fromDate(now.subtract(Duration(days: 10))),
@@ -1379,7 +1379,7 @@ class SeedData {
         'date': Timestamp.fromDate(now.add(Duration(days: 14))),
         'startTime': '06:00 AM',
         'guests': 1,
-        'totalPrice': 75.0,
+        'totalPrice': 22500.0,
         'status': 'confirmed',
         'paymentStatus': 'paid',
         'createdAt': Timestamp.fromDate(now.subtract(Duration(days: 15))),
@@ -1396,7 +1396,7 @@ class SeedData {
         'date': Timestamp.fromDate(now.subtract(Duration(days: 20))),
         'startTime': '07:00 AM',
         'guests': 2,
-        'totalPrice': 90.0,
+        'totalPrice': 27000.0,
         'status': 'completed',
         'paymentStatus': 'paid',
         'createdAt': Timestamp.fromDate(now.subtract(Duration(days: 35))),
@@ -1412,7 +1412,7 @@ class SeedData {
         'date': Timestamp.fromDate(now.subtract(Duration(days: 30))),
         'startTime': '10:00 AM',
         'guests': 1,
-        'totalPrice': 45.0,
+        'totalPrice': 13500.0,
         'status': 'completed',
         'paymentStatus': 'paid',
         'createdAt': Timestamp.fromDate(now.subtract(Duration(days: 45))),
@@ -1428,7 +1428,7 @@ class SeedData {
         'date': Timestamp.fromDate(now.subtract(Duration(days: 5))),
         'startTime': '05:30 AM',
         'guests': 2,
-        'totalPrice': 50.0,
+        'totalPrice': 15000.0,
         'status': 'completed',
         'paymentStatus': 'paid',
         'createdAt': Timestamp.fromDate(now.subtract(Duration(days: 20))),
@@ -1486,7 +1486,7 @@ class SeedData {
       },
       {
         'id': 'cat_2',
-        'name': 'Food & Drink',
+        'name': 'Food and Drinks',
         'icon': 'assets/icons/food.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
@@ -1495,7 +1495,7 @@ class SeedData {
       },
       {
         'id': 'cat_3',
-        'name': 'Arts & Culture',
+        'name': 'Culture',
         'icon': 'assets/icons/arts.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800',
@@ -1522,7 +1522,7 @@ class SeedData {
       },
       {
         'id': 'cat_6',
-        'name': 'Nature',
+        'name': 'Outdoor',
         'icon': 'assets/icons/nature.svg',
         'imageUrl':
             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
@@ -1558,8 +1558,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-        'price': 45.0,
-        'currency': 'USD',
+        'price': 13500.0,
+        'currency': 'LKR',
         'duration': 3,
         'maxGuests': 12,
         'location': {
@@ -1590,15 +1590,15 @@ class SeedData {
         'hostName': 'Amali Fernando',
         'hostPhotoUrl':
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-        'category': 'Food & Drink',
+        'category': 'Food and Drinks',
         'subcategory': 'cooking_classes',
         'images': [
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800',
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1504674900769-cc8cef48cb88?w=800',
-        'price': 45.0,
-        'currency': 'USD',
+        'price': 13500.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 8,
         'location': {
@@ -1636,8 +1636,8 @@ class SeedData {
         ],
         'coverImage':
             'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
-        'price': 55.0,
-        'currency': 'USD',
+        'price': 16500.0,
+        'currency': 'LKR',
         'duration': 2,
         'maxGuests': 8,
         'location': {

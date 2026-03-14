@@ -108,7 +108,7 @@ class EarningsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '\$${earnings.totalBalance.toStringAsFixed(2)}',
+                  'Rs. ${earnings.totalBalance.toStringAsFixed(0)}',
                   style: AppTypography.headlineLarge.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -153,21 +153,21 @@ class EarningsScreen extends ConsumerWidget {
               children: [
                 EarningsStatCard(
                   label: 'Gross Income',
-                  value: '\$${earnings.grossIncome.toStringAsFixed(2)}',
+                  value: 'Rs. ${earnings.grossIncome.toStringAsFixed(0)}',
                   backgroundColor: AppColors.success.withOpacity(0.1),
                   textColor: AppColors.success,
                 ),
                 const SizedBox(width: AppSpacing.md),
                 EarningsStatCard(
                   label: 'Platform Fee (10%)',
-                  value: '-\$${earnings.platformFee.toStringAsFixed(2)}',
+                  value: '-Rs. ${earnings.platformFee.toStringAsFixed(0)}',
                   backgroundColor: AppColors.error.withOpacity(0.1),
                   textColor: AppColors.error,
                 ),
                 const SizedBox(width: AppSpacing.md),
                 EarningsStatCard(
                   label: 'Platform Fee (10%)',
-                  value: '-\$${earnings.platformFee.toStringAsFixed(2)}',
+                  value: '-Rs. ${earnings.platformFee.toStringAsFixed(0)}',
                   backgroundColor: AppColors.error.withOpacity(0.1),
                   textColor: AppColors.error,
                 ),

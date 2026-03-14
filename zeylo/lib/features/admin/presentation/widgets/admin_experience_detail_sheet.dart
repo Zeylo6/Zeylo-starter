@@ -87,7 +87,7 @@ class _AdminExperienceDetailSheetState
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      _buildPill(Icons.attach_money, '\$$price'),
+                      _buildPill(Icons.payments, 'Rs. $price'),
                       const SizedBox(width: AppSpacing.sm),
                       _buildPill(Icons.people, 'Max $maxGuests'),
                       const SizedBox(width: AppSpacing.sm),

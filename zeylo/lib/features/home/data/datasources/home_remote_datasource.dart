@@ -26,6 +26,9 @@ abstract class HomeRemoteDataSource {
 
   /// Get single experience by ID
   Future<ExperienceModel> getExperienceById(String id);
+
+  /// Get all active experiences
+  Future<List<ExperienceModel>> getAllExperiences();
 }
 
 /// Implementation of HomeRemoteDataSource using Firestore
@@ -53,18 +56,14 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         return results;
       }
       
-      // Fallback to mock data if Firestore is empty
-      final mockData = await SeedData.getMockExperiences();
-      return mockData
-          .take(10)
-          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
-          .toList();
+      return [];
     } catch (e) {
       // Fallback to mock data on error (e.g. missing index)
       final mockData = await SeedData.getMockExperiences();
       return mockData
-          .take(10)
           .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .where((e) => e.isActive)
+          .take(10)
           .toList();
     }
   }
@@ -86,18 +85,13 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             .toList();
       }
       
-      // Fallback
-      final mockData = await SeedData.getMockExperiences();
-      return mockData
-          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
-          .where((e) => e.category == category)
-          .toList();
+      return [];
     } catch (e) {
       // Fallback
       final mockData = await SeedData.getMockExperiences();
       return mockData
           .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
-          .where((e) => e.category == category)
+          .where((e) => e.category == category && e.isActive)
           .toList();
     }
   }
@@ -115,11 +109,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             .toList();
       }
       
-      // Fallback
-      final mockData = await SeedData.getMockCategories();
-      return mockData
-          .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
-          .toList();
+      return [];
     } catch (e) {
       // Fallback
       final mockData = await SeedData.getMockCategories();
@@ -181,6 +171,31 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }).toList();
     } catch (e) {
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<ExperienceModel>> getAllExperiences() async {
+    try {
+      final snapshot = await _firestore
+          .collection('experiences')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs
+            .map((doc) => ExperienceModel.fromFirestore(doc))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      // Fallback
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .where((e) => e.isActive)
+          .toList();
     }
   }
 

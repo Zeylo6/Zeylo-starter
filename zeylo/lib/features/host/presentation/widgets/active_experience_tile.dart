@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Active experience tile widget
@@ -24,46 +22,44 @@ class ActiveExperienceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
       child: Row(
         children: [
           // Thumbnail
           Container(
-            width: 60,
-            height: 60,
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              color: AppColors.divider,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: BorderRadius.circular(16),
               child: thumbnailUrl != null
                   ? CachedNetworkImage(
                       imageUrl: thumbnailUrl!,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
-                        color: AppColors.surface,
+                        color: AppColors.divider,
                         child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1.5,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                      errorWidget: (context, url, error) => Container(
-                        color: AppColors.surface,
-                        child: const Icon(Icons.image_not_supported_outlined),
-                      ),
+                      errorWidget: (context, url, error) => const Icon(Icons.image_not_supported_outlined, color: AppColors.textHint),
                     )
-                  : Container(
-                      color: AppColors.surface,
-                      child: const Icon(Icons.image_not_supported_outlined),
-                    ),
+                  : const Icon(Icons.image_not_supported_outlined, color: AppColors.textHint),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: 16),
 
-          // Title and edit link
+          // Title and actions
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,29 +69,40 @@ class ActiveExperienceTile extends StatelessWidget {
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.labelMedium.copyWith(
+                  style: AppTypography.labelLarge.copyWith(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                if (onEditPressed != null)
-                  GestureDetector(
-                    onTap: onEditPressed,
-                    child: Text(
-                      'Edit',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (onEditPressed != null)
+                      GestureDetector(
+                        onTap: onEditPressed,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryExtraLight,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Edit Listing',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
           if (onDeletePressed != null)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              icon: Icon(Icons.delete_outline_rounded, color: AppColors.error.withOpacity(0.7)),
               onPressed: onDeletePressed,
             ),
         ],

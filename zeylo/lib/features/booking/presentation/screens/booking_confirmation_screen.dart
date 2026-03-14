@@ -132,7 +132,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                   const Divider(color: AppColors.divider, height: 24),
                   _buildDetailRow(
                     'Total Amount',
-                    '\$${totalPrice.toStringAsFixed(2)}',
+                    'Rs. ${totalPrice.toStringAsFixed(0)}',
                     isBold: true,
                   ),
                 ],

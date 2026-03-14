@@ -42,24 +42,39 @@ class PerformanceSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // Stats list
+        // Stats Grid
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Column(
             children: [
-              _PerformanceStat(
-                label: 'Response Rate',
-                value: '${responseRate.toStringAsFixed(0)}%',
+              Row(
+                children: [
+                  Expanded(
+                    child: _PerformanceCard(
+                      label: 'Response Rate',
+                      value: '${responseRate.toStringAsFixed(0)}%',
+                      icon: Icons.speed_rounded,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _PerformanceCard(
+                      label: 'Acceptance',
+                      value: '${acceptanceRate.toStringAsFixed(0)}%',
+                      icon: Icons.check_circle_outline_rounded,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              _PerformanceStat(
-                label: 'Acceptance Rate',
-                value: '${acceptanceRate.toStringAsFixed(0)}%',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _PerformanceStat(
-                label: 'Total Bookings',
+              const SizedBox(height: 12),
+              _PerformanceCard(
+                label: 'Total Bookings to Date',
                 value: totalBookings.toString(),
+                icon: Icons.book_online_outlined,
+                color: AppColors.primary,
+                isWide: true,
               ),
             ],
           ),
@@ -70,34 +85,71 @@ class PerformanceSection extends StatelessWidget {
 }
 
 /// Individual performance stat
-class _PerformanceStat extends StatelessWidget {
+class _PerformanceCard extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
+  final Color color;
+  final bool isWide;
 
-  const _PerformanceStat({
+  const _PerformanceCard({
     required this.label,
     required this.value,
+    required this.icon,
+    required this.color,
+    this.isWide = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
           ),
-        ),
-        Text(
-          value,
-          style: AppTypography.labelLarge.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+        ],
+      ),
+      child: Row(
+        mainAxisSize: isWide ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-        ),
-      ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: AppTypography.titleLarge.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

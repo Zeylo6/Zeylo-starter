@@ -34,4 +34,7 @@ abstract class HomeRepository {
 
   /// Get single experience by ID
   Future<Either<Failure, Experience>> getExperienceById(String id);
+
+  /// Get all experiences
+  Future<Either<Failure, List<Experience>>> getAllExperiences();
 }

@@ -1,89 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
-import '../theme/app_shadows.dart';
-import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'loading_shimmer.dart';
 
 /// ExperienceCard widget displaying an experience with image, host info, and details
-///
-/// Features:
-/// - Cover image with CachedNetworkImage and shimmer placeholder
-/// - Heart/favorite icon in top-right corner (toggleable)
-/// - Host name + avatar row below image
-/// - Location text with pin icon
-/// - Price text (right-aligned)
-/// - Description preview with "See more" link
-/// - Rating badge (if provided)
-/// - Optional "98% Match" badge (for mood results)
-/// - Card with rounded corners (16) and subtle shadow
-/// - onTap callback
-///
-/// Example:
-/// ```dart
-/// ExperienceCard(
-///   imageUrl: 'https://example.com/image.jpg',
-///   hostName: 'John Doe',
-///   hostAvatarUrl: 'https://example.com/avatar.jpg',
-///   location: 'Colombo, Sri Lanka',
-///   price: 'LKR 2,500',
-///   description: 'Amazing experience...',
-///   rating: 4.8,
-///   ratingCount: 234,
-///   isFavorite: false,
-///   onTap: () => Navigator.push(...),
-///   onFavoriteTap: () => toggleFavorite(),
-/// )
-/// ```
+/// 2026 Modern Aesthetic: Soft surfaces, 24dp radius, elevated typography.
 class ExperienceCard extends StatefulWidget {
-  /// URL of the cover image
   final String imageUrl;
-
-  /// Host name
   final String hostName;
-
-  /// Host avatar URL
   final String? hostAvatarUrl;
-
-  /// Location text
   final String location;
-
-  /// Price text
   final String price;
-
-  /// Description preview text
   final String description;
-
-  /// Optional title for the experience
   final String? title;
-
-  /// Whether the host is an officially verified host
   final bool isHostVerified;
-
-  /// Rating value (1-5)
   final double? rating;
-
-  /// Number of ratings
   final int? ratingCount;
-
-  /// Whether the experience is favorited
   final bool isFavorite;
-
-  /// Match percentage (e.g., "98% Match")
   final int? matchPercentage;
-
-  /// Card height. Defaults to 300
-  final double height;
-
-  /// Card width. Defaults to full width
+  final double? height;
   final double? width;
-
-  /// Callback when card is tapped
+  final String? heroTag;
   final VoidCallback? onTap;
-
-  /// Callback when favorite icon is tapped
   final VoidCallback? onFavoriteTap;
 
   const ExperienceCard({
@@ -99,8 +38,9 @@ class ExperienceCard extends StatefulWidget {
     this.isFavorite = false,
     this.matchPercentage,
     this.isHostVerified = false,
-    this.height = 320,
+    this.height,
     this.width,
+    this.heroTag,
     this.onTap,
     this.onFavoriteTap,
     super.key,
@@ -121,215 +61,202 @@ class _ExperienceCardState extends State<ExperienceCard> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    Widget cardContent = Container(
       width: widget.width,
       height: widget.height,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withOpacity(0.06), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.hardEdge,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              color: AppColors.card,
-              boxShadow: AppShadows.card,
-            ),
-            clipBehavior: Clip.hardEdge,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Image with favorite icon and match badge
-                _buildImageSection(),
-                // Content
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title (if provided)
-                      if (widget.title != null && widget.title!.isNotEmpty) ...[
-                        Text(
-                          widget.title!,
-                          style: AppTypography.titleMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                      ],
-                      // Host info
-                      _buildHostInfo(),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Location
-                      _buildLocation(),
-                      const SizedBox(height: AppSpacing.xs),
-                      // Price
-                      _buildPrice(),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Description with See more
-                      _buildDescription(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageSection() {
-    return Expanded(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Cover image
-          CachedNetworkImage(
-            imageUrl: widget.imageUrl,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => const ShimmerListTile(),
-            errorWidget: (context, url, error) => Container(
-              color: AppColors.surface,
-              child: const Icon(Icons.image_not_supported),
-            ),
-          ),
-          // Match badge (top-left)
-          if (widget.matchPercentage != null)
-            Positioned(
-              top: AppSpacing.md,
-              left: AppSpacing.md,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Text(
-                  '${widget.matchPercentage}% Match',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textInverse,
-                  ),
-                ),
-              ),
-            ),
-          // Favorite icon (top-right)
-          Positioned(
-            top: AppSpacing.md,
-            right: AppSpacing.md,
-            child: GestureDetector(
-              onTap: _toggleFavorite,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.textInverse.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                child: Icon(
-                  _isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: _isFavorite ? AppColors.error : AppColors.textPrimary,
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHostInfo() {
-    return Row(
-      children: [
-        // Avatar
-        if (widget.hostAvatarUrl != null)
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.full),
-              child: CachedNetworkImage(
-                imageUrl: widget.hostAvatarUrl!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    Container(color: AppColors.surface),
-                errorWidget: (context, url, error) =>
-                    Container(color: AppColors.surface),
-              ),
-            ),
-          )
-        else
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFE5E7EB),
-            ),
-          ),
-        const SizedBox(width: AppSpacing.sm),
-        // Host name
-        Expanded(
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                child: Text(
-                  widget.hostName,
-                  style: AppTypography.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              // Image Section
+              AspectRatio(
+                aspectRatio: 16 / 10,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: widget.imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const ShimmerListTile(),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.surface,
+                        child: const Icon(Icons.image_not_supported, color: AppColors.textHint),
+                      ),
+                    ),
+                    // Match Badge
+                    if (widget.matchPercentage != null)
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${widget.matchPercentage}% Match',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Favorite Button
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: GestureDetector(
+                        onTap: _toggleFavorite,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: _isFavorite ? AppColors.error : AppColors.textPrimary,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (widget.isHostVerified) ...[
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.verified, 
-                  color: AppColors.primary, 
-                  size: 16
+              // Content Section
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHostRow(),
+                    const SizedBox(height: 12),
+                    if (widget.title != null)
+                      Text(
+                        widget.title!,
+                        style: AppTypography.titleLarge.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 4),
+                    _buildLocation(),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildPrice(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryExtraLight,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'View Details',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ],
           ),
         ),
-        // Rating badge
-        if (widget.rating != null && widget.ratingCount != null)
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.star, size: 14, color: Color(0xFFFDB022)),
-                const SizedBox(width: 2),
-                Text(
-                  '${widget.rating}',
-                  style: AppTypography.labelMedium,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '(${widget.ratingCount})',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+      ),
+    );
+
+    if (widget.heroTag != null) {
+      return Hero(
+        tag: widget.heroTag!,
+        child: cardContent,
+      );
+    }
+
+    return cardContent;
+  }
+
+  Widget _buildHostRow() {
+    return Row(
+      children: [
+        Stack(
+          children: [
+            if (widget.hostAvatarUrl != null)
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: AppColors.divider,
+                backgroundImage: CachedNetworkImageProvider(widget.hostAvatarUrl!),
+              )
+            else
+              const CircleAvatar(
+                radius: 14,
+                backgroundColor: AppColors.divider,
+                child: Icon(Icons.person, size: 16, color: AppColors.textHint),
+              ),
+            if (widget.isHostVerified)
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(1),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
                   ),
+                  child: const Icon(Icons.verified, color: AppColors.primary, size: 12),
                 ),
-              ],
+              ),
+          ],
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            widget.hostName,
+            style: AppTypography.labelMedium.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (widget.rating != null)
+          Row(
+            children: [
+              const Icon(Icons.star_rounded, size: 16, color: Colors.orange),
+              const SizedBox(width: 2),
+              Text(
+                widget.rating!.toStringAsFixed(1),
+                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
       ],
     );
@@ -338,11 +265,7 @@ class _ExperienceCardState extends State<ExperienceCard> {
   Widget _buildLocation() {
     return Row(
       children: [
-        Icon(
-          Icons.location_on_outlined,
-          size: 14,
-          color: AppColors.textSecondary,
-        ),
+        const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
@@ -357,31 +280,18 @@ class _ExperienceCardState extends State<ExperienceCard> {
   }
 
   Widget _buildPrice() {
-    return Text(
-      widget.price,
-      style: AppTypography.titleMedium.copyWith(
-        color: AppColors.primary,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  Widget _buildDescription() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.description,
-          style: AppTypography.bodySmall,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+          'Total price',
+          style: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
         ),
-        const SizedBox(height: 2),
         Text(
-          'See more',
-          style: AppTypography.bodySmall.copyWith(
+          widget.price,
+          style: AppTypography.titleLarge.copyWith(
             color: AppColors.primary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],
