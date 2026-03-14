@@ -1,3 +1,4 @@
+import 'package:zeylo/features/admin/presentation/screens/admin_user_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -141,7 +142,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                             : 'User banned')));
                               }
                             } else if (value == 'view') {
-                              // Future feature: View detailed profile
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AdminUserDetailScreen(userId: doc.id),
+                                ),
+                              );
                             }
                           },
                           itemBuilder: (context) => [

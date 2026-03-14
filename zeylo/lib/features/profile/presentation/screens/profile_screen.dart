@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:zeylo/core/theme/app_colors.dart';
+import 'package:zeylo/core/theme/app_radius.dart';
+import 'package:zeylo/core/theme/app_spacing.dart';
+import 'package:zeylo/core/theme/app_typography.dart';
+import 'package:zeylo/core/widgets/loading_shimmer.dart';
+import 'package:zeylo/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zeylo/features/community/presentation/providers/community_provider.dart';
+import 'package:zeylo/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:zeylo/features/profile/presentation/providers/profile_provider.dart';
+import 'package:zeylo/features/profile/presentation/widgets/photo_grid.dart';
+import 'package:zeylo/features/profile/presentation/widgets/profile_header.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../domain/entities/user_profile_entity.dart';
-import '../providers/profile_provider.dart';
-import '../widgets/photo_grid.dart';
-import '../widgets/profile_header.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 
 /// User profile screen
@@ -119,12 +122,34 @@ class ProfileScreen extends ConsumerWidget {
             ),
 
             // Photo grid
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: PhotoGrid(
-                photoUrls: const [], // Load from backend
-              ),
-            ),
+            ref.watch(userPostsProvider(userId)).when(
+                  data: (posts) {
+                    final photoUrls = posts
+                        .expand((post) => post.images)
+                        .toList();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: PhotoGrid(
+                        photoUrls: photoUrls,
+                        onPhotoPressed: () {
+                          context.push('/user-posts', extra: {
+                            'userId': userId,
+                            'userName': profile.name,
+                            'userAvatarUrl': profile.photoUrl,
+                          });
+                        },
+                      ),
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: Text('Error loading posts: $error')),
+                  ),
+                ),
 
             const SizedBox(height: AppSpacing.md),
             const Divider(height: 1),
