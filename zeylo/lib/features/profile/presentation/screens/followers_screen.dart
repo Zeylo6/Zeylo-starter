@@ -48,9 +48,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen> {
         ),
         title: Text(
           widget.userName,
-          style: AppTypography.titleLarge.copyWith(
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.titleLarge,
           textAlign: TextAlign.center,
         ),
         centerTitle: true,
@@ -159,15 +157,16 @@ class _FollowerTileState extends ConsumerState<_FollowerTile> {
   }
 
   Future<void> _toggleFollow() async {
+    final newFollowState = !_isFollowing;
     setState(() {
-      _isFollowing = !_isFollowing;
+      _isFollowing = newFollowState;
     });
 
     ref.invalidate(
       followActionProvider((
         widget.userId,
         widget.follower.id,
-        !_isFollowing,
+        newFollowState,
       )),
     );
   }
@@ -193,9 +192,7 @@ class _FollowerTileState extends ConsumerState<_FollowerTile> {
           Expanded(
             child: Text(
               widget.follower.name,
-              style: AppTypography.labelLarge.copyWith(
-                color: AppColors.textPrimary,
-              ),
+              style: AppTypography.labelLarge,
             ),
           ),
 
@@ -207,7 +204,10 @@ class _FollowerTileState extends ConsumerState<_FollowerTile> {
               onPressed: _toggleFollow,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    _isFollowing ? AppColors.primary : AppColors.primary,
+                    _isFollowing ? AppColors.surface : AppColors.primary,
+                side: _isFollowing
+                    ? const BorderSide(color: AppColors.border)
+                    : BorderSide.none,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
@@ -215,7 +215,7 @@ class _FollowerTileState extends ConsumerState<_FollowerTile> {
               child: Text(
                 _isFollowing ? 'Following' : 'Follow',
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textInverse,
+                  color: _isFollowing ? AppColors.textPrimary : AppColors.textInverse,
                 ),
               ),
             ),

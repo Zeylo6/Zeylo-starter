@@ -44,11 +44,33 @@ class MoodEntity {
   }
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MoodEntity &&
+          runtimeType == other.runtimeType &&
+          mood == other.mood &&
+          description == other.description &&
+          enhancedDescription == other.enhancedDescription &&
+          preferences == other.preferences &&
+          selectedAt == other.selectedAt;
+
+  @override
+  int get hashCode =>
+      mood.hashCode ^
+      description.hashCode ^
+      enhancedDescription.hashCode ^
+      preferences.hashCode ^
+      selectedAt.hashCode;
+
+  @override
   String toString() => 'MoodEntity(mood: $mood, description: $description, '
       'enhancedDescription: $enhancedDescription, preferences: $preferences)';
 }
 
 /// Mood preferences
+///
+/// Uses sentinel-based copyWith pattern to allow clearing nullable fields
+/// back to null.
 class MoodPreferences {
   /// Preferred location for experience
   final String? location;
@@ -65,17 +87,45 @@ class MoodPreferences {
     this.timePreference,
   });
 
+  /// Creates a copy with replaced fields.
+  ///
+  /// Pass explicit `null` wrapped in the sentinel to clear a field:
+  /// ```dart
+  /// preferences.copyWith(clearLocation: true) // sets location to null
+  /// ```
   MoodPreferences copyWith({
     String? location,
+    bool clearLocation = false,
     BudgetRange? budgetRange,
+    bool clearBudgetRange = false,
     TimePreference? timePreference,
+    bool clearTimePreference = false,
   }) {
     return MoodPreferences(
-      location: location ?? this.location,
-      budgetRange: budgetRange ?? this.budgetRange,
-      timePreference: timePreference ?? this.timePreference,
+      location: clearLocation ? null : (location ?? this.location),
+      budgetRange:
+          clearBudgetRange ? null : (budgetRange ?? this.budgetRange),
+      timePreference:
+          clearTimePreference ? null : (timePreference ?? this.timePreference),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MoodPreferences &&
+          runtimeType == other.runtimeType &&
+          location == other.location &&
+          budgetRange == other.budgetRange &&
+          timePreference == other.timePreference;
+
+  @override
+  int get hashCode =>
+      location.hashCode ^ budgetRange.hashCode ^ timePreference.hashCode;
+
+  @override
+  String toString() => 'MoodPreferences(location: $location, '
+      'budgetRange: $budgetRange, timePreference: $timePreference)';
 }
 
 /// Budget range for mood preferences
@@ -86,10 +136,15 @@ class BudgetRange {
   /// Maximum budget in dollars
   final double max;
 
+  /// Creates a [BudgetRange] with validation.
+  ///
+  /// Asserts that [min] >= 0, [max] >= 0, and [min] <= [max].
   const BudgetRange({
     required this.min,
     required this.max,
-  });
+  })  : assert(min >= 0, 'min must be non-negative, got $min'),
+        assert(max >= 0, 'max must be non-negative, got $max'),
+        assert(min <= max, 'min ($min) must be <= max ($max)');
 
   BudgetRange copyWith({
     double? min,
@@ -100,6 +155,20 @@ class BudgetRange {
       max: max ?? this.max,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BudgetRange &&
+          runtimeType == other.runtimeType &&
+          min == other.min &&
+          max == other.max;
+
+  @override
+  int get hashCode => min.hashCode ^ max.hashCode;
+
+  @override
+  String toString() => 'BudgetRange(min: $min, max: $max)';
 }
 
 /// Time preference for mood
@@ -119,7 +188,7 @@ enum TimePreference {
 enum PredefinedMood {
   happy('Happy', '😊'),
   relaxed('Relaxed', '😌'),
-  adventures('Adventurous', '🥾'),
+  adventurous('Adventurous', '🥾'),
   social('Social', '🌍'),
   creative('Creative', '🎨'),
   energetic('Energetic', '🏃');
@@ -135,6 +204,13 @@ class MatchBadge {
   /// Match percentage (0-100)
   final int percentage;
 
+  /// Creates a [MatchBadge] with validation.
+  ///
+  /// Asserts that [percentage] is between 0 and 100 inclusive.
+  const MatchBadge({required this.percentage})
+      : assert(percentage >= 0 && percentage <= 100,
+            'percentage must be 0-100, got $percentage');
+
   /// Whether it's a high match (80+%)
   bool get isHighMatch => percentage >= 80;
 
@@ -145,5 +221,16 @@ class MatchBadge {
     return 'red';
   }
 
-  const MatchBadge({required this.percentage});
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MatchBadge &&
+          runtimeType == other.runtimeType &&
+          percentage == other.percentage;
+
+  @override
+  int get hashCode => percentage.hashCode;
+
+  @override
+  String toString() => 'MatchBadge(percentage: $percentage)';
 }
