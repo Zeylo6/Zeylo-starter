@@ -27,6 +27,9 @@ abstract class HomeRemoteDataSource {
   /// Get single experience by ID
   Future<ExperienceModel> getExperienceById(String id);
 
+  /// Get experience stream by ID
+  Stream<ExperienceModel> getExperienceStream(String id);
+
   /// Get all active experiences
   Future<List<ExperienceModel>> getAllExperiences();
 }
@@ -210,6 +213,15 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Stream<ExperienceModel> getExperienceStream(String id) {
+    return _firestore
+        .collection('experiences')
+        .doc(id)
+        .snapshots()
+        .map((doc) => ExperienceModel.fromFirestore(doc));
   }
 
   /// Calculate distance between two coordinates using Haversine formula

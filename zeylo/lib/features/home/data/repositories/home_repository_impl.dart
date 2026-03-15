@@ -98,6 +98,11 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
+  Stream<Experience> getExperienceStream(String id) {
+    return remoteDataSource.getExperienceStream(id).map((e) => e.toEntity());
+  }
+
+  @override
   Future<Either<Failure, List<Experience>>> getAllExperiences() async {
     try {
       final experiences = await remoteDataSource.getAllExperiences();
