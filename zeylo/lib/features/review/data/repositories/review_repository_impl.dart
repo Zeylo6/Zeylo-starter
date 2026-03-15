@@ -20,6 +20,8 @@ class ReviewRepositoryImpl implements ReviewRepository {
       role: review.role,
       rating: review.rating,
       message: review.message,
+      helpfulUserIds: review.helpfulUserIds,
+      isReported: review.isReported,
       createdAt: review.createdAt,
     );
     await _remoteDatasource.submitReview(model);
@@ -28,5 +30,21 @@ class ReviewRepositoryImpl implements ReviewRepository {
   @override
   Future<List<ReviewEntity>> getReviewsForExperience(String experienceId) async {
     return await _remoteDatasource.getReviewsForExperience(experienceId);
+  }
+
+  @override
+  Future<void> toggleHelpful(String reviewId, String userId) async {
+    await _remoteDatasource.toggleHelpful(reviewId, userId);
+  }
+
+  @override
+  Future<void> reportReview(
+      String reviewId, String reporterId, String hostId) async {
+    await _remoteDatasource.reportReview(reviewId, reporterId, hostId);
+  }
+
+  @override
+  Future<void> deleteReview(String reviewId) async {
+    await _remoteDatasource.deleteReview(reviewId);
   }
 }
