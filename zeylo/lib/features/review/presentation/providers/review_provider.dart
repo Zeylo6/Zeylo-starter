@@ -16,7 +16,7 @@ final reviewRepositoryProvider = Provider<ReviewRepository>((ref) {
   return ReviewRepositoryImpl(datasource);
 });
 
-final experienceReviewsProvider = FutureProvider.family<List<ReviewEntity>, String>((ref, experienceId) async {
+final experienceReviewsProvider = StreamProvider.family<List<ReviewEntity>, String>((ref, experienceId) {
   final repository = ref.watch(reviewRepositoryProvider);
-  return repository.getReviewsForExperience(experienceId);
+  return repository.getReviewsStream(experienceId);
 });

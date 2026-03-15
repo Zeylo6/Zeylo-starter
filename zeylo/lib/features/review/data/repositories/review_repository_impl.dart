@@ -33,6 +33,11 @@ class ReviewRepositoryImpl implements ReviewRepository {
   }
 
   @override
+  Stream<List<ReviewEntity>> getReviewsStream(String experienceId) {
+    return _remoteDatasource.getReviewsStream(experienceId);
+  }
+
+  @override
   Future<void> toggleHelpful(String reviewId, String userId) async {
     await _remoteDatasource.toggleHelpful(reviewId, userId);
   }
