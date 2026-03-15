@@ -11,7 +11,9 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/experience_info_section.dart';
 import '../widgets/host_info_card.dart';
+import '../../../../core/widgets/partial_star_rating.dart';
 import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
+import '../../../home/domain/entities/experience_entity.dart';
 
 /// Experience detail screen
 ///
@@ -120,7 +122,7 @@ class _ExperienceDetailScreenState
                               const SizedBox(height: AppSpacing.xxxl),
 
                               // Reviews Section
-                              _buildReviewsSection(context, experience.id),
+                              _buildReviewsSection(context, experience),
                               const SizedBox(height: 100), // padding for bottom button
                             ],
                           ),
@@ -252,17 +254,54 @@ class _ExperienceDetailScreenState
     );
   }
 
-  Widget _buildReviewsSection(BuildContext context, String experienceId) {
+  Widget _buildReviewsSection(BuildContext context, Experience experience) {
     return Consumer(
       builder: (context, ref, child) {
-        final reviewsAsync = ref.watch(experienceReviewsProvider(experienceId));
+        final reviewsAsync = ref.watch(experienceReviewsProvider(experience.id));
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Guest Reviews',
-              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Guest Reviews',
+                  style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                // Rating summary
+                if (experience.reviewCount > 0) ...[
+                  Text(
+                    experience.averageRating.toStringAsFixed(1),
+                    style: AppTypography.titleLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  PartialStarRating(
+                    rating: experience.averageRating,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  // Modern Review Count Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      '${experience.reviewCount}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
             reviewsAsync.when(
