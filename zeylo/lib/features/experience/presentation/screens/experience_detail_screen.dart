@@ -255,6 +255,8 @@ class _ExperienceDetailScreenState
   }
 
   Widget _buildReviewsSection(BuildContext context, Experience experience) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Consumer(
       builder: (context, ref, child) {
         final reviewsAsync = ref.watch(experienceReviewsProvider(experience.id));
@@ -267,7 +269,8 @@ class _ExperienceDetailScreenState
               children: [
                 Text(
                   'Guest Reviews',
-                  style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                  style:
+                      AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 // Rating summary
@@ -305,71 +308,170 @@ class _ExperienceDetailScreenState
             ),
             const SizedBox(height: AppSpacing.md),
             reviewsAsync.when(
-          data: (reviews) {
-            if (reviews.isEmpty) {
-              return Text(
-                'No reviews yet for this experience.',
-                style: AppTypography.bodyMediumSecondary,
-              );
-            }
-            return Column(
-              children: reviews.map((review) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              data: (reviews) {
+                if (reviews.isEmpty) {
+                  return Text(
+                    'No reviews yet for this experience.',
+                    style: AppTypography.bodyMediumSecondary,
+                  );
+                }
+                return Column(
+                  children: reviews.map((review) {
+                    final isHelpful =
+                        currentUser != null && review.helpfulUserIds.contains(currentUser.uid);
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.person, color: AppColors.primary, size: 16),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            'Seeker', // Masking real name unless fetched explicitly
-                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const Spacer(),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
-                              const SizedBox(width: 4),
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.person,
+                                    color: AppColors.primary, size: 16),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
-                                review.rating.toStringAsFixed(1),
-                                style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.bold),
+                                'Seeker', // Masking real name unless fetched explicitly
+                                style: AppTypography.labelMedium
+                                    .copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const Spacer(),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star_rounded,
+                                      color: Color(0xFFFFB800), size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    review.rating.toStringAsFixed(1),
+                                    style: AppTypography.labelSmall
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          if (review.message != null && review.message!.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              review.message!,
+                              style: AppTypography.bodyMedium
+                                  .copyWith(color: AppColors.textPrimary),
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: AppColors.textSecondary),
+                              ),
+                              Row(
+                                children: [
+                                  // Helpful Button
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (currentUser == null) return;
+                                      await ref
+                                          .read(reviewRepositoryProvider)
+                                          .toggleHelpful(review.id, currentUser.uid);
+                                      ref.invalidate(
+                                          experienceReviewsProvider(experience.id));
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isHelpful
+                                            ? AppColors.primary.withOpacity(0.1)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            isHelpful
+                                                ? Icons.thumb_up_rounded
+                                                : Icons.thumb_up_outlined,
+                                            size: 14,
+                                            color: isHelpful
+                                                ? AppColors.primary
+                                                : AppColors.textSecondary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Helpful${review.helpfulUserIds.isNotEmpty ? ' (${review.helpfulUserIds.length})' : ''}',
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: isHelpful
+                                                  ? AppColors.primary
+                                                  : AppColors.textSecondary,
+                                              fontWeight: isHelpful
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  // Report Button
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (currentUser == null) return;
+                                      final confirm = await _showReportConfirmation(context);
+                                      if (confirm == true) {
+                                        await ref
+                                            .read(reviewRepositoryProvider)
+                                            .reportReview(review.id, currentUser.uid,
+                                                experience.hostId);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Review reported to host.'),
+                                              backgroundColor: AppColors.textPrimary,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.flag_outlined,
+                                            size: 14, color: AppColors.textSecondary),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Report',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ],
                       ),
-                      if (review.message != null && review.message!.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          review.message!,
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -378,6 +480,27 @@ class _ExperienceDetailScreenState
           ],
         );
       },
+    );
+  }
+
+  Future<bool?> _showReportConfirmation(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Report Review'),
+        content: const Text(
+            'Are you sure you want to report this review? This will notify the host to investigate.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Report', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
     );
   }
 

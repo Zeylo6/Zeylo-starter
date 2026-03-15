@@ -116,4 +116,55 @@ class ReviewDatasourceImpl implements ReviewDatasource {
       rethrow;
     }
   }
+
+  @override
+  Future<void> toggleHelpful(String reviewId, String userId) async {
+    final reviewRef = _firestore.collection('reviews').doc(reviewId);
+    final doc = await reviewRef.get();
+    if (!doc.exists) return;
+
+    final data = doc.data()!;
+    final helpfulUserIds = List<String>.from(data['helpfulUserIds'] ?? []);
+
+    if (helpfulUserIds.contains(userId)) {
+      await reviewRef.update({
+        'helpfulUserIds': FieldValue.arrayRemove([userId])
+      });
+    } else {
+      await reviewRef.update({
+        'helpfulUserIds': FieldValue.arrayUnion([userId])
+      });
+    }
+  }
+
+  @override
+  Future<void> reportReview(
+      String reviewId, String reporterId, String hostId) async {
+    final batch = _firestore.batch();
+
+    // 1. Mark review as reported
+    final reviewRef = _firestore.collection('reviews').doc(reviewId);
+    batch.update(reviewRef, {'isReported': true});
+
+    // 2. Create activity/notification for host
+    final activityRef = _firestore.collection('activities').doc();
+    batch.set(activityRef, {
+      'userId': hostId,
+      'title': 'Review Reported 🚩',
+      'message': 'A guest has reported a review on your experience. Tap to take action.',
+      'createdAt': FieldValue.serverTimestamp(),
+      'type': 'review_report',
+      'isRead': false,
+      'reviewId': reviewId,
+    });
+
+    await batch.commit();
+  }
+
+  @override
+  Future<void> deleteReview(String reviewId) async {
+    // Note: In a real app, we might also want to update the experience/user stats
+    // when a review is deleted to maintain accuracy.
+    await _firestore.collection('reviews').doc(reviewId).delete();
+  }
 }
