@@ -14,6 +14,7 @@ import '../widgets/host_info_card.dart';
 import '../../../../core/widgets/partial_star_rating.dart';
 import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
 import '../../../home/domain/entities/experience_entity.dart';
+import 'package:zeylo/features/review/presentation/screens/all_reviews_screen.dart';
 
 /// Experience detail screen
 ///
@@ -304,6 +305,30 @@ class _ExperienceDetailScreenState
                     ),
                   ),
                 ],
+                const Spacer(),
+                if (experience.reviewCount > 3)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AllReviewsScreen(experience: experience),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          'View All',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primary),
+                      ],
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -315,8 +340,13 @@ class _ExperienceDetailScreenState
                     style: AppTypography.bodyMediumSecondary,
                   );
                 }
+                // Sort by highest rating and take top 3
+                final topReviews = [...reviews];
+                topReviews.sort((a, b) => b.rating.compareTo(a.rating));
+                final reviewsToShow = topReviews.take(3).toList();
+
                 return Column(
-                  children: reviews.map((review) {
+                  children: reviewsToShow.map((review) {
                     final isHelpful =
                         currentUser != null && review.helpfulUserIds.contains(currentUser.uid);
 
