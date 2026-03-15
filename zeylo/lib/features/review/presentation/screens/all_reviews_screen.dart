@@ -25,6 +25,11 @@ class AllReviewsScreen extends ConsumerStatefulWidget {
 class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  
+  // Search suggestions
+  final List<String> _suggestions = [
+    'Amazing', 'Service', 'Value', 'Food', 'Atmosphere', 'Guide'
+  ];
 
   @override
   void dispose() {
@@ -42,12 +47,34 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary, size: 20),
-          onPressed: () => Navigator.pop(context),
+        leadingWidth: 70,
+        leading: Center(
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              margin: const EdgeInsets.only(left: AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.textInverse.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+          ),
         ),
         title: Text(
-          'experience reviews',
+          'Experience reviews',
           style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
@@ -67,16 +94,28 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
                   color: AppColors.surface,
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildSummaryHeader(reviews),
                       const SizedBox(height: AppSpacing.lg),
                       _buildRatingDistribution(reviews),
                       const SizedBox(height: AppSpacing.xl),
                       _buildSearchBar(),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildSuggestions(),
                     ],
                   ),
                 ),
               ),
+              // Suggestions Section
+              if (_suggestions.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppColors.surface,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: const SizedBox(height: AppSpacing.md),
+                  ),
+                ),
               // Review List
               SliverPadding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -116,7 +155,7 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF00AA6C), // Tripadvisor Green
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           child: Text(
@@ -192,7 +231,7 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
               child: LinearProgressIndicator(
                 value: percent,
                 backgroundColor: AppColors.border,
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF008957)), // Slightly darker green
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                 minHeight: 12,
               ),
             ),
@@ -337,6 +376,40 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
           ),
         ],
       ),
+    );
+  }
+  Widget _buildSuggestions() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _suggestions.map((suggestion) {
+        final isSelected = _searchQuery.toLowerCase() == suggestion.toLowerCase();
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _searchQuery = isSelected ? '' : suggestion;
+              _searchController.text = _searchQuery;
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(AppRadius.full),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.1),
+              ),
+            ),
+            child: Text(
+              suggestion,
+              style: AppTypography.labelSmall.copyWith(
+                color: isSelected ? Colors.white : AppColors.primary,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
