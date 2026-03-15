@@ -118,6 +118,22 @@ class ReviewDatasourceImpl implements ReviewDatasource {
   }
 
   @override
+  Stream<List<ReviewModel>> getReviewsStream(String experienceId) {
+    return _firestore
+        .collection('reviews')
+        .where('experienceId', isEqualTo: experienceId)
+        .where('role', isEqualTo: 'seeker')
+        .snapshots()
+        .map((snapshot) {
+      final reviews = snapshot.docs
+          .map((doc) => ReviewModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return reviews;
+    });
+  }
+
+  @override
   Future<void> toggleHelpful(String reviewId, String userId) async {
     final reviewRef = _firestore.collection('reviews').doc(reviewId);
     final doc = await reviewRef.get();
@@ -163,8 +179,74 @@ class ReviewDatasourceImpl implements ReviewDatasource {
 
   @override
   Future<void> deleteReview(String reviewId) async {
-    // Note: In a real app, we might also want to update the experience/user stats
-    // when a review is deleted to maintain accuracy.
-    await _firestore.collection('reviews').doc(reviewId).delete();
+    final reviewRef = _firestore.collection('reviews').doc(reviewId);
+    final reviewDoc = await reviewRef.get();
+    
+    if (!reviewDoc.exists) return;
+    
+    final reviewData = reviewDoc.data()!;
+    final double rating = (reviewData['rating'] as num?)?.toDouble() ?? 0.0;
+    final String experienceId = reviewData['experienceId'] ?? '';
+    final String hostId = reviewData['revieweeId'] ?? '';
+    final String role = reviewData['role'] ?? '';
+
+    final batch = _firestore.batch();
+
+    // 1. Update Experience stats if it was a seeker review
+    if (role == 'seeker' && experienceId.isNotEmpty) {
+      final expRef = _firestore.collection('experiences').doc(experienceId);
+      final expDoc = await expRef.get();
+      
+      if (expDoc.exists) {
+        final data = expDoc.data()!;
+        final currentRating = (data['averageRating'] as num?)?.toDouble() ?? 0.0;
+        final currentCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
+        
+        if (currentCount > 1) {
+          final newCount = currentCount - 1;
+          final newRating = ((currentRating * currentCount) - rating) / newCount;
+          batch.update(expRef, {
+            'averageRating': newRating,
+            'reviewCount': newCount,
+          });
+        } else {
+          batch.update(expRef, {
+            'averageRating': 0.0,
+            'reviewCount': 0,
+          });
+        }
+      }
+
+      // 2. Update Host User stats
+      if (hostId.isNotEmpty) {
+        final userRef = _firestore.collection('users').doc(hostId);
+        final userDoc = await userRef.get();
+        if (userDoc.exists) {
+          final data = userDoc.data()!;
+          final userStats = data['stats'] as Map<String, dynamic>? ?? {};
+          final currentAvg = (userStats['averageRating'] as num?)?.toDouble() ?? 0.0;
+          final currentTotalCount = (userStats['totalReviews'] as num?)?.toInt() ?? 0;
+          
+          if (currentTotalCount > 1) {
+            final newTotalCount = currentTotalCount - 1;
+            final newAvg = ((currentAvg * currentTotalCount) - rating) / newTotalCount;
+            batch.update(userRef, {
+              'stats.averageRating': newAvg,
+              'stats.totalReviews': newTotalCount,
+            });
+          } else {
+            batch.update(userRef, {
+              'stats.averageRating': 0.0,
+              'stats.totalReviews': 0,
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Delete the review doc
+    batch.delete(reviewRef);
+
+    await batch.commit();
   }
 }

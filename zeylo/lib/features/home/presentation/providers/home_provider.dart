@@ -161,14 +161,9 @@ final experiencesByFilterProvider =
 });
 
 final experienceDetailProvider =
-    FutureProvider.family<Experience, String>((ref, experienceId) async {
+    StreamProvider.family<Experience, String>((ref, experienceId) {
   final repository = ref.watch(homeRepositoryProvider);
-  final result = await repository.getExperienceById(experienceId);
-
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (experience) => experience,
-  );
+  return repository.getExperienceStream(experienceId);
 });
 
 // Using Flutter's built-in RangeValues from material.dart
