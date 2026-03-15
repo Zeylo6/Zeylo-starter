@@ -42,6 +42,21 @@ class BookingEntity {
   /// When the booking was last updated
   final DateTime updatedAt;
 
+  /// Whether the host has rated this booking
+  final bool isRatedByHost;
+
+  /// Whether the seeker has rated this booking
+  final bool isRatedBySeeker;
+
+  /// Name of the seeker
+  final String? seekerName;
+
+  /// Photo URL of the seeker
+  final String? seekerPhotoUrl;
+
+  /// Whether the earnings for this booking have been collected by the host
+  final bool isEarningsCollected;
+
   const BookingEntity({
     required this.id,
     required this.experienceId,
@@ -57,6 +72,11 @@ class BookingEntity {
     required this.paymentStatus,
     required this.createdAt,
     required this.updatedAt,
+    this.isRatedByHost = false,
+    this.isRatedBySeeker = false,
+    this.seekerName,
+    this.seekerPhotoUrl,
+    this.isEarningsCollected = false,
   });
 
   /// Create a copy of this booking entity with some fields replaced
@@ -75,6 +95,11 @@ class BookingEntity {
     String? paymentStatus,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isRatedByHost,
+    bool? isRatedBySeeker,
+    String? seekerName,
+    String? seekerPhotoUrl,
+    bool? isEarningsCollected,
   }) {
     return BookingEntity(
       id: id ?? this.id,
@@ -91,6 +116,11 @@ class BookingEntity {
       paymentStatus: paymentStatus ?? this.paymentStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isRatedByHost: isRatedByHost ?? this.isRatedByHost,
+      isRatedBySeeker: isRatedBySeeker ?? this.isRatedBySeeker,
+      seekerName: seekerName ?? this.seekerName,
+      seekerPhotoUrl: seekerPhotoUrl ?? this.seekerPhotoUrl,
+      isEarningsCollected: isEarningsCollected ?? this.isEarningsCollected,
     );
   }
 
@@ -100,6 +130,8 @@ class BookingEntity {
       'experienceId: $experienceId, '
       'userId: $userId, '
       'status: $status, '
-      'paymentStatus: $paymentStatus'
+      'paymentStatus: $paymentStatus, '
+      'isRatedByHost: $isRatedByHost, '
+      'isRatedBySeeker: $isRatedBySeeker'
       ')';
 }

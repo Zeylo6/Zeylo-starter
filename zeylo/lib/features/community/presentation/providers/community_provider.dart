@@ -27,15 +27,10 @@ final communityRepositoryProvider = Provider<CommunityRepository>(
 // State Providers
 final selectedTagProvider = StateProvider<String?>((ref) => null);
 
-// Future Providers
-final communityPostsProvider = FutureProvider<List<Post>>((ref) async {
+// Stream Provider for real-time posts
+final communityPostsProvider = StreamProvider<List<Post>>((ref) {
   final repository = ref.watch(communityRepositoryProvider);
-  final result = await repository.getCommunityPosts(limit: 50);
-
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (posts) => posts,
-  );
+  return repository.watchCommunityPosts(limit: 50);
 });
 
 final userPostsProvider = FutureProvider.family<List<Post>, String>(

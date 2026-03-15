@@ -18,6 +18,11 @@ class BookingModel extends BookingEntity {
     required super.paymentStatus,
     required super.createdAt,
     required super.updatedAt,
+    super.isRatedByHost = false,
+    super.isRatedBySeeker = false,
+    super.seekerName,
+    super.seekerPhotoUrl,
+    super.isEarningsCollected = false,
   });
 
   /// Create a BookingModel from JSON
@@ -37,6 +42,11 @@ class BookingModel extends BookingEntity {
       paymentStatus: json['paymentStatus'] as String,
       createdAt: _parseDateTime(json['createdAt']),
       updatedAt: _parseDateTime(json['updatedAt']),
+      isRatedByHost: json['isRatedByHost'] as bool? ?? false,
+      isRatedBySeeker: json['isRatedBySeeker'] as bool? ?? false,
+      seekerName: (json['seekerName'] ?? json['seeker_name']) as String?,
+      seekerPhotoUrl: (json['seekerPhotoUrl'] ?? json['seeker_photo_url']) as String?,
+      isEarningsCollected: json['isEarningsCollected'] as bool? ?? false,
     );
   }
 
@@ -60,6 +70,11 @@ class BookingModel extends BookingEntity {
       paymentStatus: data['paymentStatus'] as String? ?? 'pending',
       createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      isRatedByHost: data['isRatedByHost'] as bool? ?? false,
+      isRatedBySeeker: data['isRatedBySeeker'] as bool? ?? false,
+      seekerName: (data['seekerName'] ?? data['seeker_name']) as String?,
+      seekerPhotoUrl: (data['seekerPhotoUrl'] ?? data['seeker_photo_url']) as String?,
+      isEarningsCollected: data['isEarningsCollected'] as bool? ?? false,
     );
   }
 
@@ -80,6 +95,11 @@ class BookingModel extends BookingEntity {
       'paymentStatus': paymentStatus,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isRatedByHost': isRatedByHost,
+      'isRatedBySeeker': isRatedBySeeker,
+      'seekerName': seekerName,
+      'seekerPhotoUrl': seekerPhotoUrl,
+      'isEarningsCollected': isEarningsCollected,
     };
   }
 
@@ -99,6 +119,11 @@ class BookingModel extends BookingEntity {
       'paymentStatus': paymentStatus,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'isRatedByHost': isRatedByHost,
+      'isRatedBySeeker': isRatedBySeeker,
+      'seekerName': seekerName,
+      'seekerPhotoUrl': seekerPhotoUrl,
+      'isEarningsCollected': isEarningsCollected,
     };
   }
 

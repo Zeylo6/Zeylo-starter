@@ -305,13 +305,15 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                       child: ExperienceCard(
+                        heroTag: 'search_experience_${experience.id}',
                         imageUrl: experience.coverImage,
                         hostName: experience.hostName,
                         hostAvatarUrl: experience.hostPhotoUrl,
+                        isHostVerified: experience.isHostVerified,
                         location:
                             '${experience.location.city}, ${experience.location.country}',
                         price:
-                            '\$${experience.price.toStringAsFixed(0)} ${experience.currency}',
+                            'LKR ${experience.price.toStringAsFixed(0)}',
                         description: experience.shortDescription,
                         rating: experience.averageRating,
                         ratingCount: experience.reviewCount,
@@ -442,10 +444,11 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                               imageUrl: leg.experience.coverImage,
                               hostName: leg.experience.hostName,
                               hostAvatarUrl: leg.experience.hostPhotoUrl,
+                              isHostVerified: leg.experience.isHostVerified,
                               location:
                                   '${leg.experience.location.city}, ${leg.experience.location.country}',
                               price:
-                                  '\$${leg.experience.price.toStringAsFixed(0)} ${leg.experience.currency}',
+                                  'LKR ${leg.experience.price.toStringAsFixed(0)}',
                               description: leg.experience.shortDescription,
                               rating: leg.experience.averageRating,
                               ratingCount: leg.experience.reviewCount,

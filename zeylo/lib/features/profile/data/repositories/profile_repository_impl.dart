@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user_profile_entity.dart';
@@ -113,6 +114,36 @@ class ProfileRepositoryImpl implements ProfileRepository {
         targetUserId,
       );
       return Right(following);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<UserProfileEntity>>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
+    try {
+      final suggestions = await _datasource.getSuggestedUsers(currentUserId, limit: limit);
+      return Right(suggestions);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadProfileImage(String userId, Uint8List imageBytes) async {
+    try {
+      final url = await _datasource.uploadProfileImage(userId, imageBytes);
+      return Right(url);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> syncHostProfileToExperiences(String hostId, String name, String? photoUrl) async {
+    try {
+      await _datasource.syncHostProfileToExperiences(hostId, name, photoUrl);
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

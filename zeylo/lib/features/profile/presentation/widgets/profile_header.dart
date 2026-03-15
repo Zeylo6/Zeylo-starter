@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/host_avatar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
+import '../providers/profile_provider.dart';
 import 'profile_stats_row.dart';
 
 /// Profile header widget displaying user information
-class ProfileHeader extends StatelessWidget {
+class ProfileHeader extends ConsumerWidget {
   final UserProfileEntity profile;
   final VoidCallback? onEditPressed;
 
@@ -19,7 +22,15 @@ class ProfileHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId = ref.watch(currentUserProvider).value?.uid;
+    final isCurrentUser = currentUserId == profile.id;
+
+    // Watch follow status only if not current user
+    final isFollowing = !isCurrentUser && currentUserId != null
+        ? ref.watch(isFollowingProvider((currentUserId, profile.id))).value ?? false
+        : false;
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -43,6 +54,32 @@ class ProfileHeader extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
+          if (profile.isHostVerified) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.verified, color: AppColors.primary, size: 14),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Verified Host',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
 
           // Stats row
@@ -50,34 +87,69 @@ class ProfileHeader extends StatelessWidget {
             followers: profile.followerCount,
             following: profile.followingCount,
             posts: profile.postCount,
+            rating: profile.averageRating,
+            reviews: profile.ratingCount,
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Edit Profile button
-          if (onEditPressed != null)
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton(
-                onPressed: onEditPressed,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                    color: AppColors.primary,
-                    width: 1.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                ),
-                child: Text(
-                  'Edit Profile',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
+          // Edit Profile or Follow button
+          if (isCurrentUser)
+            _buildEditButton(context)
+          else if (currentUserId != null)
+            _buildFollowButton(ref, currentUserId, isFollowing),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEditButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        onPressed: onEditPressed,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(
+            color: AppColors.primary,
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
+        child: Text(
+          'Edit Profile',
+          style: AppTypography.labelLarge.copyWith(
+            color: AppColors.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFollowButton(WidgetRef ref, String currentUserId, bool isFollowing) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: () {
+          ref.read(followActionProvider((currentUserId, profile.id, !isFollowing)));
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isFollowing ? AppColors.surface : AppColors.primary,
+          foregroundColor: isFollowing ? AppColors.textPrimary : AppColors.textInverse,
+          elevation: 0,
+          side: isFollowing ? BorderSide(color: AppColors.border) : null,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+        ),
+        child: Text(
+          isFollowing ? 'Following' : 'Follow',
+          style: AppTypography.labelLarge.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

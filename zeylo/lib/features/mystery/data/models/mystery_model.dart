@@ -17,6 +17,9 @@ class MysteryModel extends MysteryEntity {
     required super.experienceType,
     required super.status,
     super.matchedExperienceId,
+    super.teaserDescription,
+    super.vibe,
+    super.preparationNotes,
     super.revealedAt,
     required super.createdAt,
   });
@@ -37,6 +40,9 @@ class MysteryModel extends MysteryEntity {
       experienceType: _parseExperienceType(data['experienceType'] ?? 'surpriseMe'),
       status: _parseStatus(data['status'] ?? 'pending'),
       matchedExperienceId: data['matchedExperienceId'],
+      teaserDescription: data['teaserDescription'],
+      vibe: data['vibe'],
+      preparationNotes: data['preparationNotes'],
       revealedAt: data['revealedAt'] != null
           ? (data['revealedAt'] as Timestamp).toDate()
           : null,
@@ -59,6 +65,9 @@ class MysteryModel extends MysteryEntity {
       experienceType: _parseExperienceType(json['experienceType'] ?? 'surpriseMe'),
       status: _parseStatus(json['status'] ?? 'pending'),
       matchedExperienceId: json['matchedExperienceId'],
+      teaserDescription: json['teaserDescription'],
+      vibe: json['vibe'],
+      preparationNotes: json['preparationNotes'],
       revealedAt: json['revealedAt'] != null
           ? DateTime.parse(json['revealedAt'] as String)
           : null,
@@ -80,6 +89,9 @@ class MysteryModel extends MysteryEntity {
       'experienceType': experienceType.name,
       'status': status.name,
       'matchedExperienceId': matchedExperienceId,
+      'teaserDescription': teaserDescription,
+      'vibe': vibe,
+      'preparationNotes': preparationNotes,
       'revealedAt': revealedAt != null ? Timestamp.fromDate(revealedAt!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
     };
@@ -98,6 +110,9 @@ class MysteryModel extends MysteryEntity {
       'experienceType': experienceType.name,
       'status': status.name,
       'matchedExperienceId': matchedExperienceId,
+      'teaserDescription': teaserDescription,
+      'vibe': vibe,
+      'preparationNotes': preparationNotes,
       'revealedAt': revealedAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
     };
@@ -116,6 +131,9 @@ class MysteryModel extends MysteryEntity {
       experienceType: experienceType,
       status: status,
       matchedExperienceId: matchedExperienceId,
+      teaserDescription: teaserDescription,
+      vibe: vibe,
+      preparationNotes: preparationNotes,
       revealedAt: revealedAt,
       createdAt: createdAt,
     );
@@ -134,6 +152,9 @@ class MysteryModel extends MysteryEntity {
     MysteryExperienceType? experienceType,
     MysteryStatus? status,
     String? matchedExperienceId,
+    String? teaserDescription,
+    String? vibe,
+    String? preparationNotes,
     DateTime? revealedAt,
     DateTime? createdAt,
   }) {
@@ -148,6 +169,9 @@ class MysteryModel extends MysteryEntity {
       experienceType: experienceType ?? this.experienceType,
       status: status ?? this.status,
       matchedExperienceId: matchedExperienceId ?? this.matchedExperienceId,
+      teaserDescription: teaserDescription ?? this.teaserDescription,
+      vibe: vibe ?? this.vibe,
+      preparationNotes: preparationNotes ?? this.preparationNotes,
       revealedAt: revealedAt ?? this.revealedAt,
       createdAt: createdAt ?? this.createdAt,
     );

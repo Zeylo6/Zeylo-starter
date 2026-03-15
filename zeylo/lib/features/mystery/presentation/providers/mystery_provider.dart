@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../features/chain/presentation/providers/chain_provider.dart';
 import '../../data/datasources/mystery_datasource.dart';
 import '../../data/repositories/mystery_repository_impl.dart';
 import '../../domain/entities/mystery_entity.dart';
@@ -14,7 +15,8 @@ final firebaseFirestoreProvider = Provider((ref) {
 /// Mystery data source provider
 final mysteryDataSourceProvider = Provider((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
-  return MysteryDataSourceImpl(firestore: firestore);
+  final aiService = ref.watch(aiServiceProvider);
+  return MysteryDataSourceImpl(firestore: firestore, aiService: aiService);
 });
 
 /// Mystery repository provider

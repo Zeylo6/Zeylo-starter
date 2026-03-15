@@ -36,7 +36,7 @@ class PayoutTile extends StatelessWidget {
               color: AppColors.success.withOpacity(0.1),
             ),
             child: const Icon(
-              Icons.monetization_on,
+              Icons.account_balance_wallet_rounded,
               color: AppColors.success,
               size: 20,
             ),
@@ -69,7 +69,7 @@ class PayoutTile extends StatelessWidget {
 
           // Amount
           Text(
-            '${isPositive ? '+' : '-'}\$${amount.toStringAsFixed(2)}',
+            '${isPositive ? '+' : '-'}Rs. ${amount.toStringAsFixed(0)}',
             style: AppTypography.labelMedium.copyWith(
               color: amountColor,
               fontWeight: FontWeight.w600,

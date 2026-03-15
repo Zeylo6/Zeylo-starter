@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -9,6 +11,7 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/experience_info_section.dart';
 import '../widgets/host_info_card.dart';
+import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
 
 /// Experience detail screen
 ///
@@ -35,7 +38,8 @@ class ExperienceDetailScreen extends ConsumerStatefulWidget {
       _ExperienceDetailScreenState();
 }
 
-class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen> {
+class _ExperienceDetailScreenState
+    extends ConsumerState<ExperienceDetailScreen> {
   bool _isFavorite = false;
 
   @override
@@ -114,6 +118,10 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
                                     'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
                               ),
                               const SizedBox(height: AppSpacing.xxxl),
+
+                              // Reviews Section
+                              _buildReviewsSection(context, experience.id),
+                              const SizedBox(height: 100), // padding for bottom button
                             ],
                           ),
                         ),
@@ -155,9 +163,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
                         ),
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Icon(
-                          _isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                          _isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: _isFavorite
                               ? AppColors.error
                               : AppColors.textPrimary,
@@ -168,7 +174,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
                   ),
                 ],
               ),
-              bottomNavigationBar: _buildBookNowButton(context),
+              bottomNavigationBar: _buildBookNowButton(context, experience),
             );
           },
           loading: () => Scaffold(
@@ -246,6 +252,96 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
     );
   }
 
+  Widget _buildReviewsSection(BuildContext context, String experienceId) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final reviewsAsync = ref.watch(experienceReviewsProvider(experienceId));
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Guest Reviews',
+              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            reviewsAsync.when(
+          data: (reviews) {
+            if (reviews.isEmpty) {
+              return Text(
+                'No reviews yet for this experience.',
+                style: AppTypography.bodyMediumSecondary,
+              );
+            }
+            return Column(
+              children: reviews.map((review) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.person, color: AppColors.primary, size: 16),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Seeker', // Masking real name unless fetched explicitly
+                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                review.rating.toStringAsFixed(1),
+                                style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      if (review.message != null && review.message!.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          review.message!,
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildHostPriceRow(
     String hostName,
     String hostPhotoUrl,
@@ -285,8 +381,8 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
           ],
         ),
         // Price
-        Text(
-          '\$${price.toStringAsFixed(0)} $currency',
+      Text(
+        'Rs. ${price.toStringAsFixed(0)}',
           style: AppTypography.titleLarge.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w600,
@@ -317,7 +413,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
     );
   }
 
-  Widget _buildBookNowButton(BuildContext context) {
+  Widget _buildBookNowButton(BuildContext context, dynamic experience) {
     return Container(
       padding: EdgeInsets.only(
         left: AppSpacing.lg,
@@ -333,7 +429,7 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: InkWell(
-            onTap: _bookNow,
+            onTap: () => _bookNow(experience),
             child: Center(
               child: Text(
                 'Book Now',
@@ -355,12 +451,66 @@ class _ExperienceDetailScreenState extends ConsumerState<ExperienceDetailScreen>
     });
   }
 
-  void _bookNow() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Booking initiated'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _bookNow(dynamic experience) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to book this experience.')),
+      );
+      return;
+    }
+
+    try {
+      // Create a pending booking document
+      final docRef = FirebaseFirestore.instance.collection('bookings').doc();
+
+      await docRef.set({
+        'id': docRef.id,
+        'experienceId': experience.id,
+        'experienceTitle': experience.title,
+        'experienceCoverImage': experience.coverImage,
+        'userId': user.uid,
+        'hostId': experience.hostId,
+        'date': Timestamp.fromDate(DateTime.now().add(const Duration(
+            days:
+                1))), // Placeholder for next day (User should usually pick date)
+        'startTime': '10:00 AM', // Placeholder
+        'guests': 1, // Placeholder
+        'totalPrice': experience.price,
+        'status': 'pending',
+        'paymentStatus': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Add notification for the host
+      await FirebaseFirestore.instance.collection('activities').add({
+        'userId': experience.hostId, // Target the host
+        'title': 'New Booking Request',
+        'message': 'You have a new booking request for ${experience.title}!',
+        'createdAt': FieldValue.serverTimestamp(),
+        'type': 'new_booking',
+        'isRead': false,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Booking request sent to host!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to book: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

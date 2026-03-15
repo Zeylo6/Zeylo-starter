@@ -5,9 +5,10 @@ import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../profile/domain/entities/user_profile_entity.dart';
 
-// Datasource provider
-final profileDatasourceProvider = Provider((ref) {
-  return ProfileFirestoreDatasource(FirebaseFirestore.instance);
+final profileDatasourceProvider = Provider<ProfileDatasource>((ref) {
+  return ProfileFirestoreDatasource(
+    FirebaseFirestore.instance,
+  );
 });
 
 // Repository provider
@@ -91,6 +92,18 @@ final isFollowingProvider =
   },
 );
 
+// Suggested users provider family
+final suggestedUsersProvider = FutureProvider.family<List<UserProfileEntity>, String>(
+  (ref, userId) async {
+    final repository = ref.watch(profileRepositoryProvider);
+    final result = await repository.getSuggestedUsers(userId);
+    return result.fold(
+      (failure) => throw failure.message,
+      (suggestions) => suggestions,
+    );
+  },
+);
+
 // Follow/Unfollow action
 final followActionProvider = FutureProvider.family<void, (String currentUserId, String targetUserId, bool follow)>(
   (ref, params) async {
@@ -106,6 +119,7 @@ final followActionProvider = FutureProvider.family<void, (String currentUserId, 
           ref.invalidate(followersProvider);
           ref.invalidate(followingProvider);
           ref.invalidate(isFollowingProvider);
+          ref.invalidate(suggestedUsersProvider);
         },
       );
     } else {
@@ -117,6 +131,7 @@ final followActionProvider = FutureProvider.family<void, (String currentUserId, 
           ref.invalidate(followersProvider);
           ref.invalidate(followingProvider);
           ref.invalidate(isFollowingProvider);
+          ref.invalidate(suggestedUsersProvider);
         },
       );
     }

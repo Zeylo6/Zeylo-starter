@@ -1,3 +1,19 @@
+/// Role of the user in the Zeylo application
+enum UserRole {
+  seeker,
+  host,
+  business,
+  admin,
+}
+
+/// Verification status for host applications
+enum HostVerificationStatus {
+  unverified,
+  pending,
+  verified,
+  rejected,
+}
+
 /// User entity representing a user in the Zeylo application
 class UserEntity {
   /// Unique identifier for the user
@@ -21,8 +37,11 @@ class UserEntity {
   /// User's location (city, country)
   final Map<String, String>? location;
 
-  /// Whether the user is a host
-  final bool isHost;
+  /// The user's role, determining permissions and app behavior
+  final UserRole role;
+
+  /// The host's verification status
+  final HostVerificationStatus hostVerificationStatus;
 
   /// Whether the user's email is verified
   final bool isVerified;
@@ -48,6 +67,12 @@ class UserEntity {
   /// User settings/preferences
   final Map<String, dynamic> settings;
 
+  /// Whether the user is banned
+  final bool isBanned;
+
+  /// The reason for the ban
+  final String? banReason;
+
   const UserEntity({
     required this.uid,
     required this.email,
@@ -56,7 +81,8 @@ class UserEntity {
     this.phoneNumber,
     this.bio,
     this.location,
-    this.isHost = false,
+    this.role = UserRole.seeker,
+    this.hostVerificationStatus = HostVerificationStatus.unverified,
     this.isVerified = false,
     required this.createdAt,
     this.followersCount = 0,
@@ -65,6 +91,8 @@ class UserEntity {
     this.fcmToken,
     this.favorites = const [],
     this.settings = const {},
+    this.isBanned = false,
+    this.banReason,
   });
 
   /// Create a copy of this user entity with some fields replaced
@@ -76,7 +104,8 @@ class UserEntity {
     String? phoneNumber,
     String? bio,
     Map<String, String>? location,
-    bool? isHost,
+    UserRole? role,
+    HostVerificationStatus? hostVerificationStatus,
     bool? isVerified,
     DateTime? createdAt,
     int? followersCount,
@@ -85,6 +114,8 @@ class UserEntity {
     String? fcmToken,
     List<String>? favorites,
     Map<String, dynamic>? settings,
+    bool? isBanned,
+    String? banReason,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -94,7 +125,9 @@ class UserEntity {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       bio: bio ?? this.bio,
       location: location ?? this.location,
-      isHost: isHost ?? this.isHost,
+      role: role ?? this.role,
+      hostVerificationStatus:
+          hostVerificationStatus ?? this.hostVerificationStatus,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
       followersCount: followersCount ?? this.followersCount,
@@ -103,6 +136,8 @@ class UserEntity {
       fcmToken: fcmToken ?? this.fcmToken,
       favorites: favorites ?? this.favorites,
       settings: settings ?? this.settings,
+      isBanned: isBanned ?? this.isBanned,
+      banReason: banReason ?? this.banReason,
     );
   }
 
@@ -112,6 +147,6 @@ class UserEntity {
       'email: $email, '
       'displayName: $displayName, '
       'isVerified: $isVerified, '
-      'isHost: $isHost'
+      'role: ${role.name}'
       ')';
 }

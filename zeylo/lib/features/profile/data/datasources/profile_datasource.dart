@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import '../models/user_profile_model.dart';
 
 /// Abstract datasource for profile operations
@@ -26,6 +30,15 @@ abstract class ProfileDatasource {
 
   /// Check if current user follows target user
   Future<bool> isFollowing(String currentUserId, String targetUserId);
+
+  /// Get suggested users to follow
+  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId, {int limit = 10});
+
+  /// Upload profile image to storage
+  Future<String> uploadProfileImage(String userId, Uint8List imageBytes);
+
+  /// Synchronize host profile changes to their experiences
+  Future<void> syncHostProfileToExperiences(String hostId, String name, String? photoUrl);
 }
 
 /// Firestore implementation of profile datasource
@@ -212,5 +225,98 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
+    try {
+      // Get users ordered by follower count
+      final snapshot = await _firestore
+          .collection(_usersCollection)
+          .orderBy('followerCount', descending: true)
+          .limit(limit + 5) // Fetch a few extra in case we need to filter out the current user or already followed users
+          .get();
+
+      // Get the list of users the current user is already following
+      final followingSnapshot = await _firestore
+          .collection(_usersCollection)
+          .doc(currentUserId)
+          .collection(_followingCollection)
+          .get();
+          
+      final followingIds = followingSnapshot.docs.map((doc) => doc.id).toSet();
+      followingIds.add(currentUserId); // Add current user to filter out
+
+      final suggestions = <UserProfileModel>[];
+
+      for (final doc in snapshot.docs) {
+        if (!followingIds.contains(doc.id)) {
+          suggestions.add(UserProfileModel.fromFirestore(doc));
+          if (suggestions.length >= limit) break;
+        }
+      }
+
+      return suggestions;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  @override
+  Future<String> uploadProfileImage(String userId, Uint8List imageBytes) async {
+    const cloudName = 'deukwmcoi';
+    const uploadPreset = 'Zeylo_images';
+
+    try {
+      final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+      
+      final request = http.MultipartRequest('POST', url)
+        ..fields['upload_preset'] = uploadPreset
+        ..files.add(http.MultipartFile.fromBytes(
+          'file', 
+          imageBytes, 
+          filename: 'profile_$userId.jpg',
+        ));
+
+      final response = await request.send();
+      final responseData = await response.stream.toBytes();
+      final responseString = String.fromCharCodes(responseData);
+      final jsonMap = jsonDecode(responseString);
+
+      if (response.statusCode == 200) {
+        return jsonMap['secure_url'];
+      } else {
+        debugPrint('Cloudinary Error: ${jsonMap['error']['message']}');
+        throw Exception('Cloudinary upload failed: ${jsonMap['error']['message']}');
+      }
+    } catch (e) {
+      debugPrint("Upload error: $e");
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> syncHostProfileToExperiences(
+    String hostId,
+    String name,
+    String? photoUrl,
+  ) async {
+    final experiencesSnapshot = await _firestore
+        .collection('experiences')
+        .where('hostId', isEqualTo: hostId)
+        .get();
+
+    if (experiencesSnapshot.docs.isEmpty) return;
+
+    final batch = _firestore.batch();
+
+    for (final doc in experiencesSnapshot.docs) {
+      batch.update(doc.reference, {
+        'hostName': name,
+        if (photoUrl != null) 'hostPhotoUrl': photoUrl,
+      });
+    }
+
+    await batch.commit();
   }
 }

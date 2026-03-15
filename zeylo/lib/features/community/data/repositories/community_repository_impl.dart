@@ -13,6 +13,13 @@ class CommunityRepositoryImpl implements CommunityRepository {
   CommunityRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Stream<List<Post>> watchCommunityPosts({int limit = 50}) {
+    return remoteDataSource
+        .watchCommunityPosts(limit: limit)
+        .map((models) => models.map((m) => m.toEntity()).toList());
+  }
+
+  @override
   Future<Either<Failure, List<Post>>> getCommunityPosts({int limit = 20}) async {
     try {
       final posts = await remoteDataSource.getCommunityPosts(limit: limit);

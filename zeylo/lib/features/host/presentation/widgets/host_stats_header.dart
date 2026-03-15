@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/host_avatar.dart';
 import '../../domain/entities/host_stats_entity.dart';
 
-/// Host stats header widget with gradient background
+/// Host stats header widget with premium glassy design
 class HostStatsHeader extends StatelessWidget {
   final String hostName;
   final String? hostPhotoUrl;
@@ -28,127 +26,146 @@ class HostStatsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.gradientEnd],
+          colors: [AppColors.primary, Color(0xFF7C3AED)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Host info row
-            Row(
-              children: [
-                HostAvatar(
-                  imageUrl: hostPhotoUrl,
-                  hostName: hostName,
-                  size: AvatarSize.medium,
-                  isSuperhost: isSuperhost,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        hostName,
-                        style: AppTypography.titleMedium.copyWith(
-                          color: AppColors.textInverse,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      if (isSuperhost)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.textInverse.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                          ),
-                          child: Text(
-                            'Superhost',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textInverse,
-                            ),
-                          ),
-                        ),
-                    ],
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Host info row
+              Row(
+                children: [
+                  HostAvatar(
+                    imageUrl: hostPhotoUrl,
+                    hostName: hostName,
+                    size: AvatarSize.medium,
+                    isVerified: true,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Stats cards row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _StatCard(
-                  label: 'This Month',
-                  value: '\$${thisMonthEarnings.toStringAsFixed(0)}',
-                ),
-                _StatCard(
-                  label: 'Avg Rating',
-                  value: averageRating.toStringAsFixed(1),
-                ),
-                _StatCard(
-                  label: 'Avg Rating',
-                  value: averageRating.toStringAsFixed(1),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Welcome back,',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                        Text(
+                          hostName,
+                          style: AppTypography.headlineSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isSuperhost)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.verified, color: Colors.white, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Superhost',
+                            style: AppTypography.labelSmall.copyWith(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              
+              // Stats cards row
+              Row(
+                children: [
+                  _StatCard(
+                    label: 'Earnings',
+                    value: 'LKR ${thisMonthEarnings.toStringAsFixed(0)}',
+                    icon: Icons.payments_outlined,
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    label: 'Rating',
+                    value: averageRating.toStringAsFixed(1),
+                    icon: Icons.star_rounded,
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    label: 'Reviews',
+                    value: '${stats.totalBookings}',
+                    icon: Icons.chat_bubble_outline,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Individual stat card
+/// Individual stat card with glassmorphism
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
 
   const _StatCard({
     required this.label,
     required this.value,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.textInverse.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Icon(icon, color: Colors.white.withOpacity(0.7), size: 18),
+            const SizedBox(height: 12),
             Text(
               value,
               style: AppTypography.labelLarge.copyWith(
-                color: AppColors.textInverse,
-                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
               ),
             ),
-            const SizedBox(height: AppSpacing.xs),
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textInverse.withOpacity(0.8),
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 10,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),

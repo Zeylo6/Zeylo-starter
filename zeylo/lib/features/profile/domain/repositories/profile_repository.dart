@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/user_profile_entity.dart';
@@ -40,4 +41,16 @@ abstract class ProfileRepository {
     String currentUserId,
     String targetUserId,
   );
+
+  /// Get suggested users to follow
+  Future<Either<Failure, List<UserProfileEntity>>> getSuggestedUsers(
+    String currentUserId, {
+    int limit = 10,
+  });
+
+  /// Upload profile image
+  Future<Either<Failure, String>> uploadProfileImage(String userId, Uint8List imageBytes);
+
+  /// Synchronize host profile to experiences
+  Future<Either<Failure, void>> syncHostProfileToExperiences(String hostId, String name, String? photoUrl);
 }

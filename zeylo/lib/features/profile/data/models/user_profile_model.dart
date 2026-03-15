@@ -14,6 +14,7 @@ class UserProfileModel extends UserProfileEntity {
     super.followingCount = 0,
     super.postCount = 0,
     super.isVerified = false,
+    super.isHostVerified = false,
     super.isSuperhost = false,
     super.averageRating,
     super.ratingCount,
@@ -26,6 +27,13 @@ class UserProfileModel extends UserProfileEntity {
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data()!;
+
+    DateTime parseDate(dynamic date) {
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      return DateTime.now();
+    }
+
     return UserProfileModel(
       id: doc.id,
       name: data['name'] as String? ?? data['displayName'] as String? ?? '',
@@ -37,11 +45,12 @@ class UserProfileModel extends UserProfileEntity {
       followingCount: data['followingCount'] as int? ?? 0,
       postCount: data['postCount'] as int? ?? data['postsCount'] as int? ?? 0,
       isVerified: data['isVerified'] as bool? ?? false,
+      isHostVerified: data['hostVerificationStatus'] == 'verified',
       isSuperhost: data['isSuperhost'] as bool? ?? false,
-      averageRating: (data['averageRating'] as num?)?.toDouble(),
-      ratingCount: data['ratingCount'] as int?,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      averageRating: (data['stats']?['averageRating'] as num?)?.toDouble() ?? (data['averageRating'] as num?)?.toDouble(),
+      ratingCount: (data['stats']?['totalReviews'] as num?)?.toInt() ?? data['ratingCount'] as int? ?? 0,
+      createdAt: parseDate(data['createdAt']),
+      updatedAt: data['updatedAt'] != null ? parseDate(data['updatedAt']) : null,
     );
   }
 
@@ -57,6 +66,7 @@ class UserProfileModel extends UserProfileEntity {
       'followingCount': followingCount,
       'postCount': postCount,
       'isVerified': isVerified,
+      'hostVerificationStatus': isHostVerified ? 'verified' : 'unverified',
       'isSuperhost': isSuperhost,
       'averageRating': averageRating,
       'ratingCount': ratingCount,
@@ -78,6 +88,7 @@ class UserProfileModel extends UserProfileEntity {
     int? followingCount,
     int? postCount,
     bool? isVerified,
+    bool? isHostVerified,
     bool? isSuperhost,
     double? averageRating,
     int? ratingCount,
@@ -95,6 +106,7 @@ class UserProfileModel extends UserProfileEntity {
       followingCount: followingCount ?? this.followingCount,
       postCount: postCount ?? this.postCount,
       isVerified: isVerified ?? this.isVerified,
+      isHostVerified: isHostVerified ?? this.isHostVerified,
       isSuperhost: isSuperhost ?? this.isSuperhost,
       averageRating: averageRating ?? this.averageRating,
       ratingCount: ratingCount ?? this.ratingCount,

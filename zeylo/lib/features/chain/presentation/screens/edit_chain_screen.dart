@@ -84,7 +84,47 @@ class _EditChainScreenState extends ConsumerState<EditChainScreen> {
                 hint: 'Describe your chain...',
                 controller: _descriptionController,
                 maxLines: 3,
-                suffixWidget: const Icon(Icons.emoji_emotions_outlined, color: AppColors.textSecondary, size: 20),
+                suffixWidget: IconButton(
+                  icon: editState.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AppColors.primary))
+                      : const Icon(Icons.auto_awesome,
+                          color: AppColors.primary, size: 20),
+                  tooltip: 'Enhance with AI',
+                  onPressed: editState.isLoading
+                      ? null
+                      : () async {
+                          if (_descriptionController.text.trim().isEmpty) return;
+                          
+                          // Show loading by using the state
+                          ref.read(editChainProvider.notifier).setLoading(true);
+                              
+                          try {
+                            final aiService = ref.read(aiServiceProvider);
+                            final enhanced = await aiService.enhanceText(
+                                _descriptionController.text, 'chain_description');
+                            
+                            if (mounted) {
+                              setState(() {
+                                _descriptionController.text = enhanced;
+                              });
+                            }
+                          } catch (e) {
+                             if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('AI Enhancement failed: $e')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              ref.read(editChainProvider.notifier).setLoading(false);
+                            }
+                          }
+                        },
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -170,7 +210,7 @@ class _EditChainScreenState extends ConsumerState<EditChainScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      '\$${widget.chain.totalPrice.toStringAsFixed(0)}',
+                      'Rs. ${widget.chain.totalPrice.toStringAsFixed(0)}',
                       style: AppTypography.headlineLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
