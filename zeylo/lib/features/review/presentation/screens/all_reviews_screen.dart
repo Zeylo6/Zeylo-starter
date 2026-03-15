@@ -366,9 +366,33 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
                   GestureDetector(
                     onTap: () async {
                       if (currentUser == null) return;
-                      // Logic for report confirmation...
+                      final confirm = await _showReportConfirmation(context);
+                      if (confirm == true) {
+                        await ref.read(reviewRepositoryProvider).reportReview(
+                            review.id, currentUser.uid, widget.experience.hostId);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Review reported to host.'),
+                              backgroundColor: AppColors.textPrimary,
+                            ),
+                          );
+                        }
+                      }
                     },
-                    child: Icon(Icons.flag_outlined, color: AppColors.textSecondary, size: 16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.flag_outlined,
+                            size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Report',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -378,6 +402,28 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
       ),
     );
   }
+
+  Future<bool?> _showReportConfirmation(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Report Review'),
+        content: const Text(
+            'Are you sure you want to report this review? This will notify the host to investigate.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Report', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSuggestions() {
     return Wrap(
       spacing: 8,
