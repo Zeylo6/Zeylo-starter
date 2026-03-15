@@ -35,15 +35,7 @@ class ProfileStatsRow extends StatelessWidget {
           label: 'Following',
         ),
         _buildDivider(),
-        if (rating != null && reviews != null) ...[
-          _buildStatItem(
-            value: rating!.toStringAsFixed(1),
-            label: 'Rating',
-            icon: Icons.star_rounded,
-            iconColor: const Color(0xFFFFB800),
-          ),
-          _buildDivider(),
-        ],
+        _buildDivider(),
         _buildStatItem(
           value: _formatNumber(posts),
           label: 'Posts',

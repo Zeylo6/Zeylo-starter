@@ -36,14 +36,28 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        automaticallyImplyLeading: !isCurrentUser,
-        leading: isCurrentUser
-            ? null
-            : IconButton(
+        automaticallyImplyLeading: false,
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            if (!isCurrentUser)
+              IconButton(
                 icon: const Icon(Icons.arrow_back),
                 color: AppColors.textPrimary,
                 onPressed: () => Navigator.pop(context),
               ),
+            profileAsync.when(
+              data: (profile) => Padding(
+                padding: EdgeInsets.only(left: isCurrentUser ? AppSpacing.md : 0),
+                child: profile.averageRating != null
+                    ? _buildRatingIndicator(profile.averageRating!)
+                    : const SizedBox.shrink(),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -385,6 +399,38 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRatingIndicator(double rating) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+          const SizedBox(width: 4),
+          Text(
+            rating.toStringAsFixed(1),
+            style: AppTypography.labelLarge.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }
