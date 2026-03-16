@@ -225,7 +225,7 @@ class _MoodSelectorScreenState extends ConsumerState<MoodSelectorScreen> {
         return Icons.sentiment_satisfied;
       case PredefinedMood.relaxed:
         return Icons.sentiment_satisfied_alt;
-      case PredefinedMood.adventures:
+      case PredefinedMood.adventurous:
         return Icons.hiking;
       case PredefinedMood.social:
         return Icons.public;

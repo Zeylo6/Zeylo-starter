@@ -35,15 +35,6 @@ class ProfileStatsRow extends StatelessWidget {
           label: 'Following',
         ),
         _buildDivider(),
-        if (rating != null && reviews != null) ...[
-          _buildStatItem(
-            value: rating!.toStringAsFixed(1),
-            label: 'Rating',
-            icon: Icons.star_rounded,
-            iconColor: const Color(0xFFFFB800),
-          ),
-          _buildDivider(),
-        ],
         _buildStatItem(
           value: _formatNumber(posts),
           label: 'Posts',
@@ -58,33 +49,39 @@ class ProfileStatsRow extends StatelessWidget {
     IconData? icon,
     Color? iconColor,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              value,
-              style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: iconColor),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                value,
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          label,
-          style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -11,7 +11,7 @@ const getSurpriseExperience = async ({ location, maxBudget, datePreference, user
 
   // 2. Query Firestore based on geohash prefix using startAt and endAt
   const experiencesRef = db.collection('experiences');
-  
+
   // Note: To successfully query by prefix in Firestore, we use \uf8ff character
   const snapshot = await experiencesRef
     .orderBy('geohash')

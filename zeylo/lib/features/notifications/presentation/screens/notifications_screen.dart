@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import 'package:intl/intl.dart';
+import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -125,12 +126,14 @@ class NotificationsScreen extends ConsumerWidget {
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  onTap: isRead
-                      ? null
-                      : () {
-                          // Mark as read in Firestore
-                          doc.reference.update({'isRead': true});
-                        },
+                  onTap: () {
+                    if (data['type'] == 'review_report' && data['reviewId'] != null) {
+                      _showReviewManagementSheet(context, ref, data['reviewId'], doc.reference);
+                    } else if (!isRead) {
+                      // Mark as read in Firestore
+                      doc.reference.update({'isRead': true});
+                    }
+                  },
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: Row(
@@ -214,7 +217,169 @@ class NotificationsScreen extends ConsumerWidget {
     if (type == 'new_booking') return Icons.bookmark_added;
     if (type == 'booking_cancellation') return Icons.cancel_presentation;
     if (type == 'booking_accepted') return Icons.check_circle_outline;
+    if (type == 'review_report') return Icons.report_problem_rounded;
     return Icons.notifications;
+  }
+
+  Future<void> _showReviewManagementSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String reviewId,
+    DocumentReference notificationRef,
+  ) async {
+    // 1. Mark notification as read
+    await notificationRef.update({'isRead': true});
+
+    // 2. Fetch review details
+    final reviewDoc =
+        await FirebaseFirestore.instance.collection('reviews').doc(reviewId).get();
+    if (!reviewDoc.exists) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This review has already been deleted.')),
+        );
+      }
+      return;
+    }
+
+    final reviewData = reviewDoc.data()!;
+    final message = reviewData['message'] ?? '(No message)';
+    final rating = (reviewData['rating'] as num?)?.toDouble() ?? 0.0;
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.xl),
+            topRight: Radius.circular(AppRadius.xl),
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Reported Review Mitigation',
+                style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'A guest has reported this review. As a host, you can choose to keep it or remove it from your experience.',
+                style: AppTypography.bodyMediumSecondary,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              // Review Preview Card
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 20),
+                        const SizedBox(width: 4),
+                        Text(
+                          rating.toStringAsFixed(1),
+                          style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      message,
+                      style: AppTypography.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        // Keep review: Just clear the report status
+                        await FirebaseFirestore.instance
+                            .collection('reviews')
+                            .doc(reviewId)
+                            .update({'isReported': false});
+                        if (context.mounted) Navigator.pop(context);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Review kept. Report dismissed.')),
+                          );
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        side: const BorderSide(color: AppColors.border),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                      ),
+                      child: Text('Keep Review', style: AppTypography.labelLarge),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        // Delete review
+                        await ref.read(reviewRepositoryProvider).deleteReview(reviewId);
+                        if (context.mounted) Navigator.pop(context);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Review deleted.'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                      ),
+                      child: Text('Delete Review',
+                          style: AppTypography.labelLarge.copyWith(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _markAllAsRead(String userId) async {

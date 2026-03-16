@@ -86,7 +86,7 @@ const generateChain = async (prompt, location, date) => {
   try {
     const result = await model.generateContent(fullPrompt);
     let text = result.response.text().trim();
-    
+
     // Sometimes Gemini wraps in markdown json blocks despite instructions, so we clean it
     if (text.startsWith('```json')) {
       text = text.substring(7, text.length - 3).trim();
@@ -98,7 +98,7 @@ const generateChain = async (prompt, location, date) => {
     if (!Array.isArray(parsedArray) || parsedArray.length !== 3) {
       throw new Error("AI did not return exactly 3 array items.");
     }
-    
+
     return parsedArray;
   } catch (error) {
     console.error("Gemini generateChain Error:", error.message);
@@ -112,9 +112,9 @@ const generateChain = async (prompt, location, date) => {
  * @returns {Promise<Object>} Parsed JSON surprise object
  */
 const generateSurprise = async (preferences) => {
-    const model = getModel();
-  
-    const systemInstruction = `You are a boutique mystery experience curator.
+  const model = getModel();
+
+  const systemInstruction = `You are a boutique mystery experience curator.
     The user has provided a set of preferences. Generate a highly unique, slightly secretive "Mystery Surprise" experience for them.
     You MUST return ONLY a valid JSON object. NO markdown formatting, NO backticks, NO extra text.
     
@@ -126,26 +126,26 @@ const generateSurprise = async (preferences) => {
       "vibe": "1-2 words describing the vibe (e.g., 'Dark & Moody', 'High Energy')",
       "preparationNotes": "What should they wear or bring? Keep it vague but helpful."
     }`;
-  
-    const fullPrompt = `${systemInstruction}\n\nUser Preferences:\n${JSON.stringify(preferences)}`;
-  
-    try {
-      const result = await model.generateContent(fullPrompt);
-      let text = result.response.text().trim();
-      
-      if (text.startsWith('```json')) {
-        text = text.substring(7, text.length - 3).trim();
-      } else if (text.startsWith('```')) {
-        text = text.substring(3, text.length - 3).trim();
-      }
-  
-      const parsedData = JSON.parse(text);
-      return parsedData;
-    } catch (error) {
-      console.error("Gemini generateSurprise Error:", error.message);
-      throw new Error(`Failed to generate mystery surprise: ${error.message}`);
+
+  const fullPrompt = `${systemInstruction}\n\nUser Preferences:\n${JSON.stringify(preferences)}`;
+
+  try {
+    const result = await model.generateContent(fullPrompt);
+    let text = result.response.text().trim();
+
+    if (text.startsWith('```json')) {
+      text = text.substring(7, text.length - 3).trim();
+    } else if (text.startsWith('```')) {
+      text = text.substring(3, text.length - 3).trim();
     }
-  };
+
+    const parsedData = JSON.parse(text);
+    return parsedData;
+  } catch (error) {
+    console.error("Gemini generateSurprise Error:", error.message);
+    throw new Error(`Failed to generate mystery surprise: ${error.message}`);
+  }
+};
 
 module.exports = {
   enhanceText,

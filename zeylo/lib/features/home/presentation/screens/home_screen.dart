@@ -10,6 +10,7 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/home_provider.dart';
+import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/category_chip_list.dart';
 import '../../../../core/widgets/role_capsule.dart';
@@ -249,7 +250,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             'Rs. ${experience.price.toStringAsFixed(0)}',
                         description: experience.shortDescription,
                         rating: experience.averageRating,
-                        ratingCount: experience.reviewCount,
+                        isFavorite: ref.watch(isFavoritedProvider(experience.id)),
                         onTap: () => _navigateToDetail(experience.id),
                         onFavoriteTap: () => _toggleFavorite(experience.id),
                       ),
@@ -317,11 +318,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _toggleFavorite(String experienceId) {
-    // Handle favorite toggle
+    final isFavorited = ref.read(isFavoritedProvider(experienceId));
+    ref.read(favoritesProvider.notifier).toggleFavorite(experienceId);
+    
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added to favorites'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(isFavorited ? 'Removed from favorites' : 'Added to favorites'),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
