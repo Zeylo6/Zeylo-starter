@@ -84,6 +84,10 @@ class ProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     UserProfileEntity profile,
   ) {
+    // Read the current user model persistently loaded from Firestore
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserData = currentUserAsync.value;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,6 +97,11 @@ class ProfileScreen extends ConsumerWidget {
             profile: profile,
             onEditPressed: isCurrentUser ? onEditPressed : null,
           ),
+
+          // Premium Profile Actions
+          if (isCurrentUser && currentUserData != null)
+            _buildPremiumActions(context, currentUserData),
+
           const Divider(height: 1),
 
           // Posts section
@@ -290,7 +299,6 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
   Widget _buildPremiumActions(BuildContext context, UserEntity user) {
     return Padding(
@@ -298,6 +306,7 @@ class ProfileScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'Account Dashboard',
             style: AppTypography.titleMedium.copyWith(
@@ -370,6 +379,73 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildActionCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmallSecondary,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.textHint.withOpacity(0.5),
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildRatingIndicator(double rating) {
     return Container(
