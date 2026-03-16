@@ -137,15 +137,16 @@ class _FollowingTileState extends ConsumerState<_FollowingTile> {
   bool _isFollowing = true;
 
   Future<void> _toggleFollow() async {
+    final newFollowState = !_isFollowing;
     setState(() {
-      _isFollowing = !_isFollowing;
+      _isFollowing = newFollowState;
     });
 
     ref.invalidate(
       followActionProvider((
         widget.userId,
         widget.user.id,
-        !_isFollowing,
+        newFollowState,
       )),
     );
   }
@@ -185,7 +186,10 @@ class _FollowingTileState extends ConsumerState<_FollowingTile> {
               onPressed: _toggleFollow,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    _isFollowing ? AppColors.primary : AppColors.primary,
+                    _isFollowing ? AppColors.surface : AppColors.primary,
+                side: _isFollowing
+                    ? const BorderSide(color: AppColors.border)
+                    : BorderSide.none,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
@@ -193,7 +197,7 @@ class _FollowingTileState extends ConsumerState<_FollowingTile> {
               child: Text(
                 _isFollowing ? 'Following' : 'Follow',
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textInverse,
+                  color: _isFollowing ? AppColors.textPrimary : AppColors.textInverse,
                 ),
               ),
             ),
