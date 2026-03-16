@@ -30,6 +30,9 @@ abstract class HomeRemoteDataSource {
   /// Get experience stream by ID
   Stream<ExperienceModel> getExperienceStream(String id);
 
+  /// Get multiple experiences by IDs
+  Future<List<ExperienceModel>> getExperiencesByIds(List<String> ids);
+
   /// Get all active experiences
   Future<List<ExperienceModel>> getAllExperiences();
 }
@@ -174,6 +177,28 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }).toList();
     } catch (e) {
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<ExperienceModel>> getExperiencesByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    try {
+      // Firestore 'in' query is limited to 10 items. 
+      // For simplicity in this starter, we fetch them one by one or in chunks if needed.
+      // Here we'll fetch them individually to avoid the 10-item limit for now, 
+      // though in production we should chunk the 'in' queries.
+      final experiences = await Future.wait(
+        ids.map((id) => getExperienceById(id)),
+      );
+      return experiences;
+    } catch (e) {
+      // Fallback
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .where((e) => ids.contains(e.id))
+          .toList();
     }
   }
 

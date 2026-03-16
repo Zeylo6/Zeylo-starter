@@ -38,6 +38,9 @@ abstract class HomeRepository {
   /// Get experience stream by ID
   Stream<Experience> getExperienceStream(String id);
 
+  /// Get multiple experiences by IDs
+  Future<Either<Failure, List<Experience>>> getExperiencesByIds(List<String> ids);
+
   /// Get all experiences
   Future<Either<Failure, List<Experience>>> getAllExperiences();
 }

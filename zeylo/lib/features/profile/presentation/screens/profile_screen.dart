@@ -12,6 +12,7 @@ import '../providers/profile_provider.dart';
 import '../widgets/photo_grid.dart';
 import '../widgets/profile_header.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../favorites/presentation/widgets/favorites_bottom_sheet.dart';
 
 /// User profile screen
 class ProfileScreen extends ConsumerWidget {
@@ -290,6 +291,15 @@ class ProfileScreen extends ConsumerWidget {
               color: const Color(0xFF6C63FF),
               onTap: () => context.push('/seeker-dashboard'),
             ),
+          if (user.role == UserRole.seeker)
+            _buildActionCard(
+              context: context,
+              title: 'My Favorites',
+              subtitle: 'Quick access to saved experiences',
+              icon: Icons.favorite_rounded,
+              color: const Color(0xFFFF4B2B),
+              onTap: () => _showFavoritesBottomSheet(context),
+            ),
           if (user.role == UserRole.host)
             _buildActionCard(
               context: context,
@@ -435,4 +445,12 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  void _showFavoritesBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FavoritesBottomSheet(),
+    );
+  }
 }
