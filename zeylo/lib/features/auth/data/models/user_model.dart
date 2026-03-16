@@ -28,10 +28,10 @@ class UserModel extends UserEntity {
 
   /// Parse the role from string, with fallback to old 'isHost' boolean if present
   static UserRole _parseRole(Map<String, dynamic> data) {
-    if (data.containsKey('role')) {
-      final roleString = data['role'] as String;
+    if (data.containsKey('role') && data['role'] != null) {
+      final roleString = data['role'].toString().toLowerCase();
       return UserRole.values.firstWhere(
-        (e) => e.name == roleString,
+        (e) => e.name.toLowerCase() == roleString,
         orElse: () => UserRole.seeker,
       );
     }
