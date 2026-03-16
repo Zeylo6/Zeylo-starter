@@ -33,30 +33,55 @@ class CategoryChipList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ref.watch(categoriesProvider).when(
           data: (categories) {
-            return SizedBox(
-              height: 110,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final category = categories[index];
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 800;
+
+                if (isDesktop) {
                   return Padding(
-                    padding: EdgeInsets.only(
-                      left: index == 0 ? 0 : AppSpacing.md,
-                      right: index == categories.length - 1
-                          ? AppSpacing.md
-                          : 0,
-                    ),
-                    child: _CategoryChip(
-                      category: category.name,
-                      onTap: () {
-                        ref.read(selectedCategoryProvider.notifier).state =
-                            category.name;
-                      },
+                    padding: const EdgeInsets.only(top: AppSpacing.md),
+                    child: Wrap(
+                      spacing: AppSpacing.lg,
+                      runSpacing: AppSpacing.lg,
+                      children: categories.map((category) {
+                        return _CategoryChip(
+                          category: category.name,
+                          onTap: () {
+                            ref.read(selectedCategoryProvider.notifier).state =
+                                category.name;
+                          },
+                        );
+                      }).toList(),
                     ),
                   );
-                },
-              ),
+                }
+
+                return SizedBox(
+                  height: 110,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: index == 0 ? 0 : AppSpacing.md,
+                          right: index == categories.length - 1
+                              ? AppSpacing.md
+                              : 0,
+                        ),
+                        child: _CategoryChip(
+                          category: category.name,
+                          onTap: () {
+                            ref.read(selectedCategoryProvider.notifier).state =
+                                category.name;
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             );
           },
           loading: () => SizedBox(

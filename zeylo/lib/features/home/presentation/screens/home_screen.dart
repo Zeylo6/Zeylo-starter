@@ -59,47 +59,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onRefresh: _onRefresh,
         color: AppColors.primary,
         edgeOffset: 80,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // Top bar with logo and actions
-            SliverAppBar(
-              backgroundColor: AppColors.background.withOpacity(0.9),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              floating: true,
-              snap: true,
-              pinned: isDesktop,
-              toolbarHeight: isDesktop ? 80 : 64,
-              title: _TopBar(isDesktop: isDesktop),
-              centerTitle: false,
-            ),
-            // Main content
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Top bar with logo and actions
+                SliverAppBar(
+                  backgroundColor: AppColors.background.withOpacity(0.9),
+                  surfaceTintColor: Colors.transparent,
+                  elevation: 0,
+                  floating: true,
+                  snap: true,
+                  pinned: isDesktop,
+                  toolbarHeight: isDesktop ? 80 : 64,
+                  title: _TopBar(isDesktop: isDesktop),
+                  centerTitle: false,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!isDesktop) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      // Search bar
-                      const HomeSearchBar(),
-                    ],
-                    const SizedBox(height: AppSpacing.xl),
-                    // Category chips
-                    const _CategorySection(),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                // Main content
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!isDesktop) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          // Search bar
+                          const HomeSearchBar(),
+                        ],
+                        const SizedBox(height: AppSpacing.xl),
+                        // Category chips
+                        const _CategorySection(),
+                        const SizedBox(height: AppSpacing.xxl),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+                // Experiences list
+                _buildExperiencesList(),
+                const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
+              ],
             ),
-            // Experiences list
-            _buildExperiencesList(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
-          ],
+          ),
         ),
       ),
       floatingActionButton: _buildSpeedDial(context, isHost),
