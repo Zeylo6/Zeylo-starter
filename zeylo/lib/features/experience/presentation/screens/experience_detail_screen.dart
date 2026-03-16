@@ -268,47 +268,53 @@ class _ExperienceDetailScreenState
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.sm,
               children: [
-                Text(
-                  'Guest Reviews',
-                  style:
-                      AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                // Rating summary
-                if (experience.reviewCount > 0) ...[
-                  Text(
-                    experience.averageRating.toStringAsFixed(1),
-                    style: AppTypography.titleLarge.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Guest Reviews',
+                      style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  PartialStarRating(
-                    rating: experience.averageRating,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  // Modern Review Count Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Text(
-                      '${experience.reviewCount}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(width: AppSpacing.md),
+                    // Rating summary
+                    if (experience.reviewCount > 0) ...[
+                      Text(
+                        experience.averageRating.toStringAsFixed(1),
+                        style: AppTypography.titleLarge.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-                const Spacer(),
+                      const SizedBox(width: 8),
+                      PartialStarRating(
+                        rating: experience.averageRating,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      // Modern Review Count Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                        child: Text(
+                          '${experience.reviewCount}',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 if (experience.reviewCount > 3)
                   TextButton(
                     onPressed: () {
@@ -319,7 +325,13 @@ class _ExperienceDetailScreenState
                         ),
                       );
                     },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'View All',
@@ -377,24 +389,29 @@ class _ExperienceDetailScreenState
                                     color: AppColors.primary, size: 16),
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                'Seeker', // Masking real name unless fetched explicitly
-                                style: AppTypography.labelMedium
-                                    .copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const Spacer(),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star_rounded,
-                                      color: Color(0xFFFFB800), size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    review.rating.toStringAsFixed(1),
-                                    style: AppTypography.labelSmall
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
+                               Expanded(
+                                 child: Text(
+                                   'Seeker', // Masking real name unless fetched explicitly
+                                   style: AppTypography.labelMedium
+                                       .copyWith(fontWeight: FontWeight.bold),
+                                   maxLines: 1,
+                                   overflow: TextOverflow.ellipsis,
+                                 ),
+                               ),
+                               const SizedBox(width: AppSpacing.sm),
+                               Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   const Icon(Icons.star_rounded,
+                                       color: Color(0xFFFFB800), size: 16),
+                                   const SizedBox(width: 4),
+                                   Text(
+                                     review.rating.toStringAsFixed(1),
+                                     style: AppTypography.labelSmall
+                                         .copyWith(fontWeight: FontWeight.bold),
+                                   ),
+                                 ],
+                               ),
                             ],
                           ),
                           if (review.message != null && review.message!.isNotEmpty) ...[
