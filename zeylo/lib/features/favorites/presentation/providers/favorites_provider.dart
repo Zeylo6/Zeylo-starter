@@ -1,211 +1,113 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-/// Favorite experience model
-class FavoriteExperience {
-  final String id;
-  final String title;
-  final String hostName;
-  final String imageUrl;
-  final String? hostAvatarUrl;
-  final String location;
-  final String price;
-  final String description;
-  final double? rating;
-  final int? ratingCount;
-  final DateTime addedAt;
-
-  const FavoriteExperience({
-    required this.id,
-    required this.title,
-    required this.hostName,
-    required this.imageUrl,
-    required this.location,
-    required this.price,
-    required this.description,
-    this.hostAvatarUrl,
-    this.rating,
-    this.ratingCount,
-    required this.addedAt,
-  });
-
-  FavoriteExperience copyWith({
-    String? id,
-    String? title,
-    String? hostName,
-    String? imageUrl,
-    String? hostAvatarUrl,
-    String? location,
-    String? price,
-    String? description,
-    double? rating,
-    int? ratingCount,
-    DateTime? addedAt,
-  }) {
-    return FavoriteExperience(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      hostName: hostName ?? this.hostName,
-      imageUrl: imageUrl ?? this.imageUrl,
-      hostAvatarUrl: hostAvatarUrl ?? this.hostAvatarUrl,
-      location: location ?? this.location,
-      price: price ?? this.price,
-      description: description ?? this.description,
-      rating: rating ?? this.rating,
-      ratingCount: ratingCount ?? this.ratingCount,
-      addedAt: addedAt ?? this.addedAt,
-    );
-  }
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../home/domain/entities/experience_entity.dart';
+import '../../../home/presentation/providers/home_provider.dart';
+import '../../../home/domain/repositories/home_repository.dart';
 
 /// Favorites state
 class FavoritesState {
-  final List<FavoriteExperience> favorites;
+  final List<Experience> favorites;
   final bool isLoading;
   final String? error;
-  final String? sortBy; // newest, oldest, title, price
 
   const FavoritesState({
     this.favorites = const [],
     this.isLoading = false,
     this.error,
-    this.sortBy = 'newest',
   });
 
   FavoritesState copyWith({
-    List<FavoriteExperience>? favorites,
+    List<Experience>? favorites,
     bool? isLoading,
     String? error,
-    String? sortBy,
   }) {
     return FavoritesState(
       favorites: favorites ?? this.favorites,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
-      sortBy: sortBy ?? this.sortBy,
     );
   }
 }
 
 /// Favorites notifier
 class FavoritesNotifier extends StateNotifier<FavoritesState> {
-  FavoritesNotifier() : super(const FavoritesState());
+  final HomeRepository _homeRepository;
+  final Ref _ref;
 
-  /// Load favorites (mock implementation)
-  Future<void> loadFavorites() async {
+  FavoritesNotifier(this._homeRepository, this._ref) : super(const FavoritesState());
+
+  /// Load favorites using IDs from current user
+  Future<void> loadFavorites(List<String> favoriteIds) async {
+    if (favoriteIds.isEmpty) {
+      state = state.copyWith(favorites: [], isLoading: false, error: null);
+      return;
+    }
+
     state = state.copyWith(isLoading: true, error: null);
 
-    try {
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      final mockFavorites = [
-        FavoriteExperience(
-          id: '1',
-          title: 'Street Food Tour',
-          hostName: 'John Doe',
-          imageUrl: 'https://example.com/image1.jpg',
-          location: 'Colombo, Sri Lanka',
-          price: 'LKR 2,500',
-          description: 'An amazing street food tour',
-          rating: 4.8,
-          ratingCount: 234,
-          addedAt: DateTime.now().subtract(const Duration(days: 5)),
-        ),
-        FavoriteExperience(
-          id: '2',
-          title: 'Sunset Kayaking',
-          hostName: 'Jane Smith',
-          imageUrl: 'https://example.com/image2.jpg',
-          location: 'Mount Lavinia Beach',
-          price: 'LKR 3,500',
-          description: 'Peaceful kayaking experience at sunset',
-          rating: 4.9,
-          ratingCount: 189,
-          addedAt: DateTime.now().subtract(const Duration(days: 10)),
-        ),
-      ];
-
-      state = state.copyWith(
-        favorites: mockFavorites,
-        isLoading: false,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
+    final result = await _homeRepository.getExperiencesByIds(favoriteIds);
+    
+    result.fold(
+      (failure) => state = state.copyWith(isLoading: false, error: failure.message),
+      (experiences) => state = state.copyWith(favorites: experiences, isLoading: false),
+    );
   }
 
-  /// Add favorite
-  Future<void> addFavorite(FavoriteExperience experience) async {
-    final updated = [...state.favorites, experience];
-    state = state.copyWith(favorites: updated);
-  }
+  /// Toggle favorite status in Firestore
+  Future<void> toggleFavorite(String experienceId) async {
+    final user = _ref.read(currentUserProvider).value;
+    if (user == null) return;
 
-  /// Remove favorite
-  Future<void> removeFavorite(String experienceId) async {
-    final updated = state.favorites
-        .where((fav) => fav.id != experienceId)
-        .toList();
-    state = state.copyWith(favorites: updated);
-  }
-
-  /// Toggle favorite
-  Future<void> toggleFavorite(FavoriteExperience experience) async {
-    final isFavorited = state.favorites.any((fav) => fav.id == experience.id);
-    if (isFavorited) {
-      await removeFavorite(experience.id);
+    final updatedFavorites = List<String>.from(user.favorites);
+    if (updatedFavorites.contains(experienceId)) {
+      updatedFavorites.remove(experienceId);
     } else {
-      await addFavorite(experience);
+      updatedFavorites.add(experienceId);
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({'favorites': updatedFavorites});
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to update favorites: $e');
     }
   }
 
-  /// Sort favorites
-  void sortFavorites(String sortBy) {
-    List<FavoriteExperience> sorted = List.from(state.favorites);
-
-    switch (sortBy) {
-      case 'newest':
-        sorted.sort((a, b) => b.addedAt.compareTo(a.addedAt));
-        break;
-      case 'oldest':
-        sorted.sort((a, b) => a.addedAt.compareTo(b.addedAt));
-        break;
-      case 'title':
-        sorted.sort((a, b) => a.title.compareTo(b.title));
-        break;
-      case 'price':
-        sorted.sort((a, b) {
-          // Simple numeric comparison (assuming price is numeric)
-          final priceA = double.tryParse(a.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
-          final priceB = double.tryParse(b.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
-          return priceA.compareTo(priceB);
-        });
-        break;
-    }
-
-    state = state.copyWith(favorites: sorted, sortBy: sortBy);
-  }
-
-  /// Check if experience is favorited
+  /// Check if an experience is favorited
   bool isFavorited(String experienceId) {
-    return state.favorites.any((fav) => fav.id == experienceId);
+    final user = _ref.read(currentUserProvider).value;
+    return user?.favorites.contains(experienceId) ?? false;
   }
 }
 
 /// Favorites provider
 final favoritesProvider = StateNotifierProvider<FavoritesNotifier, FavoritesState>(
-  (ref) => FavoritesNotifier(),
-);
+  (ref) {
+    final repository = ref.watch(homeRepositoryProvider);
+    final notifier = FavoritesNotifier(repository, ref);
+    
+    // Auto-load favorites when current user's favorites list changes
+    ref.listen(currentUserProvider, (previous, next) {
+      if (next.hasValue && next.value != null) {
+        final newIds = next.value!.favorites;
+        final oldIds = previous?.value?.favorites ?? [];
+        
+        // Only reload if the IDs list has actually changed (basic check)
+        if (newIds.length != oldIds.length || !newIds.every((id) => oldIds.contains(id))) {
+          notifier.loadFavorites(newIds);
+        }
+      }
+    }, fireImmediately: true);
 
-/// Get single favorite
-final favoriteProvider = Provider.family<FavoriteExperience?, String>(
-  (ref, experienceId) {
-    final state = ref.watch(favoritesProvider);
-    return state.favorites.cast<FavoriteExperience?>().firstWhere(
-          (fav) => fav?.id == experienceId,
-          orElse: () => null,
-        );
+    return notifier;
   },
 );
+
+/// Provider to check if a specific experience is favorited
+final isFavoritedProvider = Provider.family<bool, String>((ref, experienceId) {
+  final user = ref.watch(currentUserProvider).value;
+  return user?.favorites.contains(experienceId) ?? false;
+});

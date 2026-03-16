@@ -15,6 +15,7 @@ import '../../../../core/widgets/partial_star_rating.dart';
 import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
 import '../../../home/domain/entities/experience_entity.dart';
 import 'package:zeylo/features/review/presentation/screens/all_reviews_screen.dart';
+import '../../../favorites/presentation/providers/favorites_provider.dart';
 
 /// Experience detail screen
 ///
@@ -47,7 +48,10 @@ class _ExperienceDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isFavorited = ref.watch(isFavoritedProvider(widget.experienceId));
+    
     return ref.watch(experienceDetailProvider(widget.experienceId)).when(
+
           data: (experience) {
             return Scaffold(
               backgroundColor: AppColors.background,
@@ -164,10 +168,9 @@ class _ExperienceDetailScreenState
                           color: AppColors.textInverse.withOpacity(0.9),
                           shape: BoxShape.circle,
                         ),
-                        padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Icon(
-                          _isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: _isFavorite
+                          isFavorited ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorited
                               ? AppColors.error
                               : AppColors.textPrimary,
                           size: 20,
@@ -638,9 +641,15 @@ class _ExperienceDetailScreenState
   }
 
   void _toggleFavorite() {
-    setState(() {
-      _isFavorite = !_isFavorite;
-    });
+    final isFavorited = ref.read(isFavoritedProvider(widget.experienceId));
+    ref.read(favoritesProvider.notifier).toggleFavorite(widget.experienceId);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isFavorited ? 'Removed from favorites' : 'Added to favorites'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _bookNow(dynamic experience) async {

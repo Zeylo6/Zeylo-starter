@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -7,6 +8,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/experience_card.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../providers/favorites_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Screen displaying user's favorite experiences
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -15,14 +17,16 @@ class FavoritesScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
 }
-
 class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   @override
   void initState() {
     super.initState();
     // Load favorites on screen initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(favoritesProvider.notifier).loadFavorites();
+      final user = ref.read(currentUserProvider).value;
+      if (user != null) {
+        ref.read(favoritesProvider.notifier).loadFavorites(user.favorites);
+      }
     });
   }
 
@@ -37,7 +41,22 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
               ? Center(
-                  child: Text('Error: ${state.error}'),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Error: ${state.error}'),
+                      const SizedBox(height: AppSpacing.md),
+                      ElevatedButton(
+                        onPressed: () {
+                          final user = ref.read(currentUserProvider).value;
+                          if (user != null) {
+                            ref.read(favoritesProvider.notifier).loadFavorites(user.favorites);
+                          }
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 )
               : state.favorites.isEmpty
                   ? EmptyFavoritesWidget(
@@ -84,23 +103,23 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               (context, index) {
                 final favorite = state.favorites[index];
                 return ExperienceCard(
-                  imageUrl: favorite.imageUrl,
+                  imageUrl: favorite.coverImage,
                   hostName: favorite.hostName,
-                  hostAvatarUrl: favorite.hostAvatarUrl,
-                  location: favorite.location,
-                  price: favorite.price,
+                  hostAvatarUrl: favorite.hostPhotoUrl,
+                  location: favorite.location.city,
+                  price: 'LKR ${favorite.price.toStringAsFixed(0)}',
                   description: favorite.description,
-                  rating: favorite.rating,
-                  ratingCount: favorite.ratingCount,
+                  rating: favorite.averageRating,
+                  ratingCount: favorite.reviewCount,
                   isFavorite: true,
                   height: 320,
                   width: double.infinity,
                   onTap: () {
-                    // Navigate to experience details
+                    context.push('/experience/${favorite.id}');
                   },
                   onFavoriteTap: () {
                     ref.read(favoritesProvider.notifier)
-                        .removeFavorite(favorite.id);
+                        .toggleFavorite(favorite.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('${favorite.title} removed from favorites'),
