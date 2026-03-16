@@ -51,6 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final currentUserAsync = ref.watch(currentUserProvider);
     final isHost = currentUserAsync.value?.role == UserRole.host;
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -68,9 +69,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               elevation: 0,
               floating: true,
               snap: true,
-              pinned: false,
-              toolbarHeight: 64,
-              title: const _TopBar(),
+              pinned: isDesktop,
+              toolbarHeight: isDesktop ? 80 : 64,
+              title: _TopBar(isDesktop: isDesktop),
               centerTitle: false,
             ),
             // Main content
@@ -82,9 +83,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSpacing.sm),
-                    // Search bar
-                    const HomeSearchBar(),
+                    if (!isDesktop) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      // Search bar
+                      const HomeSearchBar(),
+                    ],
                     const SizedBox(height: AppSpacing.xl),
                     // Category chips
                     const _CategorySection(),
@@ -333,7 +336,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 /// Top bar widget with logo and action icons
 class _TopBar extends ConsumerWidget {
-  const _TopBar({super.key});
+  final bool isDesktop;
+
+  const _TopBar({super.key, this.isDesktop = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -345,17 +350,17 @@ class _TopBar extends ConsumerWidget {
       children: [
         // Logo
         Container(
-          width: 40,
-          height: 40,
+          width: isDesktop ? 48 : 40,
+          height: isDesktop ? 48 : 40,
           decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               'Z',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: isDesktop ? 26 : 22,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textInverse,
                 fontFamily: 'Inter',
@@ -363,6 +368,19 @@ class _TopBar extends ConsumerWidget {
             ),
           ),
         ),
+        if (isDesktop) ...[
+          const SizedBox(width: AppSpacing.xxxl),
+          const Expanded(
+            child: Center(
+              child: SizedBox(
+                width: 600,
+                height: 48,
+                child: HomeSearchBar(),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xxxl),
+        ],
         // Action icons
         Row(
           children: [
