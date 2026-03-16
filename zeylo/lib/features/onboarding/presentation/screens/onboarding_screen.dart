@@ -68,73 +68,237 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  IconData _getFallbackIcon(String imagePath) {
+    if (imagePath.contains('1')) return Icons.explore_outlined;
+    if (imagePath.contains('2')) return Icons.search_outlined;
+    return Icons.people_outlined;
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        // PageView
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            children: _pages.map((page) {
+              return OnboardingPage(
+                imagePath: page['image']!,
+                title: page['title']!,
+                subtitle: page['subtitle']!,
+              );
+            }).toList(),
+          ),
+        ),
+        // Pagination dots
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.lg,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              _pages.length,
+              (index) => Container(
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentPage == index
+                      ? AppColors.primary
+                      : AppColors.primaryLight.withOpacity(0.3),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Buttons
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              // Sign Up button
+              ZeyloButton(
+                onPressed: () => context.push('/signup'),
+                label: 'Sign Up',
+                variant: ButtonVariant.filled,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              // Log In button
+              ZeyloButton(
+                onPressed: () => context.push('/login'),
+                label: 'Log In',
+                variant: ButtonVariant.outlined,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        // Left side: Images and Dots Carousel
+        Expanded(
+          flex: 1,
+          child: Container(
+            color: AppColors.backgroundAlt ?? Colors.grey[100],
+            child: Stack(
+              children: [
+                PageView(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  children: _pages.map((page) {
+                    return Image.asset(
+                      page['image']!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primaryLight.withOpacity(0.3),
+                                AppColors.primary.withOpacity(0.1),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              _getFallbackIcon(page['image']!),
+                              size: 150,
+                              color: AppColors.primary.withOpacity(0.5),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
+                ),
+                // Pagination dots overlaid on image
+                Positioned(
+                  bottom: AppSpacing.xl,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _pages.length,
+                      (index) => Container(
+                        width: 12,
+                        height: 12,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _currentPage == index
+                              ? AppColors.primary
+                              : Colors.white.withOpacity(0.5),
+                          border: Border.all(
+                            color: _currentPage == index ? Colors.transparent : Colors.black12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Right side: Onboarding text and Buttons
+        Expanded(
+          flex: 1,
+          child: Container(
+            color: AppColors.background ?? Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 64.0, vertical: 48.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated text changes
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Column(
+                          key: ValueKey<int>(_currentPage),
+                          children: [
+                            Text(
+                              _pages[_currentPage]['title']!,
+                              style: AppTypography.displaySmall?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ) ?? AppTypography.headlineLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Text(
+                              _pages[_currentPage]['subtitle']!,
+                              style: AppTypography.titleMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                              ) ?? AppTypography.bodyLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Buttons
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      height: 56,
+                      child: ZeyloButton(
+                        onPressed: () => context.push('/signup'),
+                        label: 'Sign Up',
+                        variant: ButtonVariant.filled,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      height: 56,
+                      child: ZeyloButton(
+                        onPressed: () => context.push('/login'),
+                        label: 'Log In',
+                        variant: ButtonVariant.outlined,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            // PageView
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                children: _pages.map((page) {
-                  return OnboardingPage(
-                    imagePath: page['image']!,
-                    title: page['title']!,
-                    subtitle: page['subtitle']!,
-                  );
-                }).toList(),
-              ),
-            ),
-            // Pagination dots
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.lg,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _pages.length,
-                  (index) => Container(
-                    width: 10,
-                    height: 10,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _currentPage == index
-                          ? AppColors.primary
-                          : AppColors.primaryLight.withOpacity(0.3),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Buttons
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                children: [
-                  // Sign Up button
-                  ZeyloButton(
-                    onPressed: () => context.push('/signup'),
-                    label: 'Sign Up',
-                    variant: ButtonVariant.filled,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  // Log In button
-                  ZeyloButton(
-                    onPressed: () => context.push('/login'),
-                    label: 'Log In',
-                    variant: ButtonVariant.outlined,
-                  ),
-                ],
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 800;
+            if (isDesktop) {
+              return _buildDesktopLayout();
+            }
+            return _buildMobileLayout();
+          },
         ),
       ),
     );
