@@ -1,29 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:zeylo/core/theme/app_colors.dart';
 import 'package:zeylo/core/theme/app_radius.dart';
 import 'package:zeylo/core/theme/app_spacing.dart';
 import 'package:zeylo/core/theme/app_typography.dart';
-import 'package:zeylo/core/widgets/loading_shimmer.dart';
 import 'package:zeylo/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zeylo/features/community/presentation/providers/community_provider.dart';
 import 'package:zeylo/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:zeylo/features/profile/presentation/providers/profile_provider.dart';
 import 'package:zeylo/features/profile/presentation/widgets/photo_grid.dart';
 import 'package:zeylo/features/profile/presentation/widgets/profile_header.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../domain/entities/user_profile_entity.dart';
-import '../providers/profile_provider.dart';
 import '../widgets/past_experience_tile.dart';
-import '../widgets/photo_grid.dart';
-import '../widgets/profile_header.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../favorites/presentation/widgets/favorites_bottom_sheet.dart';
 
@@ -261,6 +249,16 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
+          // Premium actions (if current user)
+          if (isCurrentUser)
+            ref.watch(currentUserProvider).when(
+                  data: (user) => user != null
+                      ? _buildPremiumActions(context, user)
+                      : const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+
           const SizedBox(height: AppSpacing.md),
         ],
       ),
@@ -325,7 +323,6 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
   Widget _buildPremiumActions(BuildContext context, UserEntity user) {
     return Padding(
@@ -405,6 +402,37 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildActionCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: BorderSide(color: AppColors.border),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(title, style: AppTypography.labelLarge),
+        subtitle: Text(subtitle, style: AppTypography.labelSmall),
+        trailing: const Icon(Icons.chevron_right, size: 20),
+      ),
+    );
+  }
 
   Widget _buildRatingIndicator(double rating) {
     return Container(
