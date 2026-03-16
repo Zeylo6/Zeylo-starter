@@ -147,6 +147,217 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     }
   }
 
+  Widget _buildSignupForm(bool isLoading) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 32),
+          // Logo or Icon Placeholder
+          Hero(
+            tag: 'app_logo',
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.blur_on_rounded,
+                size: 40,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Join Zeylo',
+            style: AppTypography.displayMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start your extraordinary journey today',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 40),
+
+          // Form fields
+          ZeyloTextField(
+            label: 'Full Name',
+            hint: 'John Doe',
+            controller: _nameController,
+            errorText: _nameError,
+            onChanged: (_) => setState(() => _nameError = null),
+          ),
+          const SizedBox(height: 16),
+          ZeyloTextField(
+            label: 'Email Address',
+            hint: 'john@example.com',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            errorText: _emailError,
+            onChanged: (_) => setState(() => _emailError = null),
+          ),
+          const SizedBox(height: 16),
+          PhoneInputField(
+            label: 'Mobile Number',
+            controller: _phoneController,
+            errorText: _phoneError,
+            onChanged: (_) => setState(() => _phoneError = null),
+          ),
+          const SizedBox(height: 16),
+          ZeyloTextField(
+            label: 'Password',
+            hint: '••••••••',
+            controller: _passwordController,
+            obscureText: true,
+            errorText: _passwordError,
+            onChanged: (_) => setState(() => _passwordError = null),
+          ),
+          const SizedBox(height: 16),
+          ZeyloTextField(
+            label: 'Confirm Password',
+            hint: '••••••••',
+            controller: _confirmPasswordController,
+            obscureText: true,
+            errorText: _confirmPasswordError,
+            onChanged: (_) => setState(() => _confirmPasswordError = null),
+          ),
+          const SizedBox(height: 32),
+
+          // Role Selector
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'I am joining as a...',
+              style: AppTypography.titleMedium,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 2.0,
+            children: [
+              _buildRoleCard('seeker', '🔍', 'Seeker', 'Discover'),
+              _buildRoleCard('host', '🏡', 'Host', 'List'),
+              _buildRoleCard('business', '💼', 'Business', 'Group'),
+              _buildRoleCard('admin', '🛡️', 'Admin', 'Manage'),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Terms checkbox
+          Row(
+            children: [
+              SizedBox(
+                height: 24,
+                width: 24,
+                child: Checkbox(
+                  value: _agreeToTerms,
+                  onChanged: (value) => setState(() => _agreeToTerms = value ?? false),
+                  activeColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _agreeToTerms = !_agreeToTerms),
+                  child: RichText(
+                    text: TextSpan(
+                      text: 'I agree to the ',
+                      style: AppTypography.labelSmall,
+                      children: [
+                        TextSpan(
+                          text: 'Terms',
+                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(text: ' & '),
+                        TextSpan(
+                          text: 'Privacy Policy',
+                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          // Sign up button
+          SizedBox(
+            width: double.infinity,
+            child: ZeyloButton(
+              onPressed: isLoading ? null : _validateAndSubmit,
+              label: 'Create Account',
+              isLoading: isLoading,
+              variant: ButtonVariant.filled,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Divider
+          Row(
+            children: [
+              Expanded(child: Divider(color: AppColors.border)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text('or', style: AppTypography.labelSmall.copyWith(color: AppColors.textHint)),
+              ),
+              Expanded(child: Divider(color: AppColors.border)),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Google sign up button
+          SocialLoginButton(
+            label: 'Google',
+            icon: const Icon(Icons.g_mobiledata, color: AppColors.textPrimary, size: 32),
+            onTap: isLoading ? null : _signUpWithGoogle,
+            isLoading: isLoading,
+          ),
+          const SizedBox(height: 32),
+
+          // Login link
+          GestureDetector(
+            onTap: () => context.go('/login'),
+            child: RichText(
+              text: TextSpan(
+                text: 'Already have an account? ',
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                children: [
+                  TextSpan(
+                    text: 'Log In',
+                    style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 48),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
@@ -159,7 +370,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.background,
+              AppColors.background ?? Colors.white,
               AppColors.primaryExtraLight.withOpacity(0.3),
             ],
             begin: Alignment.topCenter,
@@ -167,213 +378,104 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32),
-                // Logo or Icon Placeholder
-                Hero(
-                  tag: 'app_logo',
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.blur_on_rounded,
-                      size: 40,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Join Zeylo',
-                  style: AppTypography.displayMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Start your extraordinary journey today',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                
-                // Form fields
-                ZeyloTextField(
-                  label: 'Full Name',
-                  hint: 'John Doe',
-                  controller: _nameController,
-                  errorText: _nameError,
-                  onChanged: (_) => setState(() => _nameError = null),
-                ),
-                const SizedBox(height: 16),
-                ZeyloTextField(
-                  label: 'Email Address',
-                  hint: 'john@example.com',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  errorText: _emailError,
-                  onChanged: (_) => setState(() => _emailError = null),
-                ),
-                const SizedBox(height: 16),
-                PhoneInputField(
-                  label: 'Mobile Number',
-                  controller: _phoneController,
-                  errorText: _phoneError,
-                  onChanged: (_) => setState(() => _phoneError = null),
-                ),
-                const SizedBox(height: 16),
-                ZeyloTextField(
-                  label: 'Password',
-                  hint: '••••••••',
-                  controller: _passwordController,
-                  obscureText: true,
-                  errorText: _passwordError,
-                  onChanged: (_) => setState(() => _passwordError = null),
-                ),
-                const SizedBox(height: 16),
-                ZeyloTextField(
-                  label: 'Confirm Password',
-                  hint: '••••••••',
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  errorText: _confirmPasswordError,
-                  onChanged: (_) => setState(() => _confirmPasswordError = null),
-                ),
-                const SizedBox(height: 32),
-
-                // Role Selector
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'I am joining as a...',
-                    style: AppTypography.titleMedium,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 2.0,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 800) {
+                // Desktop layout
+                return Row(
                   children: [
-                    _buildRoleCard('seeker', '🔍', 'Seeker', 'Discover'),
-                    _buildRoleCard('host', '🏡', 'Host', 'List'),
-                    _buildRoleCard('business', '💼', 'Business', 'Group'),
-                    _buildRoleCard('admin', '🛡️', 'Admin', 'Manage'),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                
-                // Terms checkbox
-                Row(
-                  children: [
-                    SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: Checkbox(
-                        value: _agreeToTerms,
-                        onChanged: (value) => setState(() => _agreeToTerms = value ?? false),
-                        activeColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _agreeToTerms = !_agreeToTerms),
-                        child: RichText(
-                          text: TextSpan(
-                            text: 'I agree to the ',
-                            style: AppTypography.caption,
-                            children: [
-                              TextSpan(
-                                text: 'Terms',
-                                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                              ),
-                              TextSpan(text: ' & '),
-                              TextSpan(
-                                text: 'Privacy Policy',
-                                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                              ),
+                      flex: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.7),
                             ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(48.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.blur_on_rounded,
+                                  size: 80,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(height: 40),
+                                Text(
+                                  'Join Zeylo',
+                                  style: AppTypography.displayLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  'Discover, list, and connect. Create your profile directly and start engaging with your local business network.',
+                                  style: AppTypography.headlineSmall?.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                                const SizedBox(height: 60),
+                                Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Text(
+                                          'Free, ready to grow, and perfectly designed for modern explorers and businesses.',
+                                          style: AppTypography.titleMedium?.copyWith(
+                                            color: Colors.white,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                
-                // Sign up button
-                SizedBox(
-                  width: double.infinity,
-                  child: ZeyloButton(
-                    onPressed: isLoading ? null : _validateAndSubmit,
-                    label: 'Create Account',
-                    isLoading: isLoading,
-                    variant: ButtonVariant.filled,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: AppColors.border)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('or', style: AppTypography.labelSmall.copyWith(color: AppColors.textHint)),
-                    ),
-                    Expanded(child: Divider(color: AppColors.border)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                
-                // Google sign up button
-                SocialLoginButton(
-                  label: 'Google',
-                  icon: const Icon(Icons.g_mobiledata, color: AppColors.textPrimary, size: 32),
-                  onTap: isLoading ? null : _signUpWithGoogle,
-                  isLoading: isLoading,
-                ),
-                const SizedBox(height: 32),
-                
-                // Login link
-                GestureDetector(
-                  onTap: () => context.go('/login'),
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Already have an account? ',
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                      children: [
-                        TextSpan(
-                          text: 'Log In',
-                          style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: _buildSignupForm(isLoading),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-              ],
-            ),
+                  ],
+                );
+              }
+
+              // Mobile Layout
+              return _buildSignupForm(isLoading);
+            },
           ),
         ),
       ),
