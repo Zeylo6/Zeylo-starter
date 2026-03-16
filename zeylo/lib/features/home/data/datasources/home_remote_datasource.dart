@@ -27,6 +27,12 @@ abstract class HomeRemoteDataSource {
   /// Get single experience by ID
   Future<ExperienceModel> getExperienceById(String id);
 
+  /// Get experience stream by ID
+  Stream<ExperienceModel> getExperienceStream(String id);
+
+  /// Get multiple experiences by IDs
+  Future<List<ExperienceModel>> getExperiencesByIds(List<String> ids);
+
   /// Get all active experiences
   Future<List<ExperienceModel>> getAllExperiences();
 }
@@ -175,6 +181,28 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
+  Future<List<ExperienceModel>> getExperiencesByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    try {
+      // Firestore 'in' query is limited to 10 items. 
+      // For simplicity in this starter, we fetch them one by one or in chunks if needed.
+      // Here we'll fetch them individually to avoid the 10-item limit for now, 
+      // though in production we should chunk the 'in' queries.
+      final experiences = await Future.wait(
+        ids.map((id) => getExperienceById(id)),
+      );
+      return experiences;
+    } catch (e) {
+      // Fallback
+      final mockData = await SeedData.getMockExperiences();
+      return mockData
+          .map((json) => ExperienceModel.fromJson(json as Map<String, dynamic>))
+          .where((e) => ids.contains(e.id))
+          .toList();
+    }
+  }
+
+  @override
   Future<List<ExperienceModel>> getAllExperiences() async {
     try {
       final snapshot = await _firestore
@@ -210,6 +238,15 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Stream<ExperienceModel> getExperienceStream(String id) {
+    return _firestore
+        .collection('experiences')
+        .doc(id)
+        .snapshots()
+        .map((doc) => ExperienceModel.fromFirestore(doc));
   }
 
   /// Calculate distance between two coordinates using Haversine formula

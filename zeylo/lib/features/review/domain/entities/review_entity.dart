@@ -9,6 +9,8 @@ class ReviewEntity extends Equatable {
   final String role; // 'host' or 'seeker'
   final double rating; // 1-5
   final String? message;
+  final List<String> helpfulUserIds;
+  final bool isReported;
   final DateTime createdAt;
 
   const ReviewEntity({
@@ -20,6 +22,8 @@ class ReviewEntity extends Equatable {
     required this.role,
     required this.rating,
     this.message,
+    this.helpfulUserIds = const [],
+    this.isReported = false,
     required this.createdAt,
   });
 
@@ -33,6 +37,8 @@ class ReviewEntity extends Equatable {
         role,
         rating,
         message,
+        helpfulUserIds,
+        isReported,
         createdAt,
       ];
 }

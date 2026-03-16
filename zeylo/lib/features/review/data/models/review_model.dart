@@ -11,6 +11,8 @@ class ReviewModel extends ReviewEntity {
     required super.role,
     required super.rating,
     super.message,
+    super.helpfulUserIds = const [],
+    super.isReported = false,
     required super.createdAt,
   });
 
@@ -24,6 +26,8 @@ class ReviewModel extends ReviewEntity {
       role: doc['role'] ?? '',
       rating: (doc['rating'] as num?)?.toDouble() ?? 0.0,
       message: doc['message'],
+      helpfulUserIds: List<String>.from(doc['helpfulUserIds'] ?? []),
+      isReported: doc['isReported'] ?? false,
       createdAt: _parseDateTime(doc['createdAt']),
     );
   }
@@ -45,6 +49,8 @@ class ReviewModel extends ReviewEntity {
       'role': role,
       'rating': rating,
       'message': message,
+      'helpfulUserIds': helpfulUserIds,
+      'isReported': isReported,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }

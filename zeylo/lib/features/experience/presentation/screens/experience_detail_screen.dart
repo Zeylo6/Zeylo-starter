@@ -11,7 +11,11 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/experience_info_section.dart';
 import '../widgets/host_info_card.dart';
+import '../../../../core/widgets/partial_star_rating.dart';
 import 'package:zeylo/features/review/presentation/providers/review_provider.dart';
+import '../../../home/domain/entities/experience_entity.dart';
+import 'package:zeylo/features/review/presentation/screens/all_reviews_screen.dart';
+import '../../../favorites/presentation/providers/favorites_provider.dart';
 
 /// Experience detail screen
 ///
@@ -44,7 +48,10 @@ class _ExperienceDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isFavorited = ref.watch(isFavoritedProvider(widget.experienceId));
+    
     return ref.watch(experienceDetailProvider(widget.experienceId)).when(
+
           data: (experience) {
             return Scaffold(
               backgroundColor: AppColors.background,
@@ -120,7 +127,7 @@ class _ExperienceDetailScreenState
                               const SizedBox(height: AppSpacing.xxxl),
 
                               // Reviews Section
-                              _buildReviewsSection(context, experience.id),
+                              _buildReviewsSection(context, experience),
                               const SizedBox(height: 100), // padding for bottom button
                             ],
                           ),
@@ -161,10 +168,9 @@ class _ExperienceDetailScreenState
                           color: AppColors.textInverse.withOpacity(0.9),
                           shape: BoxShape.circle,
                         ),
-                        padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Icon(
-                          _isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: _isFavorite
+                          isFavorited ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorited
                               ? AppColors.error
                               : AppColors.textPrimary,
                           size: 20,
@@ -252,85 +258,253 @@ class _ExperienceDetailScreenState
     );
   }
 
-  Widget _buildReviewsSection(BuildContext context, String experienceId) {
+  Widget _buildReviewsSection(BuildContext context, Experience experience) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Consumer(
       builder: (context, ref, child) {
-        final reviewsAsync = ref.watch(experienceReviewsProvider(experienceId));
+        final reviewsAsync = ref.watch(experienceReviewsProvider(experience.id));
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Guest Reviews',
-              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Guest Reviews',
+                  style:
+                      AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                // Rating summary
+                if (experience.reviewCount > 0) ...[
+                  Text(
+                    experience.averageRating.toStringAsFixed(1),
+                    style: AppTypography.titleLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  PartialStarRating(
+                    rating: experience.averageRating,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  // Modern Review Count Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      '${experience.reviewCount}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                if (experience.reviewCount > 3)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AllReviewsScreen(experience: experience),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          'View All',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primary),
+                      ],
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
             reviewsAsync.when(
-          data: (reviews) {
-            if (reviews.isEmpty) {
-              return Text(
-                'No reviews yet for this experience.',
-                style: AppTypography.bodyMediumSecondary,
-              );
-            }
-            return Column(
-              children: reviews.map((review) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              data: (reviews) {
+                if (reviews.isEmpty) {
+                  return Text(
+                    'No reviews yet for this experience.',
+                    style: AppTypography.bodyMediumSecondary,
+                  );
+                }
+                // Sort by highest rating and take top 3
+                final topReviews = [...reviews];
+                topReviews.sort((a, b) => b.rating.compareTo(a.rating));
+                final reviewsToShow = topReviews.take(3).toList();
+
+                return Column(
+                  children: reviewsToShow.map((review) {
+                    final isHelpful =
+                        currentUser != null && review.helpfulUserIds.contains(currentUser.uid);
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.person, color: AppColors.primary, size: 16),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            'Seeker', // Masking real name unless fetched explicitly
-                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const Spacer(),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
-                              const SizedBox(width: 4),
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.person,
+                                    color: AppColors.primary, size: 16),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
-                                review.rating.toStringAsFixed(1),
-                                style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.bold),
+                                'Seeker', // Masking real name unless fetched explicitly
+                                style: AppTypography.labelMedium
+                                    .copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const Spacer(),
+                              Row(
+                                children: [
+                                  const Icon(Icons.star_rounded,
+                                      color: Color(0xFFFFB800), size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    review.rating.toStringAsFixed(1),
+                                    style: AppTypography.labelSmall
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          if (review.message != null && review.message!.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              review.message!,
+                              style: AppTypography.bodyMedium
+                                  .copyWith(color: AppColors.textPrimary),
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: AppColors.textSecondary),
+                              ),
+                              Row(
+                                children: [
+                                  // Helpful Button
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (currentUser == null) return;
+                                      await ref
+                                          .read(reviewRepositoryProvider)
+                                          .toggleHelpful(review.id, currentUser.uid);
+                                      ref.invalidate(
+                                          experienceReviewsProvider(experience.id));
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isHelpful
+                                            ? AppColors.primary.withOpacity(0.1)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            isHelpful
+                                                ? Icons.thumb_up_rounded
+                                                : Icons.thumb_up_outlined,
+                                            size: 14,
+                                            color: isHelpful
+                                                ? AppColors.primary
+                                                : AppColors.textSecondary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Helpful${review.helpfulUserIds.isNotEmpty ? ' (${review.helpfulUserIds.length})' : ''}',
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: isHelpful
+                                                  ? AppColors.primary
+                                                  : AppColors.textSecondary,
+                                              fontWeight: isHelpful
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  // Report Button
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (currentUser == null) return;
+                                      final confirm = await _showReportConfirmation(context);
+                                      if (confirm == true) {
+                                        await ref
+                                            .read(reviewRepositoryProvider)
+                                            .reportReview(review.id, currentUser.uid,
+                                                experience.hostId);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Review reported to host.'),
+                                              backgroundColor: AppColors.textPrimary,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.flag_outlined,
+                                            size: 14, color: AppColors.textSecondary),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Report',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ],
                       ),
-                      if (review.message != null && review.message!.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          review.message!,
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -339,6 +513,27 @@ class _ExperienceDetailScreenState
           ],
         );
       },
+    );
+  }
+
+  Future<bool?> _showReportConfirmation(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Report Review'),
+        content: const Text(
+            'Are you sure you want to report this review? This will notify the host to investigate.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Report', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -446,9 +641,15 @@ class _ExperienceDetailScreenState
   }
 
   void _toggleFavorite() {
-    setState(() {
-      _isFavorite = !_isFavorite;
-    });
+    final isFavorited = ref.read(isFavoritedProvider(widget.experienceId));
+    ref.read(favoritesProvider.notifier).toggleFavorite(widget.experienceId);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isFavorited ? 'Removed from favorites' : 'Added to favorites'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _bookNow(dynamic experience) async {

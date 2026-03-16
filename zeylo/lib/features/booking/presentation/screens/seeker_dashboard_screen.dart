@@ -225,9 +225,14 @@ class _BookingCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(18),
-            blurRadius: 12,
+            color: AppColors.primary.withOpacity(0.06),
+            blurRadius: 20,
             offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
           ),
         ],
       ),

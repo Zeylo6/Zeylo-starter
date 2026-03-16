@@ -11,6 +11,8 @@ import '../providers/profile_provider.dart';
 import '../widgets/past_experience_tile.dart';
 import '../widgets/photo_grid.dart';
 import '../widgets/profile_header.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../favorites/presentation/widgets/favorites_bottom_sheet.dart';
 
 /// User profile screen
 class ProfileScreen extends ConsumerWidget {
@@ -35,14 +37,28 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        automaticallyImplyLeading: !isCurrentUser,
-        leading: isCurrentUser
-            ? null
-            : IconButton(
+        automaticallyImplyLeading: false,
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            if (!isCurrentUser)
+              IconButton(
                 icon: const Icon(Icons.arrow_back),
                 color: AppColors.textPrimary,
                 onPressed: () => Navigator.pop(context),
               ),
+            profileAsync.when(
+              data: (profile) => Padding(
+                padding: EdgeInsets.only(left: isCurrentUser ? AppSpacing.md : 0),
+                child: profile.averageRating != null
+                    ? _buildRatingIndicator(profile.averageRating!)
+                    : const SizedBox.shrink(),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -276,5 +292,123 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
+  Widget _buildPremiumActions(BuildContext context, UserEntity user) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Account Dashboard',
+            style: AppTypography.titleMedium.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (user.role == UserRole.seeker)
+            _buildActionCard(
+              context: context,
+              title: 'My Bookings',
+              subtitle: 'Manage your upcoming experiences',
+              icon: Icons.calendar_today_rounded,
+              color: const Color(0xFF6C63FF),
+              onTap: () => context.push('/seeker-dashboard'),
+            ),
+          if (user.role == UserRole.seeker)
+            _buildActionCard(
+              context: context,
+              title: 'My Favorites',
+              subtitle: 'Quick access to saved experiences',
+              icon: Icons.favorite_rounded,
+              color: const Color(0xFFFF4B2B),
+              onTap: () => _showFavoritesBottomSheet(context),
+            ),
+          if (user.role == UserRole.host)
+            _buildActionCard(
+              context: context,
+              title: 'Host Control Center',
+              subtitle: 'Listing management & analytics',
+              icon: Icons.dashboard_customize_rounded,
+              color: const Color(0xFFFF9A3C),
+              onTap: () => context.push('/host-dashboard', extra: {
+                'hostId': user.uid,
+                'hostName': user.displayName,
+                'hostPhotoUrl': user.photoUrl,
+                'isSuperhost': false,
+              }),
+            ),
+          if (user.role == UserRole.business)
+            _buildActionCard(
+              context: context,
+              title: 'Business Suite',
+              subtitle: 'Verify & manage your storefront',
+              icon: Icons.storefront_rounded,
+              color: const Color(0xFF11998E),
+              onTap: () => context.push('/business-registration'),
+            ),
+          if (user.role == UserRole.admin)
+            _buildActionCard(
+              context: context,
+              title: 'Admin Oversight',
+              subtitle: 'System health & moderation',
+              icon: Icons.admin_panel_settings_rounded,
+              color: const Color(0xFF8E2DE2),
+              onTap: () => context.push('/admin-dashboard'),
+            ),
+          _buildActionCard(
+            context: context,
+            title: 'Privacy & Security',
+            subtitle: 'Manage your data and account',
+            icon: Icons.security_rounded,
+            color: Colors.blueGrey,
+            onTap: () => context.push('/settings'),
+          ),
+        ],
+      ),
+    );
+  }
 
 
+  Widget _buildRatingIndicator(double rating) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
+          const SizedBox(width: 4),
+          Text(
+            rating.toStringAsFixed(1),
+            style: AppTypography.labelLarge.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFavoritesBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FavoritesBottomSheet(),
+    );
+  }
+}
