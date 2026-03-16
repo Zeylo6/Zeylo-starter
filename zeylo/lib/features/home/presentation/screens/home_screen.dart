@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -369,7 +370,15 @@ class _TopBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
             IconButton(
               icon: const Icon(Icons.send_outlined),
-              onPressed: () {},
+              onPressed: () {
+                final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
+                if (currentUser != null) {
+                  context.push('/messages', extra: {
+                    'userId': currentUser.uid,
+                    'userName': 'Messages',
+                  });
+                }
+              },
               color: AppColors.textPrimary,
             ),
             IconButton(

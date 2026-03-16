@@ -1,11 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/host_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../messaging/presentation/providers/messaging_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../providers/profile_provider.dart';
 import 'profile_stats_row.dart';
@@ -92,11 +95,21 @@ class ProfileHeader extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Edit Profile or Follow button
+          // Edit Profile or Follow + Message buttons
           if (isCurrentUser)
             _buildEditButton(context)
           else if (currentUserId != null)
-            _buildFollowButton(ref, currentUserId, isFollowing),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildFollowButton(ref, currentUserId, isFollowing),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _buildMessageButton(context, ref, currentUserId),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -129,7 +142,6 @@ class ProfileHeader extends ConsumerWidget {
 
   Widget _buildFollowButton(WidgetRef ref, String currentUserId, bool isFollowing) {
     return SizedBox(
-      width: double.infinity,
       height: 48,
       child: ElevatedButton(
         onPressed: () {
@@ -148,6 +160,40 @@ class ProfileHeader extends ConsumerWidget {
           isFollowing ? 'Following' : 'Follow',
           style: AppTypography.labelLarge.copyWith(
             fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessageButton(BuildContext context, WidgetRef ref, String currentUserId) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: () async {
+          final result = await ref.read(
+            getOrCreateConversationProvider((currentUserId, profile.id)).future,
+          );
+          if (context.mounted) {
+            context.push('/chat/${result.id}', extra: {
+              'otherUserName': profile.name,
+              'currentUserId': currentUserId,
+            });
+          }
+        },
+        icon: const Icon(Icons.send_outlined, size: 18),
+        label: Text(
+          'Message',
+          style: AppTypography.labelLarge.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
         ),
       ),
