@@ -235,29 +235,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 horizontal: AppSpacing.lg,
                 vertical: AppSpacing.lg,
               ),
-              sliver: SliverList(
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 400,
+                  mainAxisExtent: 390,
+                  crossAxisSpacing: AppSpacing.lg,
+                  mainAxisSpacing: AppSpacing.xl,
+                ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final experience = experiences[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-                      child: ExperienceCard(
-                        heroTag: 'home_experience_${experience.id}',
-                        title: experience.title,
-                        imageUrl: experience.coverImage,
-                        hostName: experience.hostName,
-                        hostAvatarUrl: experience.hostPhotoUrl,
-                        isHostVerified: experience.isHostVerified,
-                        location:
-                            '${experience.location.city}, ${experience.location.country}',
-                        price:
-                            'Rs. ${experience.price.toStringAsFixed(0)}',
-                        description: experience.shortDescription,
-                        rating: experience.averageRating,
-                        isFavorite: ref.watch(isFavoritedProvider(experience.id)),
-                        onTap: () => _navigateToDetail(experience.id),
-                        onFavoriteTap: () => _toggleFavorite(experience.id),
-                      ),
+                    return ExperienceCard(
+                      heroTag: 'home_experience_${experience.id}',
+                      title: experience.title,
+                      imageUrl: experience.coverImage,
+                      hostName: experience.hostName,
+                      hostAvatarUrl: experience.hostPhotoUrl,
+                      isHostVerified: experience.isHostVerified,
+                      location:
+                          '${experience.location.city}, ${experience.location.country}',
+                      price:
+                          'Rs. ${experience.price.toStringAsFixed(0)}',
+                      description: experience.shortDescription,
+                      rating: experience.averageRating,
+                      isFavorite: ref.watch(isFavoritedProvider(experience.id)),
+                      onTap: () => _navigateToDetail(experience.id),
+                      onFavoriteTap: () => _toggleFavorite(experience.id),
                     );
                   },
                   childCount: experiences.length,
@@ -270,13 +273,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               horizontal: AppSpacing.lg,
               vertical: AppSpacing.lg,
             ),
-            sliver: SliverList(
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 400,
+                mainAxisExtent: 390,
+                crossAxisSpacing: AppSpacing.lg,
+                mainAxisSpacing: AppSpacing.xl,
+              ),
               delegate: SliverChildBuilderDelegate(
-                (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-                  child: const ShimmerExperienceCard(height: 340),
-                ),
-                childCount: 3,
+                (context, index) => const ShimmerExperienceCard(height: 380),
+                childCount: 6,
               ),
             ),
           ),
