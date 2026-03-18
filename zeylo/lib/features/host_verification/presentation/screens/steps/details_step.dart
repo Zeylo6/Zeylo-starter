@@ -75,71 +75,76 @@ class _HostVerificationDetailsScreenState extends ConsumerState<HostVerification
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Tell us about yourself',
-                style: AppTypography.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Please ensure these details match your government ID exactly.',
-                style: AppTypography.bodyMediumSecondary,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              
-              ZeyloTextField(
-                label: 'Full Legal Name',
-                hint: 'John Doe',
-                controller: _nameController,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              
-              Text(
-                'Date of Birth',
-                style: AppTypography.labelLarge,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              GestureDetector(
-                onTap: () => _selectDate(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Tell us about yourself',
+                    style: AppTypography.headlineSmall,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _selectedDate == null
-                            ? 'Select your Date of Birth'
-                            : DateFormat('MMM dd, yyyy').format(_selectedDate!),
-                        style: _selectedDate == null 
-                            ? AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)
-                            : AppTypography.bodyMedium,
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Please ensure these details match your government ID exactly.',
+                    style: AppTypography.bodyMediumSecondary,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  
+                  ZeyloTextField(
+                    label: 'Full Legal Name',
+                    hint: 'John Doe',
+                    controller: _nameController,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  
+                  Text(
+                    'Date of Birth',
+                    style: AppTypography.labelLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  GestureDetector(
+                    onTap: () => _selectDate(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.border),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const Icon(Icons.calendar_today, color: AppColors.textSecondary, size: 20),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedDate == null
+                                ? 'Select your Date of Birth'
+                                : DateFormat('MMM dd, yyyy').format(_selectedDate!),
+                            style: _selectedDate == null 
+                                ? AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)
+                                : AppTypography.bodyMedium,
+                          ),
+                          const Icon(Icons.calendar_today, color: AppColors.textSecondary, size: 20),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  
+                  const Spacer(),
+                  ZeyloButton(
+                    label: 'Continue',
+                    onPressed: (_nameController.text.isNotEmpty && _selectedDate != null)
+                        ? () {
+                            ref.read(hostVerificationFlowProvider.notifier)
+                                .updatePersonalDetails(_nameController.text, _selectedDate!);
+                            ref.read(hostVerificationFlowProvider.notifier).nextStep();
+                          }
+                        : null,
+                  ),
+                ],
               ),
-              
-              const Spacer(),
-              ZeyloButton(
-                label: 'Continue',
-                onPressed: (_nameController.text.isNotEmpty && _selectedDate != null)
-                    ? () {
-                        ref.read(hostVerificationFlowProvider.notifier)
-                            .updatePersonalDetails(_nameController.text, _selectedDate!);
-                        ref.read(hostVerificationFlowProvider.notifier).nextStep();
-                      }
-                    : null,
-              ),
-            ],
+            ),
           ),
         ),
       ),
