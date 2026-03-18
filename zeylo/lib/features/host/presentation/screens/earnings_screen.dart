@@ -9,6 +9,7 @@ import '../widgets/earnings_stat_card.dart';
 import '../widgets/payout_tile.dart';
 
 /// Host earnings screen
+/// Adapted for responsive Web layout. Constrained to fixed max-width on Desktop to avoid wide stretching.
 class EarningsScreen extends ConsumerWidget {
   final String hostId;
 
@@ -22,38 +23,40 @@ class EarningsScreen extends ConsumerWidget {
     final earningsAsync = ref.watch(hostEarningsProvider(hostId));
     final trendAsync = ref.watch(earningsTrendProvider(hostId));
 
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        leading: IconButton(
+        leading: isDesktop ? null : IconButton(
           icon: const Icon(Icons.arrow_back),
           color: AppColors.textPrimary,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Earnings',
+          'Earnings Dashboard',
           style: AppTypography.titleLarge.copyWith(
-            color: AppColors.textPrimary,
+             color: AppColors.textPrimary,
+             fontWeight: FontWeight.bold,
           ),
         ),
+        centerTitle: false,
       ),
       body: earningsAsync.when(
         data: (earnings) => trendAsync.when(
-          data: (trend) => _buildContent(context, earnings, trend),
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
+          data: (trend) => Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: _buildContent(context, earnings, trend, isDesktop),
+            ),
           ),
-          error: (error, stack) => Center(
-            child: Text('Error: $error'),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Error: $error')),
         ),
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stack) => Center(
-          child: Text('Error: $error'),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
   }
@@ -62,152 +65,182 @@ class EarningsScreen extends ConsumerWidget {
     BuildContext context,
     dynamic earnings,
     double trend,
+    bool isDesktop,
   ) {
     return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Month dropdown
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'This Month',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+      padding: EdgeInsets.symmetric(
+         horizontal: AppSpacing.md, 
+         vertical: isDesktop ? AppSpacing.xl : AppSpacing.md
+      ),
+      child: Container(
+        padding: EdgeInsets.all(isDesktop ? AppSpacing.xl : AppSpacing.sm),
+        decoration: isDesktop ? BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+             BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+             )
+          ]
+        ) : null,
+        child: Column(
+          children: [
+            // Month dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'This Month',
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                   ),
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: AppColors.textSecondary),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      'October',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'October',
+                        style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Total balance section
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
+            const SizedBox(height: AppSpacing.xl),
+
+            // Total balance section
+            Column(
               children: [
                 Text(
                   'Total Balance',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTypography.labelMedium.copyWith(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Rs. ${earnings.totalBalance.toStringAsFixed(0)}',
                   style: AppTypography.headlineLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 48,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
 
                 // Trend indicator
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      trend >= 0
-                          ? Icons.trending_up
-                          : Icons.trending_down,
-                      color: trend >= 0
-                          ? AppColors.success
-                          : AppColors.error,
-                      size: 20,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      '${trend >= 0 ? '+' : ''}${trend.toStringAsFixed(1)}% vs last month',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: trend >= 0
-                            ? AppColors.success
-                            : AppColors.error,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: (trend >= 0 ? AppColors.success : AppColors.error).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        trend >= 0 ? Icons.trending_up : Icons.trending_down,
+                        color: trend >= 0 ? AppColors.success : AppColors.error,
+                        size: 20,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        '${trend >= 0 ? '+' : ''}${trend.toStringAsFixed(1)}% vs last month',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: trend >= 0 ? AppColors.success : AppColors.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.xxl),
 
-          // Stats cards row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
+            // Stats cards row
+            Row(
               children: [
-                EarningsStatCard(
-                  label: 'Gross Income',
-                  value: 'Rs. ${earnings.grossIncome.toStringAsFixed(0)}',
-                  backgroundColor: AppColors.success.withOpacity(0.1),
-                  textColor: AppColors.success,
+                Expanded(
+                  child: EarningsStatCard(
+                    label: 'Gross Income',
+                    value: 'Rs. ${earnings.grossIncome.toStringAsFixed(0)}',
+                    backgroundColor: AppColors.success.withOpacity(0.1),
+                    textColor: AppColors.success,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                EarningsStatCard(
-                  label: 'Platform Fee (10%)',
-                  value: '-Rs. ${earnings.platformFee.toStringAsFixed(0)}',
-                  backgroundColor: AppColors.error.withOpacity(0.1),
-                  textColor: AppColors.error,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                EarningsStatCard(
-                  label: 'Platform Fee (10%)',
-                  value: '-Rs. ${earnings.platformFee.toStringAsFixed(0)}',
-                  backgroundColor: AppColors.error.withOpacity(0.1),
-                  textColor: AppColors.error,
+                Expanded(
+                  child: EarningsStatCard(
+                    label: 'Platform Fee (10%)',
+                    value: '-Rs. ${earnings.platformFee.toStringAsFixed(0)}',
+                    backgroundColor: AppColors.error.withOpacity(0.1),
+                    textColor: AppColors.error,
+                  ),
                 ),
               ],
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xxxl),
 
-          // Recent payouts section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Column(
+            // Recent payouts section
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Recent Payouts',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                   children: [
+                      const Icon(Icons.history, color: AppColors.textSecondary),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                         'Recent Payouts',
+                         style: AppTypography.titleMedium.copyWith(
+                           color: AppColors.textPrimary,
+                           fontWeight: FontWeight.bold,
+                         ),
+                      ),
+                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
 
                 // Payouts list
-                ...earnings.payouts.asMap().entries.map((entry) {
-                  final payout = entry.value;
-                  return PayoutTile(
-                    title: 'Weekly Payout',
-                    date: _formatDate(payout.date),
-                    amount: payout.amount,
-                    isPositive: true,
-                  );
-                }).toList(),
+                if (earnings.payouts.isEmpty)
+                   Center(
+                      child: Padding(
+                         padding: const EdgeInsets.all(AppSpacing.xl),
+                         child: Text("No payouts processed yet.", style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary)),
+                      )
+                   )
+                else
+                   ...earnings.payouts.asMap().entries.map((entry) {
+                     final payout = entry.value;
+                     return Container(
+                        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        decoration: BoxDecoration(
+                           color: AppColors.surfaceContainerLow,
+                           borderRadius: BorderRadius.circular(AppRadius.md),
+                           border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                        ),
+                        child: PayoutTile(
+                          title: 'Weekly Payout',
+                          date: _formatDate(payout.date),
+                          amount: payout.amount,
+                          isPositive: true,
+                        ),
+                     );
+                   }).toList(),
               ],
             ),
-          ),
-
-          const SizedBox(height: AppSpacing.lg),
-        ],
+          ],
+        ),
       ),
     );
   }
