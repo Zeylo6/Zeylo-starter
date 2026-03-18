@@ -94,61 +94,66 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Verify your identity',
-                style: AppTypography.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Clear, readable photos help speed up approval.',
-                style: AppTypography.bodyMediumSecondary,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              
-              Expanded(
-                child: ListView(
-                  children: [
-                    _buildDocumentPicker(
-                      title: 'National Identity Card (NIC)',
-                      subtitle: 'Required',
-                      file: state.nicFile,
-                      isRequired: true,
-                      onTap: () => _pickImage('nic'),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Verify your identity',
+                    style: AppTypography.headlineSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Clear, readable photos help speed up approval.',
+                    style: AppTypography.bodyMediumSecondary,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildDocumentPicker(
+                          title: 'National Identity Card (NIC)',
+                          subtitle: 'Required',
+                          file: state.nicFile,
+                          isRequired: true,
+                          onTap: () => _pickImage('nic'),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildDocumentPicker(
+                          title: 'Passport',
+                          subtitle: 'Optional',
+                          file: state.passportFile,
+                          isRequired: false,
+                          onTap: () => _pickImage('passport'),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildDocumentPicker(
+                          title: 'Driver\'s License',
+                          subtitle: 'Optional',
+                          file: state.driverLicenseFile,
+                          isRequired: false,
+                          onTap: () => _pickImage('license'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _buildDocumentPicker(
-                      title: 'Passport',
-                      subtitle: 'Optional',
-                      file: state.passportFile,
-                      isRequired: false,
-                      onTap: () => _pickImage('passport'),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _buildDocumentPicker(
-                      title: 'Driver\'s License',
-                      subtitle: 'Optional',
-                      file: state.driverLicenseFile,
-                      isRequired: false,
-                      onTap: () => _pickImage('license'),
-                    ),
-                  ],
-                ),
+                  ),
+                  
+                  const SizedBox(height: AppSpacing.md),
+                  ZeyloButton(
+                    label: 'Submit for Review',
+                    isLoading: state.isSubmitting,
+                    onPressed: state.nicFile != null && !state.isSubmitting
+                        ? _submitVerification
+                        : null,
+                  ),
+                ],
               ),
-              
-              const SizedBox(height: AppSpacing.md),
-              ZeyloButton(
-                label: 'Submit for Review',
-                isLoading: state.isSubmitting,
-                onPressed: state.nicFile != null && !state.isSubmitting
-                    ? _submitVerification
-                    : null,
-              ),
-            ],
+            ),
           ),
         ),
       ),

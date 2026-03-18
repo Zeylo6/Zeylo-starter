@@ -20,40 +20,45 @@ class HostVerificationIntroScreen extends ConsumerWidget {
         elevation: 0,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.verified_user_outlined,
-                size: 80,
-                color: AppColors.primary,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(
+                    Icons.verified_user_outlined,
+                    size: 80,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  Text(
+                    'Let\'s get you verified',
+                    style: AppTypography.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'To ensure the safety of our community, all hosts must verify their identity before creating experiences.',
+                    style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xxxl),
+                  _buildRequirementRow(Icons.person_outline, 'Personal Details', 'Full name and Date of Birth'),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildRequirementRow(Icons.credit_card_outlined, 'Government ID', 'National ID Card (NIC) is required'),
+                  const Spacer(),
+                  ZeyloButton(
+                    label: 'Get Started',
+                    onPressed: () {
+                      ref.read(hostVerificationFlowProvider.notifier).nextStep();
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.xxl),
-              Text(
-                'Let\'s get you verified',
-                style: AppTypography.headlineMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'To ensure the safety of our community, all hosts must verify their identity before creating experiences.',
-                style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xxxl),
-              _buildRequirementRow(Icons.person_outline, 'Personal Details', 'Full name and Date of Birth'),
-              const SizedBox(height: AppSpacing.lg),
-              _buildRequirementRow(Icons.credit_card_outlined, 'Government ID', 'National ID Card (NIC) is required'),
-              const Spacer(),
-              ZeyloButton(
-                label: 'Get Started',
-                onPressed: () {
-                  ref.read(hostVerificationFlowProvider.notifier).nextStep();
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
