@@ -10,7 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
-import '../../../../features/chain/presentation/providers/chain_provider.dart'; // Contains aiServiceProvider
+import '../../../../features/chain/presentation/providers/chain_provider.dart'; 
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +19,8 @@ import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/custom_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+/// Create Experience Screen
+/// Responsive layout built for web interface
 class CreateExperienceScreen extends ConsumerStatefulWidget {
   const CreateExperienceScreen({super.key});
 
@@ -114,7 +116,6 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     }
   }
 
-  /// Uploads to Cloudinary using Unsigned Preset
   Future<String?> _uploadToCloudinary() async {
     if (_selectedImage == null) return null;
 
@@ -196,7 +197,6 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final isHostVerified = userDoc.data()?['hostVerificationStatus'] == 'verified';
 
-      // Upload to Cloudinary first if an image is selected
       String? finalImageUrl;
       if (_selectedImage != null) {
         finalImageUrl = await _uploadToCloudinary();
@@ -207,7 +207,6 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
         }
       }
 
-      // Fallback: 1. Cloudinary URL, 2. Manual URL, 3. Placeholder
       finalImageUrl ??= manualImageUrl.isNotEmpty
           ? manualImageUrl
           : 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200';
@@ -266,21 +265,22 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Create Listing', style: AppTypography.titleMedium),
+        title: Text('Create Listing', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        leading: isDesktop ? null : const BackButton(color: AppColors.textPrimary),
       ),
       body: userAsync.when(
         data: (user) {
           if (user == null || user.hostVerificationStatus != HostVerificationStatus.verified) {
             return _buildVerificationRequiredView(context, user?.hostVerificationStatus);
           }
-          return _buildForm(context);
+          return _buildFormLayout(context, isDesktop);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(child: Text('Error loading user data')),
@@ -323,7 +323,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
             ),
             const SizedBox(height: AppSpacing.xl),
             SizedBox(
-              width: double.infinity,
+              width: 300,
               height: 50,
               child: ElevatedButton(
                 onPressed: () => context.push(actionParams),
@@ -345,93 +345,152 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     );
   }
 
-  Widget _buildForm(BuildContext context) {
+  Widget _buildFormLayout(BuildContext context, bool isDesktop) {
+    // Media & Identity Block
+    final identityBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Experience Identity', Icons.auto_awesome_mosaic_rounded),
+        const SizedBox(height: AppSpacing.md),
+        _buildMediaPicker(),
+        const SizedBox(height: AppSpacing.lg),
+        _buildFormSection(
+          children: [
+            _buildModernTextField(_titleController, 'Experience Title', 'e.g., Sunset Surfing', Icons.title_rounded),
+             const SizedBox(height: AppSpacing.lg),
+            _buildModernTextField(_shortDescController, 'Catchy One-Liner', 'A brief, exciting hook...', Icons.short_text_rounded),
+          ],
+        ),
+      ]
+    );
+
+    // Narrative Block
+    final narrativeBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('The Story', Icons.description_rounded),
+        const SizedBox(height: AppSpacing.md),
+        _buildNarrativeSection(),
+      ],
+    );
+
+    // Logistics Block
+    final logisticsBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+         _buildSectionHeader('Logistics & Pricing', Icons.monetization_on_rounded),
+         const SizedBox(height: AppSpacing.md),
+         _buildFormSection(
+          children: [
+            Row(
+              children: [
+                Expanded(child: _buildModernTextField(_priceController, 'Price (LKR)', '5000', Icons.payments_rounded, isNumber: true)),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: _buildModernTextField(_durationController, 'Mins', '120', Icons.timer_outlined, isNumber: true)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _buildModernTextField(_maxGuestsController, 'Group Size Limit', 'e.g., 4', Icons.groups_rounded, isNumber: true),
+          ],
+        ),
+      ]
+    );
+
+    // Location Block
+    final locationBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+         _buildSectionHeader('Location Mapping', Icons.location_on_rounded),
+         const SizedBox(height: AppSpacing.md),
+         _buildLocationSection(),
+      ]
+    );
+
+    // Form Controls
+    final actionControls = Row(
+      children: [
+         Expanded(
+           child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                side: BorderSide(color: AppColors.border),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text('Save Draft', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
+           ),
+         ),
+         const SizedBox(width: AppSpacing.md),
+         Expanded(
+           child: ZeyloButton(
+              onPressed: _isLoading ? null : _submitExperience,
+              label: 'Publish Experience',
+              isLoading: _isLoading,
+              variant: ButtonVariant.filled,
+           ),
+         ),
+      ]
+    );
+
+    if (isDesktop) {
+       return Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl, vertical: AppSpacing.xl),
+            child: ConstrainedBox(
+               constraints: const BoxConstraints(maxWidth: 1200),
+               child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     // Left Panel
+                     Expanded(
+                        flex: 1,
+                        child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                              identityBlock,
+                              const SizedBox(height: AppSpacing.xl),
+                              narrativeBlock,
+                           ],
+                        ),
+                     ),
+                     const SizedBox(width: AppSpacing.xxxl),
+                     // Right Panel
+                     Expanded(
+                        flex: 1,
+                        child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                              logisticsBlock,
+                              const SizedBox(height: AppSpacing.xl),
+                              locationBlock,
+                              const SizedBox(height: AppSpacing.xxxl),
+                              actionControls,
+                           ],
+                        )
+                     )
+                  ],
+               ),
+            ),
+          ),
+       );
+    } // Mobile layout
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section 1: Hero Media
-          _buildSectionHeader('Experience Identity', Icons.auto_awesome_mosaic_rounded),
-          const SizedBox(height: AppSpacing.md),
-          _buildMediaPicker(),
-          
-          const SizedBox(height: AppSpacing.lg),
-          _buildFormSection(
-            children: [
-              _buildModernTextField(_titleController, 'Experience Title', 'e.g., Sunset Surfing', Icons.title_rounded),
-              const SizedBox(height: AppSpacing.lg),
-              _buildModernTextField(_shortDescController, 'Catchy One-Liner', 'A brief, exciting hook...', Icons.short_text_rounded),
-            ],
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-          
-          // Section 2: Narrative
-          _buildSectionHeader('The Story', Icons.description_rounded),
-          const SizedBox(height: AppSpacing.md),
-          _buildNarrativeSection(),
-
-          const SizedBox(height: AppSpacing.xl),
-          
-          // Section 3: Logistics
-          _buildSectionHeader('Logistics & Pricing', Icons.monetization_on_rounded),
-          const SizedBox(height: AppSpacing.md),
-          _buildFormSection(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildModernTextField(_priceController, 'Price (LKR)', '5000', Icons.payments_rounded, isNumber: true),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _buildModernTextField(_durationController, 'Mins', '120', Icons.timer_outlined, isNumber: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildModernTextField(_maxGuestsController, 'Group Size Limit', 'e.g., 4', Icons.groups_rounded, isNumber: true),
-            ],
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-          
-          // Section 4: Location
-          _buildSectionHeader('Location Mapping', Icons.location_on_rounded),
-          const SizedBox(height: AppSpacing.md),
-          _buildLocationSection(),
-
-          const SizedBox(height: 40),
-
-          // Action Chips (Publish)
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Text('Save Draft', style: AppTypography.labelLarge.copyWith(color: AppColors.textSecondary)),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: ZeyloButton(
-                  onPressed: _isLoading ? null : _submitExperience,
-                  label: 'Publish Experience',
-                  isLoading: _isLoading,
-                  variant: ButtonVariant.filled,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-        ],
-      ),
+       padding: const EdgeInsets.all(AppSpacing.lg),
+       child: Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+            identityBlock,
+            const SizedBox(height: AppSpacing.xl),
+            narrativeBlock,
+            const SizedBox(height: AppSpacing.xl),
+            logisticsBlock,
+            const SizedBox(height: AppSpacing.xl),
+            locationBlock,
+            const SizedBox(height: AppSpacing.xxxl),
+            actionControls,
+            const SizedBox(height: AppSpacing.xxl),
+         ],
+       )
     );
   }
 
@@ -505,7 +564,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
                       Text('Upload Cover Illustration',
                           style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
-                      Text('Tap to select from gallery',
+                      Text('Tap to select from local storage',
                           style: AppTypography.bodySmallSecondary),
                     ],
                   ),
@@ -602,5 +661,4 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
       child: suffix,
     );
   }
-
 }
