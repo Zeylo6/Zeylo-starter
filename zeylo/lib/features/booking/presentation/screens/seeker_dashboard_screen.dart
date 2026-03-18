@@ -15,6 +15,7 @@ import '../widgets/report_sheet.dart';
 import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
 
 /// Seeker Dashboard Screen — shows a seeker's bookings in 3 tabs
+/// Responsive Layout implemented for Web
 class SeekerDashboardScreen extends ConsumerStatefulWidget {
   const SeekerDashboardScreen({super.key});
 
@@ -60,13 +61,14 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
 
   Widget _buildDashboard(BuildContext context, String userId) {
     final bookingsAsync = ref.watch(userBookingsProvider(userId));
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.background,
-        leading: IconButton(
+        leading: isDesktop ? null : IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -115,9 +117,9 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildBookingList(context, upcoming, 'upcoming', userId),
-              _buildBookingList(context, ongoing, 'ongoing', userId),
-              _buildBookingList(context, past, 'past', userId),
+              _buildBookingList(context, upcoming, 'upcoming', userId, isDesktop),
+              _buildBookingList(context, ongoing, 'ongoing', userId, isDesktop),
+              _buildBookingList(context, past, 'past', userId, isDesktop),
             ],
           );
         },
@@ -146,6 +148,7 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
     List<BookingEntity> bookings,
     String type,
     String userId,
+    bool isDesktop,
   ) {
     if (bookings.isEmpty) {
       final emojis = {'upcoming': '📅', 'ongoing': '🎯', 'past': '📖'};
@@ -185,19 +188,41 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: () async => ref.invalidate(userBookingsProvider(userId)),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: bookings.length,
-        itemBuilder: (context, index) {
-          return _BookingCard(
-            booking: bookings[index],
-            type: type,
-            userId: userId,
-            onPaymentComplete: () =>
-                ref.invalidate(userBookingsProvider(userId)),
-          );
-        },
-      ),
+      child: isDesktop 
+      ? GridView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl, vertical: AppSpacing.xl),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 400,
+            crossAxisSpacing: AppSpacing.xl,
+            mainAxisSpacing: AppSpacing.xl,
+            childAspectRatio: 0.85, 
+          ),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            return _BookingCard(
+              booking: bookings[index],
+              type: type,
+              userId: userId,
+              isDesktop: isDesktop,
+              onPaymentComplete: () =>
+                  ref.invalidate(userBookingsProvider(userId)),
+            );
+          },
+        )
+      : ListView.builder(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          itemCount: bookings.length,
+          itemBuilder: (context, index) {
+            return _BookingCard(
+              booking: bookings[index],
+              type: type,
+              userId: userId,
+              isDesktop: isDesktop,
+              onPaymentComplete: () =>
+                  ref.invalidate(userBookingsProvider(userId)),
+            );
+          },
+        ),
     );
   }
 }
@@ -207,34 +232,40 @@ class _BookingCard extends ConsumerWidget {
   final BookingEntity booking;
   final String type;
   final String userId;
+  final bool isDesktop;
   final VoidCallback onPaymentComplete;
 
   const _BookingCard({
     required this.booking,
     required this.type,
     required this.userId,
+    required this.isDesktop,
     required this.onPaymentComplete,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: EdgeInsets.only(bottom: isDesktop ? 0 : AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 30,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: AppColors.border),
+        boxShadow: isDesktop 
+          ? [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ]
+          : [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +280,7 @@ class _BookingCard extends ConsumerWidget {
                 child: booking.experienceCoverImage.isNotEmpty
                     ? Image.network(
                         booking.experienceCoverImage,
-                        height: 160,
+                        height: isDesktop ? 180 : 160,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _placeholderImage(),
@@ -291,105 +322,96 @@ class _BookingCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-
             ],
           ),
 
           // Content
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  booking.experienceTitle,
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    booking.experienceTitle,
+                    style: AppTypography.titleLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today,
-                        size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${booking.date.day}/${booking.date.month}/${booking.date.year}  ${booking.startTime}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.group,
-                        size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${booking.guests} guest${booking.guests > 1 ? 's' : ''}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'Rs. ${booking.totalPrice.toStringAsFixed(0)}',
-                      style: AppTypography.titleMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Rate Now button (only for completed & unrated past bookings)
-                if (type == 'past' &&
-                    booking.status == 'completed' &&
-                    !booking.isRatedBySeeker) ...[
                   const SizedBox(height: AppSpacing.md),
-                  ZeyloButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => RateAndReviewSheet(
-                          booking: booking,
-                          reviewerRole: 'seeker',
-                          onSuccess: onPaymentComplete, // Reuse to refresh list
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today_rounded,
+                          size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${booking.date.day}/${booking.date.month}/${booking.date.year}  ${booking.startTime}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
                         ),
-                      );
-                    },
-                    label: 'Rate Experience',
-                    variant: ButtonVariant.filled,
-                    icon: const Icon(Icons.star_rounded,
-                        size: 20, color: Colors.white),
+                      ),
+                    ],
                   ),
-                ],
-
-                // Complete & Pay button (only for ongoing bookings)
-                if (type == 'ongoing') ...[
-                  const SizedBox(height: AppSpacing.md),
-                  if (booking.paymentStatus != 'paid')
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.group_rounded,
+                          size: 16, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${booking.guests} guest${booking.guests > 1 ? 's' : ''}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Rs. ${booking.totalPrice.toStringAsFixed(0)}',
+                        style: AppTypography.titleLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+            
+                  // Actions 
+                  if (type == 'past' &&
+                      booking.status == 'completed' &&
+                      !booking.isRatedBySeeker) ...[
                     ZeyloButton(
-                      onPressed: () => _showPaymentSheet(context),
-                      label: '💳  Complete & Pay',
+                      onPressed: () {
+                         _showReviewDialogOrSheet(context, ref);
+                      },
+                      label: 'Rate Experience',
                       variant: ButtonVariant.filled,
-                    )
-                  else
-                    ZeyloButton(
-                      onPressed: () => _completeExperience(context, ref),
-                      label: '✅  Complete Experience',
-                      variant: ButtonVariant.filled,
-                      backgroundColor: AppColors.success,
+                      icon: const Icon(Icons.star_rounded,
+                          size: 20, color: Colors.white),
                     ),
+                  ],
+            
+                  // Complete & Pay button 
+                  if (type == 'ongoing') ...[
+                    if (booking.paymentStatus != 'paid')
+                      ZeyloButton(
+                        onPressed: () => _showPaymentSheet(context),
+                        label: '💳  Complete & Pay',
+                        variant: ButtonVariant.filled,
+                      )
+                    else
+                      ZeyloButton(
+                        onPressed: () => _completeExperience(context, ref),
+                        label: '✅  Complete Experience',
+                        variant: ButtonVariant.filled,
+                        backgroundColor: AppColors.success,
+                      ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],
@@ -399,7 +421,7 @@ class _BookingCard extends ConsumerWidget {
 
   Widget _placeholderImage() {
     return Container(
-      height: 160,
+      height: isDesktop ? 180 : 160,
       width: double.infinity,
       color: AppColors.surface,
       child: const Icon(
@@ -410,30 +432,101 @@ class _BookingCard extends ConsumerWidget {
     );
   }
 
+  void _showReviewDialogOrSheet(BuildContext context, WidgetRef ref) {
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+          child: Container(
+             width: 500,
+             constraints: const BoxConstraints(maxHeight: 700),
+             padding: const EdgeInsets.all(AppSpacing.md),
+             child: RateAndReviewSheet(
+                booking: booking,
+                reviewerRole: 'seeker',
+                onSuccess: () {
+                  Navigator.pop(context); // Close dialog explicitly here
+                  onPaymentComplete(); 
+                },
+             ),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => RateAndReviewSheet(
+          booking: booking,
+          reviewerRole: 'seeker',
+          onSuccess: onPaymentComplete,
+        ),
+      );
+    }
+  }
+
   void _showPaymentSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _PaymentSheet(
-        booking: booking,
-        onSuccess: onPaymentComplete,
-      ),
-    );
+    if (isDesktop) {
+       showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+          child: SizedBox(
+             width: 500,
+             height: 600,
+             child: _PaymentSheet(
+                booking: booking,
+                onSuccess: onPaymentComplete,
+             ),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _PaymentSheet(
+          booking: booking,
+          onSuccess: onPaymentComplete,
+        ),
+      );
+    }
   }
 
   void _showReportSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ReportSheet(
-        reportedUserId: booking.hostId, // Seeker is reporting the Host
-        bookingId: booking.id,
-        reporterRole: 'seeker',
-        reportedRole: 'host',
-      ),
-    );
+    if (isDesktop) {
+       showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+          child: SizedBox(
+             width: 500,
+             height: 480,
+             child: ReportSheet(
+                reportedUserId: booking.hostId, // Seeker is reporting the Host
+                bookingId: booking.id,
+                reporterRole: 'seeker',
+                reportedRole: 'host',
+             ),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => ReportSheet(
+          reportedUserId: booking.hostId, 
+          bookingId: booking.id,
+          reporterRole: 'seeker',
+          reportedRole: 'host',
+        ),
+      );
+    }
   }
 
   Future<void> _completeExperience(BuildContext context, WidgetRef ref) async {
@@ -445,7 +538,7 @@ class _BookingCard extends ConsumerWidget {
       });
 
       if (context.mounted) {
-        onPaymentComplete(); // Refresh list
+        onPaymentComplete(); 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Experience marked as completed! 🎉'),
@@ -502,7 +595,7 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-/// Payment bottom sheet
+/// Payment bottom sheet / Dialog
 class _PaymentSheet extends StatefulWidget {
   final BookingEntity booking;
   final VoidCallback onSuccess;
@@ -540,10 +633,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     setState(() => _isProcessing = true);
 
     try {
-      // Simulate payment processing delay (replace with real payment gateway)
       await Future.delayed(const Duration(seconds: 2));
 
-      // Update Firestore
       final db = FirebaseFirestore.instance;
       final batch = db.batch();
       final bookingRef = db.collection('bookings').doc(widget.booking.id);
@@ -553,10 +644,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Notify the host
       final activityRef = db.collection('activities').doc();
       batch.set(activityRef, {
-        'userId': widget.booking.hostId, // The recipient is the host
+        'userId': widget.booking.hostId, 
         'title': 'Payment Received! 💰',
         'message':
             'A seeker has completed the payment for "${widget.booking.experienceTitle}".',
@@ -600,6 +690,164 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+    
+    // Core payment UI contents 
+    Widget content = ListView(
+      physics: isDesktop ? const BouncingScrollPhysics() : const ClampingScrollPhysics(),
+      padding: EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: isDesktop ? AppSpacing.xl : AppSpacing.sm,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      children: [
+        if (!isDesktop) // Handle bar only for mobile sheet
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+            ),
+          ),
+        if (!isDesktop) const SizedBox(height: AppSpacing.md),
+
+        // Header
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C63FF), Color(0xFF48CAE4)],
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                boxShadow: [
+                   BoxShadow(color: const Color(0xFF6C63FF).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                ]
+              ),
+              child: const Icon(Icons.payment_rounded, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Complete Payment',
+                    style: AppTypography.headlineSmall.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    widget.booking.experienceTitle,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (isDesktop) 
+             IconButton(
+               icon: const Icon(Icons.close_rounded),
+               onPressed: () => Navigator.pop(context),
+             ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xl),
+
+        // Order summary
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              _summaryRow('Experience', widget.booking.experienceTitle,
+                  bold: false),
+              const Divider(height: AppSpacing.lg),
+              _summaryRow('Guests', '${widget.booking.guests} person(s)'),
+              const SizedBox(height: 4),
+              _summaryRow('Date',
+                  '${widget.booking.date.day}/${widget.booking.date.month}/${widget.booking.date.year}'),
+              const Divider(height: AppSpacing.lg),
+              _summaryRow(
+                'Total Amount',
+                'Rs. ${widget.booking.totalPrice.toStringAsFixed(0)}',
+                bold: true,
+                highlight: true,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+
+        Text(
+          'Card Details',
+          style: AppTypography.titleLarge.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        PaymentCardInput(
+          onCardNumberChanged: (v) => setState(() => _cardNumber = v),
+          onExpiryChanged: (v) => setState(() => _expiry = v),
+          onCVCChanged: (v) => setState(() => _cvc = v),
+          onCardholderNameChanged: (v) =>
+              setState(() => _cardholderName = v),
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+
+        ZeyloButton(
+          onPressed: _isProcessing ? null : _processPayment,
+          label: _isProcessing
+              ? 'Processing Securely...'
+              : 'Pay Rs. ${widget.booking.totalPrice.toStringAsFixed(0)}',
+          isLoading: _isProcessing,
+          variant: ButtonVariant.filled,
+          height: 56,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.lock_rounded,
+                size: 14, color: AppColors.success),
+            const SizedBox(width: 6),
+            Text(
+              'Payments are 256-bit encrypted & secure',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    if (isDesktop) {
+       return ClipRRect(
+         borderRadius: BorderRadius.circular(AppRadius.xl),
+         child: Material(
+           color: AppColors.background,
+           child: content,
+         ),
+       );
+    } // else Mobile
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -610,141 +858,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
-        child: ListView(
-          controller: controller,
-          padding: EdgeInsets.only(
-            left: AppSpacing.lg,
-            right: AppSpacing.lg,
-            top: AppSpacing.sm,
-            bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-          ),
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF48CAE4)],
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  child:
-                      const Icon(Icons.payment, color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Complete Payment',
-                        style: AppTypography.headlineSmall.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        widget.booking.experienceTitle,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // Order summary
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                children: [
-                  _summaryRow('Experience', widget.booking.experienceTitle,
-                      bold: false),
-                  const Divider(height: AppSpacing.lg),
-                  _summaryRow('Guests', '${widget.booking.guests} person(s)'),
-                  const SizedBox(height: 4),
-                  _summaryRow('Date',
-                      '${widget.booking.date.day}/${widget.booking.date.month}/${widget.booking.date.year}'),
-                  const Divider(height: AppSpacing.lg),
-                  _summaryRow(
-                    'Total Amount',
-                    'Rs. ${widget.booking.totalPrice.toStringAsFixed(0)}',
-                    bold: true,
-                    highlight: true,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
-            Text(
-              'Card Details',
-              style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-
-            PaymentCardInput(
-              onCardNumberChanged: (v) => setState(() => _cardNumber = v),
-              onExpiryChanged: (v) => setState(() => _expiry = v),
-              onCVCChanged: (v) => setState(() => _cvc = v),
-              onCardholderNameChanged: (v) =>
-                  setState(() => _cardholderName = v),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
-            ZeyloButton(
-              onPressed: _isProcessing ? null : _processPayment,
-              label: _isProcessing
-                  ? 'Processing...'
-                  : 'Pay Rs. ${widget.booking.totalPrice.toStringAsFixed(0)}',
-              isLoading: _isProcessing,
-              variant: ButtonVariant.filled,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.lock,
-                    size: 14, color: AppColors.textSecondary),
-                const SizedBox(width: 4),
-                Text(
-                  'Payments are encrypted & secure',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        child: content,
       ),
     );
   }
@@ -757,17 +871,20 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         Text(
           label,
           style:
-              AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
         ),
-        Text(
-          value,
-          style: bold
-              ? AppTypography.titleMedium.copyWith(
-                  color: highlight ? AppColors.primary : AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                )
-              : AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
-          overflow: TextOverflow.ellipsis,
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: bold
+                ? AppTypography.titleLarge.copyWith(
+                    color: highlight ? AppColors.primary : AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  )
+                : AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
