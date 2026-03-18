@@ -8,6 +8,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 
+/// Host Calendar Screen
+/// Desktop uses a horizontal Row view to expand TableCalendar and Agenda.
 class HostCalendarScreen extends ConsumerStatefulWidget {
   const HostCalendarScreen({super.key});
 
@@ -48,7 +50,6 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
         data['id'] = doc.id; // Inject id for cancellation logic
         if (data['date'] is Timestamp) {
           final date = (data['date'] as Timestamp).toDate();
-          // Normalize to midnight to match TableCalendar easily
           final day = DateTime(date.year, date.month, date.day);
 
           if (newMap[day] == null) {
@@ -105,180 +106,208 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedEvents =
-        _selectedDay != null ? _getEventsForDay(_selectedDay!) : [];
+    final selectedEvents = _selectedDay != null ? _getEventsForDay(_selectedDay!) : [];
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+
+    final calendarWidget = Container(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md, top: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: isDesktop ? null : const Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: TableCalendar(
+        firstDay: DateTime.now().subtract(const Duration(days: 365)),
+        lastDay: DateTime.now().add(const Duration(days: 365)),
+        focusedDay: _focusedDay,
+        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+        onDaySelected: (selectedDay, focusedDay) {
+          if (!isSameDay(_selectedDay, selectedDay)) {
+            setState(() {
+              _selectedDay = selectedDay;
+              _focusedDay = focusedDay;
+            });
+          }
+        },
+        eventLoader: _getEventsForDay,
+        calendarStyle: CalendarStyle(
+          todayDecoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
+          ),
+          todayTextStyle: AppTypography.labelMedium.copyWith(color: AppColors.primary),
+          selectedDecoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, Color(0xFF8E2DE2)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryAlpha30,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          selectedTextStyle: AppTypography.labelMedium.copyWith(color: Colors.white),
+          markerDecoration: const BoxDecoration(
+            color: AppColors.secondary,
+            shape: BoxShape.circle,
+          ),
+          markerSize: 4.0,
+          markersMaxCount: 1,
+          markerMargin: const EdgeInsets.only(top: 6),
+          outsideDaysVisible: false,
+          weekendTextStyle: AppTypography.bodyMediumSecondary,
+          defaultTextStyle: AppTypography.bodyMedium,
+        ),
+        headerStyle: HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextStyle: AppTypography.headlineSmall.copyWith(fontWeight: FontWeight.w800),
+          leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary),
+          rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+        ),
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
+          weekendStyle: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
+        ),
+      ),
+    );
+
+    final eventsWidget = selectedEvents.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'No bookings on this day.',
+                  style: AppTypography.bodyMediumSecondary,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ElevatedButton.icon(
+                  onPressed: () => _blockSelectedDate(),
+                  icon: const Icon(Icons.block, size: 18),
+                  label: const Text('Block Date'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: AppColors.textInverse,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            itemCount: selectedEvents.length,
+            itemBuilder: (context, index) {
+              final exp = selectedEvents[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exp['experienceTitle'] ?? 'Experience',
+                      style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    if (exp['isBlock'] == true) ...[
+                      Text('You have blocked this date.',
+                          style: AppTypography.bodySmall.copyWith(color: AppColors.error)),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton(
+                        onPressed: () => _unblockDate(exp['blockId']),
+                        style: TextButton.styleFrom(
+                            foregroundColor: AppColors.error,
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(50, 25)),
+                        child: const Text('Unblock'),
+                      ),
+                    ] else ...[
+                      Row(
+                         children: [
+                            const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text('${exp['startTime'] ?? 'TBA'}', style: AppTypography.bodySmall),
+                         ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                         children: [
+                            const Icon(Icons.people_outline_rounded, size: 14, color: AppColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text('${exp['guests'] ?? 1} Guests', style: AppTypography.bodySmall),
+                         ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                         children: [
+                            const Icon(Icons.payments_outlined, size: 14, color: AppColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text('Rs. ${exp['totalPrice'] ?? 0}', style: AppTypography.bodySmall),
+                         ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (exp['status'] != 'cancelled_by_host')
+                        TextButton(
+                          onPressed: () => _cancelBooking(exp),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.error,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: const Size(50, 25),
+                            alignment: Alignment.centerLeft,
+                          ),
+                          child: const Text('Cancel Booking', style: TextStyle(fontWeight: FontWeight.w600)),
+                        )
+                      else
+                        Text('Cancelled',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.error, fontWeight: FontWeight.bold)),
+                    ],
+                  ],
+                ),
+              );
+            },
+          );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Booking Calendar', style: AppTypography.titleMedium),
+        title: Text('Booking Calendar', style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold)),
         elevation: 0,
         backgroundColor: AppColors.background,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        centerTitle: false,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  decoration: const BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border(bottom: BorderSide(color: AppColors.border)),
-                  ),
-                  child: TableCalendar(
-                    firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                    lastDay: DateTime.now().add(const Duration(days: 365)),
-                    focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    onDaySelected: (selectedDay, focusedDay) {
-                      if (!isSameDay(_selectedDay, selectedDay)) {
-                        setState(() {
-                          _selectedDay = selectedDay;
-                          _focusedDay = focusedDay;
-                        });
-                      }
-                    },
-                    eventLoader: _getEventsForDay,
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
-                      ),
-                      todayTextStyle: AppTypography.labelMedium.copyWith(color: AppColors.primary),
-                      selectedDecoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primary, Color(0xFF8E2DE2)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryAlpha30,
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      selectedTextStyle: AppTypography.labelMedium.copyWith(color: Colors.white),
-                      markerDecoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                      markerSize: 4.0,
-                      markersMaxCount: 1,
-                      markerMargin: const EdgeInsets.only(top: 6),
-                      outsideDaysVisible: false,
-                      weekendTextStyle: AppTypography.bodyMediumSecondary,
-                      defaultTextStyle: AppTypography.bodyMedium,
-                    ),
-                    headerStyle: HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                      titleTextStyle: AppTypography.headlineSmall.copyWith(fontWeight: FontWeight.w800),
-                      leftChevronIcon: const Icon(Icons.chevron_left_rounded, color: AppColors.primary),
-                      rightChevronIcon: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
-                    ),
-                    daysOfWeekStyle: DaysOfWeekStyle(
-                      weekdayStyle: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
-                      weekendStyle: AppTypography.labelSmall.copyWith(color: AppColors.textHint),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: selectedEvents.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'No bookings on this day.',
-                                style: AppTypography.bodyMediumSecondary,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              ElevatedButton.icon(
-                                onPressed: () => _blockSelectedDate(),
-                                icon: const Icon(Icons.block),
-                                label: const Text('Block Date'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.error,
-                                  foregroundColor: AppColors.textInverse,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          itemCount: selectedEvents.length,
-                          itemBuilder: (context, index) {
-                            final exp = selectedEvents[index];
-                            return Container(
-                              margin:
-                                  const EdgeInsets.only(bottom: AppSpacing.md),
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.md),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    exp['experienceTitle'] ?? 'Experience',
-                                    style: AppTypography.labelLarge
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  if (exp['isBlock'] == true) ...[
-                                    Text('You have blocked this date.',
-                                        style: AppTypography.bodySmall
-                                            .copyWith(color: AppColors.error)),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    TextButton(
-                                      onPressed: () =>
-                                          _unblockDate(exp['blockId']),
-                                      style: TextButton.styleFrom(
-                                          foregroundColor: AppColors.error,
-                                          padding: EdgeInsets.zero),
-                                      child: const Text('Unblock'),
-                                    ),
-                                  ] else ...[
-                                    Text('Time: ${exp['startTime'] ?? 'TBA'}',
-                                        style: AppTypography.bodySmall),
-                                    Text('Guests: ${exp['guests'] ?? 1}',
-                                        style: AppTypography.bodySmall),
-                                    Text('Price: Rs. ${exp['totalPrice'] ?? 0}',
-                                        style: AppTypography.bodySmall),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    if (exp['status'] != 'cancelled_by_host')
-                                      TextButton(
-                                        onPressed: () => _cancelBooking(exp),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: AppColors.error,
-                                          padding: EdgeInsets.zero,
-                                          minimumSize: const Size(50, 30),
-                                          alignment: Alignment.centerLeft,
-                                        ),
-                                        child: const Text('Cancel Booking'),
-                                      )
-                                    else
-                                      Text('Cancelled',
-                                          style: AppTypography.bodySmall
-                                              .copyWith(
-                                                  color: AppColors.error)),
-                                  ],
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
+          : (isDesktop 
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     Expanded(flex: 5, child: SingleChildScrollView(child: calendarWidget)),
+                     Container(width: 1, color: AppColors.border),
+                     Expanded(flex: 4, child: Container(color: AppColors.surfaceContainerLow, child: eventsWidget)),
+                  ],
+                )
+              : Column(
+                  children: [
+                    calendarWidget,
+                    Expanded(child: eventsWidget),
+                  ],
+                )
             ),
     );
   }
@@ -333,15 +362,16 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Cancel Booking'),
         content: const Text(
             'Are you sure you want to cancel this booking? The seeker will be notified.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: const Text('Close', style: TextStyle(color: AppColors.textSecondary)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
               try {
@@ -369,7 +399,7 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Booking cancelled.')));
+                      const SnackBar(content: Text('Booking cancelled.'), backgroundColor: AppColors.error));
                 }
               } catch (e) {
                 if (mounted) {
@@ -378,8 +408,8 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                 }
               }
             },
-            child: const Text('Cancel Booking',
-                style: TextStyle(color: AppColors.error)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+            child: const Text('Cancel Booking'),
           ),
         ],
       ),
