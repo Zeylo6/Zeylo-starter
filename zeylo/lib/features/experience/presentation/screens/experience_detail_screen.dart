@@ -21,17 +21,10 @@ import '../../../favorites/presentation/providers/favorites_provider.dart';
 
 /// Experience detail screen
 ///
-/// Displays full details about an experience including:
-/// - Cover image with back button and favorite icon
-/// - Title and host info
-/// - Location
-/// - Description
-/// - What's included section
-/// - Requirements section
-/// - Host bio
-/// - Book Now button (sticky at bottom)
+/// Refactored for Web responsive layout:
+/// - Desktop (≥800px): Hero image banner, Two-column layout (content left, sticky booking card right)
+/// - Mobile: Original scroll view with sticky bottom AppBar for booking
 class ExperienceDetailScreen extends ConsumerStatefulWidget {
-  /// Experience ID to display
   final String experienceId;
 
   const ExperienceDetailScreen({
@@ -46,144 +39,29 @@ class ExperienceDetailScreen extends ConsumerStatefulWidget {
 
 class _ExperienceDetailScreenState
     extends ConsumerState<ExperienceDetailScreen> {
-  bool _isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
     final isFavorited = ref.watch(isFavoritedProvider(widget.experienceId));
     
     return ref.watch(experienceDetailProvider(widget.experienceId)).when(
-
           data: (experience) {
             return Scaffold(
               backgroundColor: AppColors.background,
-              body: Stack(
-                children: [
-                  // Main content
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Cover image with overlay buttons
-                        _buildCoverImage(experience.coverImage),
-                        Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Title
-                              Text(
-                                experience.title,
-                                style: AppTypography.displayMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Host and price row
-                              _buildHostPriceRow(
-                                experience.hostName,
-                                experience.hostPhotoUrl,
-                                experience.price,
-                                experience.currency,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Location
-                              _buildLocation(
-                                experience.location.address,
-                                experience.location.city,
-                              ),
-                              const SizedBox(height: AppSpacing.lg),
-
-                              // Description
-                              Text(
-                                experience.description,
-                                style: AppTypography.bodyMedium,
-                              ),
-                              const SizedBox(height: AppSpacing.xxl),
-
-                              // What's included section
-                              ExperienceInfoSection(
-                                title: "What's Included",
-                                items: experience.includes,
-                              ),
-                              const SizedBox(height: AppSpacing.xxl),
-
-                              // Requirements section
-                              if (experience.requirements.isNotEmpty)
-                                ExperienceInfoSection(
-                                  title: 'Requirements',
-                                  items: experience.requirements,
-                                ),
-                              if (experience.requirements.isNotEmpty)
-                                const SizedBox(height: AppSpacing.xxl),
-
-                              // Host bio card
-                              HostInfoCard(
-                                hostName: experience.hostName,
-                                hostPhotoUrl: experience.hostPhotoUrl,
-                                rating: experience.averageRating,
-                                reviewCount: experience.reviewCount,
-                                bio:
-                                    'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
-                                onMessageTap: () => _openChatWithHost(context, experience),
-                              ),
-                              const SizedBox(height: AppSpacing.xxxl),
-
-                              // Reviews Section
-                              _buildReviewsSection(context, experience),
-                              const SizedBox(height: 100), // padding for bottom button
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Back button
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + AppSpacing.md,
-                    left: AppSpacing.lg,
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.textInverse.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: AppColors.textPrimary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Favorite button
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + AppSpacing.md,
-                    right: AppSpacing.lg,
-                    child: GestureDetector(
-                      onTap: _toggleFavorite,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.textInverse.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isFavorited ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorited
-                              ? AppColors.error
-                              : AppColors.textPrimary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              body: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isDesktop = constraints.maxWidth >= 800;
+                    if (isDesktop) {
+                      return _buildDesktopLayout(context, experience, isFavorited);
+                    }
+                    return _buildMobileLayout(context, experience, isFavorited);
+                  },
+                ),
               ),
-              bottomNavigationBar: _buildBookNowButton(context, experience),
+              bottomNavigationBar: MediaQuery.of(context).size.width < 800
+                  ? _buildBookNowButton(context, experience)
+                  : null, // Desktop uses sticky card
             );
           },
           loading: () => Scaffold(
@@ -223,7 +101,7 @@ class _ExperienceDetailScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                   const Icon(
                     Icons.error_outline,
                     size: 48,
                     color: AppColors.error,
@@ -244,6 +122,362 @@ class _ExperienceDetailScreenState
           ),
         );
   }
+
+  // ─────────────────────────── DESKTOP LAYOUT ───────────────────────────
+
+  Widget _buildDesktopLayout(BuildContext context, Experience experience, bool isFavorited) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: _buildDesktopHeader(experience, isFavorited),
+        ),
+        SliverToBoxAdapter(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              width: 1200, // Max width for content
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl, vertical: AppSpacing.xxxl),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Details
+                  Expanded(
+                    flex: 7,
+                    child: _buildMainContent(experience),
+                  ),
+                  const SizedBox(width: AppSpacing.xxxl * 1.5),
+                  // Right Column: Sticky Booking Card
+                  SizedBox(
+                    width: 380,
+                    child: _buildStickyBookingCard(experience),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopHeader(Experience experience, bool isFavorited) {
+    return Stack(
+      children: [
+        // Hero Image
+        SizedBox(
+          width: double.infinity,
+          height: 480,
+          child: CachedNetworkImage(
+            imageUrl: experience.coverImage,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => ShimmerListTile(height: 480),
+            errorWidget: (context, url, error) => Container(
+              color: AppColors.surface,
+              child: const Icon(Icons.image_not_supported),
+            ),
+          ),
+        ),
+        // Overlay gradient for readability
+        Container(
+          height: 480,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(0.5),
+                Colors.transparent,
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+        // Top Bar
+        Positioned(
+          top: AppSpacing.xxl,
+          left: AppSpacing.xxxl,
+          right: AppSpacing.xxxl,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back Button
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black12, blurRadius: 8),
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.arrow_back_rounded, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Back', style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ),
+              // Favorite Button
+              GestureDetector(
+                onTap: _toggleFavorite,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black12, blurRadius: 8),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    isFavorited ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorited ? AppColors.error : AppColors.textPrimary,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStickyBookingCard(Experience experience) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rs. ${experience.price.toStringAsFixed(0)}',
+            style: AppTypography.displayMedium.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _buildLocation(experience.location.address, experience.location.city),
+          const SizedBox(height: AppSpacing.xxl),
+          
+          // Options / Selectors (Placeholder for future)
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Date', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700)),
+                    Text('Add dates', style: AppTypography.bodySmallSecondary),
+                  ],
+                ),
+                const Icon(Icons.calendar_today_rounded, size: 18, color: AppColors.textSecondary),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () => _bookNow(experience),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Book Now',
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Center(
+            child: Text(
+              'You won\'t be charged yet',
+              style: AppTypography.caption,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────── MOBILE LAYOUT ───────────────────────────
+
+  Widget _buildMobileLayout(BuildContext context, Experience experience, bool isFavorited) {
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCoverImage(experience.coverImage),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: _buildMainContent(experience),
+              ),
+            ],
+          ),
+        ),
+        // Back button
+        Positioned(
+          top: AppSpacing.md,
+          left: AppSpacing.lg,
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.textInverse.withOpacity(0.9),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: const Icon(
+                Icons.arrow_back,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+          ),
+        ),
+        // Favorite button
+        Positioned(
+          top: AppSpacing.md,
+          right: AppSpacing.lg,
+          child: GestureDetector(
+            onTap: _toggleFavorite,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.textInverse.withOpacity(0.9),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Icon(
+                isFavorited ? Icons.favorite : Icons.favorite_border,
+                color: isFavorited ? AppColors.error : AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────── SHARED CONTENT ───────────────────────────
+
+  Widget _buildMainContent(Experience experience) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          experience.title,
+          style: AppTypography.displayMedium,
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Host and price row (Price only visible on mobile, as Desktop has sticky card)
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = MediaQuery.of(context).size.width >= 800;
+            return _buildHostPriceRow(
+              experience.hostName,
+              experience.hostPhotoUrl,
+              experience.price,
+              experience.currency,
+              hidePrice: isDesktop,
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Location
+        _buildLocation(
+          experience.location.address,
+          experience.location.city,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+
+        // Description
+        Text(
+          experience.description,
+          style: AppTypography.bodyLarge.copyWith(height: 1.8),
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        const Divider(color: AppColors.border),
+        const SizedBox(height: AppSpacing.xxl),
+
+        // What's included section
+        ExperienceInfoSection(
+          title: "What's Included",
+          items: experience.includes,
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+
+        // Requirements section
+        if (experience.requirements.isNotEmpty) ...[
+          ExperienceInfoSection(
+            title: 'Requirements',
+            items: experience.requirements,
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+        ],
+
+        const Divider(color: AppColors.border),
+        const SizedBox(height: AppSpacing.xxl),
+
+        // Host bio card
+        HostInfoCard(
+          hostName: experience.hostName,
+          hostPhotoUrl: experience.hostPhotoUrl,
+          rating: experience.averageRating,
+          reviewCount: experience.reviewCount,
+          bio:
+              'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
+          onMessageTap: () => _openChatWithHost(context, experience),
+        ),
+        const SizedBox(height: AppSpacing.xxxl),
+
+        // Reviews Section
+        _buildReviewsSection(context, experience),
+        const SizedBox(height: 100), // padding for bottom button
+      ],
+    );
+  }
+
+  // ─────────────────────────── HELPERS ───────────────────────────
 
   Future<void> _openChatWithHost(BuildContext context, Experience experience) async {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -291,11 +525,9 @@ class _ExperienceDetailScreenState
               children: [
                 Text(
                   'Guest Reviews',
-                  style:
-                      AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                // Rating summary
                 if (experience.reviewCount > 0) ...[
                   Text(
                     experience.averageRating.toStringAsFixed(1),
@@ -310,7 +542,6 @@ class _ExperienceDetailScreenState
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  // Modern Review Count Badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
@@ -361,168 +592,41 @@ class _ExperienceDetailScreenState
                     style: AppTypography.bodyMediumSecondary,
                   );
                 }
-                // Sort by highest rating and take top 3
                 final topReviews = [...reviews];
                 topReviews.sort((a, b) => b.rating.compareTo(a.rating));
                 final reviewsToShow = topReviews.take(3).toList();
 
-                return Column(
-                  children: reviewsToShow.map((review) {
-                    final isHelpful =
-                        currentUser != null && review.helpfulUserIds.contains(currentUser.uid);
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.person,
-                                    color: AppColors.primary, size: 16),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                'Seeker', // Masking real name unless fetched explicitly
-                                style: AppTypography.labelMedium
-                                    .copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const Spacer(),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star_rounded,
-                                      color: Color(0xFFFFB800), size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    review.rating.toStringAsFixed(1),
-                                    style: AppTypography.labelSmall
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          if (review.message != null && review.message!.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              review.message!,
-                              style: AppTypography.bodyMedium
-                                  .copyWith(color: AppColors.textPrimary),
-                            ),
-                          ],
-                          const SizedBox(height: AppSpacing.md),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: AppColors.textSecondary),
-                              ),
-                              Row(
-                                children: [
-                                  // Helpful Button
-                                  GestureDetector(
-                                    onTap: () async {
-                                      if (currentUser == null) return;
-                                      await ref
-                                          .read(reviewRepositoryProvider)
-                                          .toggleHelpful(review.id, currentUser.uid);
-                                      ref.invalidate(
-                                          experienceReviewsProvider(experience.id));
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: isHelpful
-                                            ? AppColors.primary.withOpacity(0.1)
-                                            : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            isHelpful
-                                                ? Icons.thumb_up_rounded
-                                                : Icons.thumb_up_outlined,
-                                            size: 14,
-                                            color: isHelpful
-                                                ? AppColors.primary
-                                                : AppColors.textSecondary,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Helpful${review.helpfulUserIds.isNotEmpty ? ' (${review.helpfulUserIds.length})' : ''}',
-                                            style: AppTypography.labelSmall.copyWith(
-                                              color: isHelpful
-                                                  ? AppColors.primary
-                                                  : AppColors.textSecondary,
-                                              fontWeight: isHelpful
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.md),
-                                  // Report Button
-                                  GestureDetector(
-                                    onTap: () async {
-                                      if (currentUser == null) return;
-                                      final confirm = await _showReportConfirmation(context);
-                                      if (confirm == true) {
-                                        await ref
-                                            .read(reviewRepositoryProvider)
-                                            .reportReview(review.id, currentUser.uid,
-                                                experience.hostId);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Review reported to host.'),
-                                              backgroundColor: AppColors.textPrimary,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    },
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.flag_outlined,
-                                            size: 14, color: AppColors.textSecondary),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Report',
-                                          style: AppTypography.labelSmall.copyWith(
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isDesktop = constraints.maxWidth >= 800;
+                    
+                    if (isDesktop) {
+                       // Grid layout for reviews on desktop
+                       return GridView.builder(
+                         shrinkWrap: true,
+                         physics: const NeverScrollableScrollPhysics(),
+                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                           crossAxisCount: 2,
+                           crossAxisSpacing: AppSpacing.lg,
+                           mainAxisSpacing: AppSpacing.lg,
+                           childAspectRatio: 2.5,
+                         ),
+                         itemCount: reviewsToShow.length,
+                         itemBuilder: (context, index) {
+                           return _buildReviewTile(reviewsToShow[index], experience, currentUser, ref);
+                         },
+                       );
+                    }
+                    
+                    return Column(
+                      children: reviewsToShow.map((review) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: _buildReviewTile(review, experience, currentUser, ref),
+                        );
+                      }).toList(),
                     );
-                  }).toList(),
+                  },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -531,6 +635,165 @@ class _ExperienceDetailScreenState
           ],
         );
       },
+    );
+  }
+
+  Widget _buildReviewTile(dynamic review, Experience experience, User? currentUser, WidgetRef ref) {
+    final isHelpful = currentUser != null && review.helpfulUserIds.contains(currentUser.uid);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.person,
+                    color: AppColors.primary, size: 16),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Seeker',
+                style: AppTypography.labelMedium
+                    .copyWith(fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded,
+                      color: Color(0xFFFFB800), size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    review.rating.toStringAsFixed(1),
+                    style: AppTypography.labelSmall
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (review.message != null && review.message!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                review.message!,
+                style: AppTypography.bodySmall
+                    .copyWith(color: AppColors.textPrimary),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ] else ... [
+             const Spacer(),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                style: AppTypography.caption
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      if (currentUser == null) return;
+                      await ref
+                          .read(reviewRepositoryProvider)
+                          .toggleHelpful(review.id, currentUser.uid);
+                      ref.invalidate(
+                          experienceReviewsProvider(experience.id));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isHelpful
+                            ? AppColors.primary.withOpacity(0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isHelpful
+                                ? Icons.thumb_up_rounded
+                                : Icons.thumb_up_outlined,
+                            size: 14,
+                            color: isHelpful
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Helpful${review.helpfulUserIds.isNotEmpty ? ' (${review.helpfulUserIds.length})' : ''}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: isHelpful
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                              fontWeight: isHelpful
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  GestureDetector(
+                    onTap: () async {
+                      if (currentUser == null) return;
+                      final confirm = await _showReportConfirmation(context);
+                      if (confirm == true) {
+                        await ref
+                            .read(reviewRepositoryProvider)
+                            .reportReview(review.id, currentUser.uid,
+                                experience.hostId);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Review reported to host.'),
+                              backgroundColor: AppColors.textPrimary,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(Icons.flag_outlined,
+                            size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Report',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -559,12 +822,12 @@ class _ExperienceDetailScreenState
     String hostName,
     String hostPhotoUrl,
     double price,
-    String currency,
-  ) {
+    String currency, {
+    bool hidePrice = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Host info
         Row(
           children: [
             Container(
@@ -593,14 +856,14 @@ class _ExperienceDetailScreenState
             ),
           ],
         ),
-        // Price
-      Text(
-        'Rs. ${price.toStringAsFixed(0)}',
-          style: AppTypography.titleLarge.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
+        if (!hidePrice)
+          Text(
+            'Rs. ${price.toStringAsFixed(0)}',
+            style: AppTypography.titleLarge.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
       ],
     );
   }
@@ -608,7 +871,7 @@ class _ExperienceDetailScreenState
   Widget _buildLocation(String address, String city) {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.location_on_outlined,
           size: 16,
           color: AppColors.textSecondary,
@@ -680,7 +943,6 @@ class _ExperienceDetailScreenState
     }
 
     try {
-      // Create a pending booking document
       final docRef = FirebaseFirestore.instance.collection('bookings').doc();
 
       await docRef.set({
@@ -690,11 +952,9 @@ class _ExperienceDetailScreenState
         'experienceCoverImage': experience.coverImage,
         'userId': user.uid,
         'hostId': experience.hostId,
-        'date': Timestamp.fromDate(DateTime.now().add(const Duration(
-            days:
-                1))), // Placeholder for next day (User should usually pick date)
-        'startTime': '10:00 AM', // Placeholder
-        'guests': 1, // Placeholder
+        'date': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1))), 
+        'startTime': '10:00 AM', 
+        'guests': 1, 
         'totalPrice': experience.price,
         'status': 'pending',
         'paymentStatus': 'pending',
@@ -702,9 +962,8 @@ class _ExperienceDetailScreenState
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Add notification for the host
       await FirebaseFirestore.instance.collection('activities').add({
-        'userId': experience.hostId, // Target the host
+        'userId': experience.hostId, 
         'title': 'New Booking Request',
         'message': 'You have a new booking request for ${experience.title}!',
         'createdAt': FieldValue.serverTimestamp(),
