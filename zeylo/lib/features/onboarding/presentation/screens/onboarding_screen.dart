@@ -148,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Expanded(
           flex: 1,
           child: Container(
-            color: AppColors.backgroundAlt ?? Colors.grey[100],
+            color: AppColors.surfaceContainerLow,
             child: Stack(
               children: [
                 PageView(
@@ -236,10 +236,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           children: [
                             Text(
                               _pages[_currentPage]['title']!,
-                              style: AppTypography.displaySmall?.copyWith(
+                              style: AppTypography.displayMedium.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,
-                              ) ?? AppTypography.headlineLarge,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: AppSpacing.lg),
