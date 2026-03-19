@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'app.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,11 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
+  
+  // Initialize Stripe
+  Stripe.publishableKey =
+      "pk_test_51TCepJIpapJkUVVbudjFIjcd2en54Z0qjkjZ8nMl2f7eL9VsZ12ykDjyZ5MKtIffb1cHpairMGsQXBJJW4wXFlXV00bHBXtRVp";
+  await Stripe.instance.applySettings();
 
   runApp(
     const ProviderScope(

@@ -11,9 +11,9 @@ import '../../../../core/widgets/phone_input_field.dart';
 import '../providers/booking_provider.dart';
 import '../widgets/date_time_picker.dart';
 import '../widgets/guest_selector.dart';
-import '../widgets/payment_card_input.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/stripe_payment_service.dart';
 
 /// Booking screen for completing a booking reservation
 /// Based on Figma design "booking page"
@@ -55,10 +55,6 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   String? _emailError;
   String? _phoneError;
   String? _dateError;
-  String? _cardNumberError;
-  String? _expiryError;
-  String? _cvcError;
-  String? _cardholderError;
 
   @override
   void initState() {
@@ -97,21 +93,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       _emailError = Validators.validateEmail(formState.email);
       _phoneError = Validators.validatePhone(formState.phoneNumber);
       _dateError = formState.date.isEmpty ? 'Date is required' : null;
-      _cardNumberError = Validators.validateCardNumber(formState.cardNumber);
-      _expiryError = Validators.validateExpiry(formState.expiry);
-      _cvcError = Validators.validateCVC(formState.cvc);
-      _cardholderError = Validators.validateRequired(formState.cardholderName);
     });
 
     // Check if all validations passed
     if (_fullNameError == null &&
         _emailError == null &&
         _phoneError == null &&
-        _dateError == null &&
-        _cardNumberError == null &&
-        _expiryError == null &&
-        _cvcError == null &&
-        _cardholderError == null) {
+        _dateError == null) {
       _submitBooking();
     } else {
       // Show feedback if validation fails
@@ -151,7 +139,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         guests: formState.guests,
         totalPrice: widget.totalPrice,
         status: 'pending',
-        paymentStatus: 'paid', // Assuming payment is done in this step
+        paymentStatus: 'pending', // Payment will be processed via Stripe
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         seekerName: _fullNameController.text.trim().isNotEmpty 
@@ -160,15 +148,24 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         seekerPhotoUrl: user.photoUrl,
       );
 
+      // 1. Create the booking in Firestore first
       final createBooking = ref.read(createBookingUseCaseProvider);
-      await createBooking(booking);
+      final createdBooking = await createBooking(booking);
+
+      // 2. Initiate Stripe Payment
+      if (mounted) {
+        await StripePaymentService.makePayment(
+          widget.totalPrice,
+          createdBooking.id,
+        );
+      }
 
       formNotifier.setLoading(false);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Booking completed successfully!'),
+            content: Text('Booking and Payment successful!'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -178,7 +175,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Booking failed: $e'),
+            content: Text('Error: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -327,55 +324,6 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
 
-            // Payment Information Section
-            _buildSectionHeader('Payment Information'),
-            const SizedBox(height: AppSpacing.lg),
-
-            // Payment Card Input
-            PaymentCardInput(
-              cardNumber: formState.cardNumber,
-              expiry: formState.expiry,
-              cvc: formState.cvc,
-              cardholderName: formState.cardholderName,
-              cardNumberError: _cardNumberError,
-              expiryError: _expiryError,
-              cvcError: _cvcError,
-              cardholderNameError: _cardholderError,
-              onCardNumberChanged: (value) {
-                ref.read(bookingFormProvider.notifier).updateCardNumber(value);
-                if (_cardNumberError != null) {
-                  setState(() {
-                    _cardNumberError = Validators.validateCardNumber(value);
-                  });
-                }
-              },
-              onExpiryChanged: (value) {
-                ref.read(bookingFormProvider.notifier).updateExpiry(value);
-                if (_expiryError != null) {
-                  setState(() {
-                    _expiryError = Validators.validateExpiry(value);
-                  });
-                }
-              },
-              onCVCChanged: (value) {
-                ref.read(bookingFormProvider.notifier).updateCVC(value);
-                if (_cvcError != null) {
-                  setState(() {
-                    _cvcError = Validators.validateCVC(value);
-                  });
-                }
-              },
-              onCardholderNameChanged: (value) {
-                ref.read(bookingFormProvider.notifier).updateCardholderName(value);
-                if (_cardholderError != null) {
-                  setState(() {
-                    _cardholderError = Validators.validateRequired(value);
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
             // Summary Card
             _buildSummaryCard(),
             const SizedBox(height: AppSpacing.xl),
@@ -383,12 +331,28 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             // Complete Booking Button
             ZeyloButton(
               onPressed: _validateForm,
-              label: 'Complete Booking',
+              label: 'Pay & Confirm Booking',
               variant: ButtonVariant.filled,
               isLoading: formState.isLoading,
               height: 52,
             ),
             const SizedBox(height: AppSpacing.lg),
+            
+            // Payment processed by Stripe tagline
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.lock_outline, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Payments are secure and encrypted by Stripe',
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
           ],
         ),
       ),
