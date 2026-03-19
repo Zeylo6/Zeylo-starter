@@ -1,0 +1,47 @@
+name: Node.js Backend CI & Render Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+
+defaults:
+  run:
+    working-directory: ./backend
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+    - run: npm ci
+    # Add testing commands below if you add tests in the future:
+    # - run: npm test
+
+  deploy-to-render:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger Render Deployment
+        # Render has a unique deploy hook URL for each web service you create there.
+        # Add the URL to standard GitHub Secrets as RENDER_DEPLOY_HOOK_URL
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+            echo "Deploy hooked triggered successfully."
+          else
+            echo "::warning title=Render Deploy Hook Missing::No RENDER_DEPLOY_HOOK_URL secret found. Skipping automatic deploy."
+          fi

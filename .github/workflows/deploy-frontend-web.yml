@@ -1,0 +1,42 @@
+name: Deploy Flutter Web to Firebase Hosting
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'zeylo/**'
+      - '.github/workflows/deploy-frontend-web.yml'
+
+defaults:
+  run:
+    working-directory: ./zeylo
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Web
+        run: flutter build web --release
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        # This action automatically posts a comment to a PR (if it's a pull_request trigger), 
+        # or deploys directly to production if on main branch and not PR
+        with:
+          # You MUST set these secrets in GitHub Settings > Secrets and variables > Actions
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ZEYLO_XXXX }} # Update this suffix
+          projectId: zeylo-xxxx # Update with your Firebase project ID
+          channelId: live
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
