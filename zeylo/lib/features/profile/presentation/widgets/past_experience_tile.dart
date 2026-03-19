@@ -12,12 +12,12 @@ class PastExperienceTile extends StatelessWidget {
   final double price;
 
   const PastExperienceTile({
+    super.key,
     required this.experienceId,
     required this.title,
     required this.rating,
     required this.ratingCount,
     required this.price,
-    super.key,
   });
 
   @override
