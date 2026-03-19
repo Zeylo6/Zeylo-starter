@@ -13,6 +13,7 @@ dependencies:
 
   #flutter stripe
   flutter_stripe: 12.4.0  
+  flutter_stripe_web: 12.4.0
 
   # Firebase
   firebase_core: ^4.5.0
