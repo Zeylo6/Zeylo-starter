@@ -15,10 +15,6 @@ class BookingFormState {
   final int guests;
   final String date;
   final String time;
-  final String cardNumber;
-  final String expiry;
-  final String cvc;
-  final String cardholderName;
   final bool isLoading;
   final String? errorMessage;
 
@@ -29,10 +25,6 @@ class BookingFormState {
     this.guests = 1,
     this.date = '',
     this.time = '09:00 AM',
-    this.cardNumber = '',
-    this.expiry = '',
-    this.cvc = '',
-    this.cardholderName = '',
     this.isLoading = false,
     this.errorMessage,
   });
@@ -44,10 +36,6 @@ class BookingFormState {
     int? guests,
     String? date,
     String? time,
-    String? cardNumber,
-    String? expiry,
-    String? cvc,
-    String? cardholderName,
     bool? isLoading,
     String? errorMessage,
   }) {
@@ -58,10 +46,6 @@ class BookingFormState {
       guests: guests ?? this.guests,
       date: date ?? this.date,
       time: time ?? this.time,
-      cardNumber: cardNumber ?? this.cardNumber,
-      expiry: expiry ?? this.expiry,
-      cvc: cvc ?? this.cvc,
-      cardholderName: cardholderName ?? this.cardholderName,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );
@@ -97,22 +81,6 @@ class BookingFormNotifier extends Notifier<BookingFormState> {
 
   void updateTime(String value) {
     state = state.copyWith(time: value);
-  }
-
-  void updateCardNumber(String value) {
-    state = state.copyWith(cardNumber: value);
-  }
-
-  void updateExpiry(String value) {
-    state = state.copyWith(expiry: value);
-  }
-
-  void updateCVC(String value) {
-    state = state.copyWith(cvc: value);
-  }
-
-  void updateCardholderName(String value) {
-    state = state.copyWith(cardholderName: value);
   }
 
   void setLoading(bool isLoading) {
