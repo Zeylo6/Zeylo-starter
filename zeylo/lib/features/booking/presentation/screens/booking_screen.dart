@@ -157,6 +157,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         await StripePaymentService.makePayment(
           widget.totalPrice,
           createdBooking.id,
+          formState.email, // Pass email for receipt
         );
       }
 

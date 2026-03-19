@@ -4,8 +4,8 @@ const { db } = require('../config/firebase');
 
 const createIntent = async (req, res) => {
   try {
-    const { amount, bookingId } = req.body;
-    const paymentIntent = await stripeService.createPaymentIntent(amount, 'usd', { bookingId });
+    const { amount, bookingId, email } = req.body;
+    const paymentIntent = await stripeService.createPaymentIntent(amount, 'usd', { bookingId }, email);
     
     res.status(200).json({
       clientSecret: paymentIntent.client_secret,

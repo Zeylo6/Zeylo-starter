@@ -77,7 +77,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   void _submitPayment() async {
     setState(() => _isLoading = true);
     try {
-      await StripePaymentService.makePayment(50.0, "current_booking_id");
+      await StripePaymentService.makePayment(50.0, "current_booking_id", "test@example.com");
       // Handle success (navigate to success screen)
     } catch (e) {
       // Handle error (show snackbar)
