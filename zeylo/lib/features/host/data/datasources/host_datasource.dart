@@ -16,6 +16,9 @@ abstract class HostDatasource {
   /// Get earnings trend percentage
   Future<double> getEarningsTrend(String hostId);
 
+  /// Watch host statistics reactively
+  Stream<HostStatsModel> watchHostStats(String hostId);
+
   /// Watch this month's earnings reactively
   Stream<double> watchThisMonthEarnings(String hostId);
 }
@@ -168,6 +171,45 @@ class HostFirestoreDatasource implements HostDatasource {
     } catch (e) {
       return 0;
     }
+  }
+
+  @override
+  Stream<HostStatsModel> watchHostStats(String hostId) {
+    return _firestore.collection('users').doc(hostId).snapshots().asyncMap((userDoc) async {
+      int profileCompletion = 0;
+      int superHostBadgeStatus = 0;
+
+      // Fetch host doc once per user update
+      final hostDoc = await _firestore.collection(_hostsCollection).doc(hostId).get();
+      if (hostDoc.exists) {
+        final hostData = hostDoc.data()!;
+        profileCompletion = hostData['profileCompletion'] as int? ?? 0;
+        superHostBadgeStatus = hostData['superHostBadgeStatus'] as int? ?? 0;
+      }
+
+      double averageRating = 0.0;
+      int totalBookings = 0;
+      
+      if (userDoc.exists) {
+        final userData = userDoc.data()!;
+        final statsMap = userData['stats'] as Map<String, dynamic>? ?? {};
+        averageRating = (statsMap['averageRating'] as num?)?.toDouble() ?? 0.0;
+        totalBookings = (statsMap['totalReviews'] as num?)?.toInt() ?? 0;
+      }
+
+      return HostStatsModel(
+        hostId: hostId,
+        earnings: 0.0,
+        averageRating: averageRating,
+        responseRate: 100.0,
+        acceptanceRate: 100.0,
+        totalBookings: totalBookings,
+        profileCompletion: profileCompletion,
+        superHostBadgeStatus: superHostBadgeStatus,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    });
   }
 
   @override

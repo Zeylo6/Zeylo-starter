@@ -8,6 +8,9 @@ abstract class ProfileRepository {
   /// Get user profile by ID
   Future<Either<Failure, UserProfileEntity>> getProfile(String userId);
 
+  /// Watch user profile by ID
+  Stream<Either<Failure, UserProfileEntity>> watchProfile(String userId);
+
   /// Update user profile
   Future<Either<Failure, UserProfileEntity>> updateProfile(
     String userId,

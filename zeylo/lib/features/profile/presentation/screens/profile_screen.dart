@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../domain/entities/user_profile_entity.dart';
-import '../providers/profile_provider.dart';
+import 'package:zeylo/core/theme/app_colors.dart';
+import 'package:zeylo/core/theme/app_radius.dart';
+import 'package:zeylo/core/theme/app_spacing.dart';
+import 'package:zeylo/core/theme/app_typography.dart';
+import 'package:zeylo/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zeylo/features/community/presentation/providers/community_provider.dart';
+import 'package:zeylo/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:zeylo/features/profile/presentation/providers/profile_provider.dart';
+import 'package:zeylo/features/profile/presentation/widgets/photo_grid.dart';
+import 'package:zeylo/features/profile/presentation/widgets/profile_header.dart';
 import '../widgets/past_experience_tile.dart';
-import '../widgets/photo_grid.dart';
-import '../widgets/profile_header.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../favorites/presentation/widgets/favorites_bottom_sheet.dart';
 
@@ -122,13 +123,35 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
 
-          // Photo grid
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: PhotoGrid(
-              photoUrls: const [], // Load from backend
-            ),
-          ),
+            // Photo grid
+            ref.watch(userPostsProvider(userId)).when(
+                  data: (posts) {
+                    final photoUrls = posts
+                        .expand((post) => post.images)
+                        .toList();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: PhotoGrid(
+                        photoUrls: photoUrls,
+                        onPhotoPressed: () {
+                          context.push('/user-posts', extra: {
+                            'userId': userId,
+                            'userName': profile.name,
+                            'userAvatarUrl': profile.photoUrl,
+                          });
+                        },
+                      ),
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: Text('Error loading posts: $error')),
+                  ),
+                ),
 
           const SizedBox(height: AppSpacing.md),
           const Divider(height: 1),
@@ -234,6 +257,16 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
+
+          // Premium actions (if current user)
+          if (isCurrentUser)
+            ref.watch(currentUserProvider).when(
+                  data: (user) => user != null
+                      ? _buildPremiumActions(context, user)
+                      : const SizedBox.shrink(),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
 
           const SizedBox(height: AppSpacing.md),
         ],
@@ -387,62 +420,26 @@ class ProfileScreen extends ConsumerWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: InkWell(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: BorderSide(color: AppColors.border),
+      ),
+      child: ListTile(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.primary.withOpacity(0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.04),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.titleMedium.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: AppTypography.bodySmallSecondary,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: AppColors.textHint.withOpacity(0.5),
-                size: 14,
-              ),
-            ],
-          ),
+          child: Icon(icon, color: color),
         ),
+        title: Text(title, style: AppTypography.labelLarge),
+        subtitle: Text(subtitle, style: AppTypography.labelSmall),
+        trailing: const Icon(Icons.chevron_right, size: 20),
       ),
     );
   }

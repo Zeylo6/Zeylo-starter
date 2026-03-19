@@ -23,6 +23,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Stream<Either<Failure, UserProfileEntity>> watchProfile(String userId) {
+    return _datasource.watchProfile(userId).map(
+          (profile) => Right<Failure, UserProfileEntity>(profile),
+        );
+  }
+
+  @override
   Future<Either<Failure, UserProfileEntity>> updateProfile(
     String userId,
     UserProfileEntity profile,

@@ -70,12 +70,22 @@ class Validators {
     // Remove any non-digit characters
     final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
 
-    if (digitsOnly.length != 10) {
-      return 'Phone number must be 10 digits';
-    }
-
-    if (!digitsOnly.startsWith('07')) {
-      return 'Phone number must start with 07';
+    // Handle both local (07...) and international (947...) formats
+    // PhoneInputField adds '94' prefix to the input
+    if (digitsOnly.length == 10) {
+      if (!digitsOnly.startsWith('07')) {
+        return 'Phone number must start with 07';
+      }
+    } else if (digitsOnly.length == 11) {
+       if (!digitsOnly.startsWith('947')) {
+         return 'Phone number must start with 947';
+       }
+    } else if (digitsOnly.length == 12) {
+      if (!digitsOnly.startsWith('9407')) {
+        return 'Phone number must start with 9407 or 947';
+      }
+    } else {
+      return 'Please enter a valid phone number';
     }
 
     return null;

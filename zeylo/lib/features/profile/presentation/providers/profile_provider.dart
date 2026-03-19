@@ -17,43 +17,14 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepositoryImpl(datasource);
 });
 
-// State notifier for profile
-class ProfileNotifier extends StateNotifier<AsyncValue<UserProfileEntity>> {
-  final ProfileRepository repository;
-  final String userId;
-
-  ProfileNotifier({required this.repository, required this.userId})
-      : super(const AsyncValue.loading());
-
-  Future<void> loadProfile() async {
-    state = const AsyncValue.loading();
-    final result = await repository.getProfile(userId);
-    result.fold(
-      (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
-      (profile) => state = AsyncValue.data(profile),
-    );
-  }
-
-  Future<void> updateProfile(UserProfileEntity profile) async {
-    state = const AsyncValue.loading();
-    final result = await repository.updateProfile(userId, profile);
-    result.fold(
-      (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
-      (profile) => state = AsyncValue.data(profile),
-    );
-  }
-}
-
-// Profile provider family
-final profileProvider =
-    StateNotifierProvider.family<ProfileNotifier, AsyncValue<UserProfileEntity>, String>(
-  (ref, userId) {
-    final repository = ref.watch(profileRepositoryProvider);
-    final notifier = ProfileNotifier(repository: repository, userId: userId);
-    notifier.loadProfile();
-    return notifier;
-  },
-);
+// Profile provider family (Stream-based for real-time updates)
+final profileProvider = StreamProvider.family<UserProfileEntity, String>((ref, userId) {
+  final repository = ref.watch(profileRepositoryProvider);
+  return repository.watchProfile(userId).map((result) => result.fold(
+        (failure) => throw failure.message,
+        (profile) => profile,
+      ));
+});
 
 // Followers provider family
 final followersProvider = FutureProvider.family<List<UserProfileEntity>, String>(

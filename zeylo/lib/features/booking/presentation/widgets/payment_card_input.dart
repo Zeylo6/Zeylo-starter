@@ -33,6 +33,18 @@ class PaymentCardInput extends StatefulWidget {
   /// Initial cardholder name value
   final String cardholderName;
 
+  /// Error text for card number
+  final String? cardNumberError;
+
+  /// Error text for expiry
+  final String? expiryError;
+
+  /// Error text for CVC
+  final String? cvcError;
+
+  /// Error text for cardholder name
+  final String? cardholderNameError;
+
   const PaymentCardInput({
     required this.onCardNumberChanged,
     required this.onExpiryChanged,
@@ -42,6 +54,10 @@ class PaymentCardInput extends StatefulWidget {
     this.expiry = '',
     this.cvc = '',
     this.cardholderName = '',
+    this.cardNumberError,
+    this.expiryError,
+    this.cvcError,
+    this.cardholderNameError,
     super.key,
   });
 
@@ -123,6 +139,15 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
             ),
             const SizedBox(height: AppSpacing.sm),
             _buildCardNumberField(),
+            if (widget.cardNumberError != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                widget.cardNumberError!,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.error,
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -140,6 +165,15 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _buildExpiryField(),
+                  if (widget.expiryError != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      widget.expiryError!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -154,6 +188,15 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _buildCVCField(),
+                  if (widget.cvcError != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      widget.cvcError!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -166,6 +209,7 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
           label: 'Cardholder Name',
           hint: 'Full name on card',
           controller: _cardholderNameController,
+          errorText: widget.cardholderNameError,
           onChanged: widget.onCardholderNameChanged,
         ),
       ],
@@ -177,7 +221,10 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(
+          color: widget.cardNumberError != null ? AppColors.error : AppColors.border,
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: TextField(
@@ -185,7 +232,7 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
         keyboardType: TextInputType.number,
         inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,
-          LengthLimitingTextInputFormatter(16),
+          LengthLimitingTextInputFormatter(19), // Allow 16 digits + 3 spaces
         ],
         onChanged: (value) {
           final formatted = _formatCardNumber(value);
@@ -225,7 +272,10 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
   Widget _buildExpiryField() {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(
+          color: widget.expiryError != null ? AppColors.error : AppColors.border,
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: TextField(
@@ -266,7 +316,10 @@ class _PaymentCardInputState extends State<PaymentCardInput> {
   Widget _buildCVCField() {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border, width: 1.5),
+        border: Border.all(
+          color: widget.cvcError != null ? AppColors.error : AppColors.border,
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: TextField(
