@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -641,7 +641,14 @@ class _ExperienceDetailScreenState
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: InkWell(
-            onTap: () => _bookNow(experience),
+            onTap: () {
+              context.push('/booking/${experience.id}', extra: {
+                'experienceTitle': experience.title,
+                'experienceCoverImage': experience.coverImage,
+                'hostId': experience.hostId,
+                'totalPrice': experience.price,
+              });
+            },
             child: Center(
               child: Text(
                 'Book Now',
@@ -669,66 +676,4 @@ class _ExperienceDetailScreenState
     );
   }
 
-  Future<void> _bookNow(dynamic experience) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to book this experience.')),
-      );
-      return;
-    }
-
-    try {
-      // Create a pending booking document
-      final docRef = FirebaseFirestore.instance.collection('bookings').doc();
-
-      await docRef.set({
-        'id': docRef.id,
-        'experienceId': experience.id,
-        'experienceTitle': experience.title,
-        'experienceCoverImage': experience.coverImage,
-        'userId': user.uid,
-        'hostId': experience.hostId,
-        'date': Timestamp.fromDate(DateTime.now().add(const Duration(
-            days:
-                1))), // Placeholder for next day (User should usually pick date)
-        'startTime': '10:00 AM', // Placeholder
-        'guests': 1, // Placeholder
-        'totalPrice': experience.price,
-        'status': 'pending',
-        'paymentStatus': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Add notification for the host
-      await FirebaseFirestore.instance.collection('activities').add({
-        'userId': experience.hostId, // Target the host
-        'title': 'New Booking Request',
-        'message': 'You have a new booking request for ${experience.title}!',
-        'createdAt': FieldValue.serverTimestamp(),
-        'type': 'new_booking',
-        'isRead': false,
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking request sent to host!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to book: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 }

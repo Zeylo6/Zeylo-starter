@@ -25,14 +25,15 @@ final getHostStatsUseCaseProvider = Provider((ref) {
 });
 
 // Host stats provider
-final hostStatsProvider = FutureProvider.family<HostStatsEntity, String>(
-  (ref, hostId) async {
+final hostStatsProvider = StreamProvider.family<HostStatsEntity, String>(
+  (ref, hostId) {
     final repository = ref.watch(hostRepositoryProvider);
-    final result = await repository.getHostStats(hostId);
-    return result.fold(
-      (failure) => throw failure.message,
-      (stats) => stats,
-    );
+    return repository.watchHostStats(hostId).map((result) {
+      return result.fold(
+        (failure) => throw failure.message,
+        (stats) => stats,
+      );
+    });
   },
 );
 

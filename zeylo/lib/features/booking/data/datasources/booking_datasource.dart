@@ -27,7 +27,19 @@ class BookingRemoteDataSource implements BookingDataSource {
   Future<BookingModel> createBooking(BookingModel booking) async {
     try {
       final docRef = await _bookingsCollection.add(booking.toFirestore());
-      return booking.copyWith(id: docRef.id) as BookingModel;
+      
+      // Create notification for host
+      await firebaseFirestore.collection('activities').add({
+        'userId': booking.hostId,
+        'title': 'New Booking Request',
+        'message': 'You have a new booking request for "${booking.experienceTitle}".',
+        'type': 'new_booking',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'bookingId': docRef.id,
+      });
+
+      return booking.copyWith(id: docRef.id);
     } catch (e) {
       throw Exception('Failed to create booking: $e');
     }
@@ -91,6 +103,39 @@ class BookingRemoteDataSource implements BookingDataSource {
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Fetch booking to get user details for notification
+      final booking = await getBookingById(id);
+      
+      String title = '';
+      String message = '';
+      String type = 'booking_update';
+
+      if (status == 'accepted' || status == 'confirmed') {
+        title = 'Booking Accepted!';
+        message = 'Your booking for "${booking.experienceTitle}" has been accepted by the host.';
+        type = 'booking_accepted';
+      } else if (status == 'rejected') {
+        title = 'Booking Declined';
+        message = 'Sorry, your booking for "${booking.experienceTitle}" was declined.';
+        type = 'booking_rejected';
+      } else if (status == 'completed') {
+        title = 'Experience Completed';
+        message = 'We hope you enjoyed "${booking.experienceTitle}"! Please leave a review.';
+        type = 'booking_completed';
+      }
+
+      if (title.isNotEmpty) {
+        await firebaseFirestore.collection('activities').add({
+          'userId': booking.userId,
+          'title': title,
+          'message': message,
+          'type': type,
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+          'bookingId': id,
+        });
+      }
     } catch (e) {
       throw Exception('Failed to update booking status: $e');
     }
@@ -111,9 +156,24 @@ class BookingRemoteDataSource implements BookingDataSource {
   @override
   Future<void> cancelBooking(String id) async {
     try {
+      // Fetch booking to notify host/seeker
+      final booking = await getBookingById(id);
+
       await _bookingsCollection.doc(id).update({
         'status': 'cancelled',
         'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // If seeker cancelled, notify host. If host cancelled (rare flow), notify seeker.
+      // Assuming for now it's seeker cancelling.
+      await firebaseFirestore.collection('activities').add({
+        'userId': booking.hostId,
+        'title': 'Booking Cancelled',
+        'message': 'A booking for "${booking.experienceTitle}" has been cancelled.',
+        'type': 'booking_cancelled',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'bookingId': id,
       });
     } catch (e) {
       throw Exception('Failed to cancel booking: $e');
