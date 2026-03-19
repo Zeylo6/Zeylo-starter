@@ -590,6 +590,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "12.4.0"
+  flutter_stripe_web:
+    dependency: "direct main"
+    description:
+      name: flutter_stripe_web
+      sha256: "9f60939a054ae5b48ee7bd3fed9bc11be4e0ec3014086d5ce57a416a1cd3f8fe"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.4.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -1493,6 +1501,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "12.4.0"
+  stripe_js:
+    dependency: transitive
+    description:
+      name: stripe_js
+      sha256: "6585fcbaa240669fe260a05808b2f40a26e84b08b7a2737b470db0f1b2c4baeb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.4.0"
   stripe_platform_interface:
     dependency: transitive
     description:
