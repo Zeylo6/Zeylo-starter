@@ -11,6 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  #flutter stripe
+  flutter_stripe: 12.4.0  
+  flutter_stripe_web: 7.4.0
+
   # Firebase
   firebase_core: ^4.5.0
   firebase_auth: ^6.2.0

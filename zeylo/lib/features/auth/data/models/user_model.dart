@@ -22,16 +22,17 @@ class UserModel extends UserEntity {
     super.fcmToken,
     super.favorites,
     super.settings,
+    super.stats,
     super.isBanned,
     super.banReason,
   });
 
   /// Parse the role from string, with fallback to old 'isHost' boolean if present
   static UserRole _parseRole(Map<String, dynamic> data) {
-    if (data.containsKey('role')) {
-      final roleString = data['role'] as String;
+    if (data.containsKey('role') && data['role'] != null) {
+      final roleString = data['role'].toString().toLowerCase();
       return UserRole.values.firstWhere(
-        (e) => e.name == roleString,
+        (e) => e.name.toLowerCase() == roleString,
         orElse: () => UserRole.seeker,
       );
     }
@@ -81,6 +82,7 @@ class UserModel extends UserEntity {
           ? List<String>.from(json['favorites'] as List)
           : [],
       settings: json['settings'] as Map<String, dynamic>? ?? {},
+      stats: json['stats'] as Map<String, dynamic>? ?? {},
       isBanned: json['isBanned'] as bool? ?? false,
       banReason: json['banReason'] as String?,
     );
@@ -112,6 +114,7 @@ class UserModel extends UserEntity {
           ? List<String>.from(data['favorites'] as List)
           : [],
       settings: data['settings'] as Map<String, dynamic>? ?? {},
+      stats: data['stats'] as Map<String, dynamic>? ?? {},
       isBanned: data['isBanned'] as bool? ?? false,
       banReason: data['banReason'] as String?,
     );
@@ -137,6 +140,7 @@ class UserModel extends UserEntity {
       'fcmToken': fcmToken,
       'favorites': favorites,
       'settings': settings,
+      'stats': stats,
       'isBanned': isBanned,
       'banReason': banReason,
     };
@@ -161,6 +165,7 @@ class UserModel extends UserEntity {
       'fcmToken': fcmToken,
       'favorites': favorites,
       'settings': settings,
+      'stats': stats,
       'isBanned': isBanned,
       'banReason': banReason,
     };
@@ -186,6 +191,7 @@ class UserModel extends UserEntity {
     String? fcmToken,
     List<String>? favorites,
     Map<String, dynamic>? settings,
+    Map<String, dynamic>? stats,
     bool? isBanned,
     String? banReason,
   }) {
@@ -208,6 +214,7 @@ class UserModel extends UserEntity {
       fcmToken: fcmToken ?? this.fcmToken,
       favorites: favorites ?? this.favorites,
       settings: settings ?? this.settings,
+      stats: stats ?? this.stats,
       isBanned: isBanned ?? this.isBanned,
       banReason: banReason ?? this.banReason,
     );

@@ -101,12 +101,24 @@ import '../features/business/presentation/screens/business_registration_screen.d
 import '../features/host_verification/presentation/screens/host_verification_screen.dart';
 import '../features/host_verification/presentation/screens/steps/pending_step.dart';
 
+/// A Listenable that notifies when any auth-related state changes
+class RouterRefreshListenable extends ChangeNotifier {
+  RouterRefreshListenable(Ref ref) {
+    // Listen to Firebase auth state
+    ref.listen(authStateProvider, (_, __) => notifyListeners());
+    // Listen to real-time user document (includes role/ban status)
+    ref.listen(currentUserProvider, (_, __) => notifyListeners());
+  }
+}
+
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final refreshListenable = RouterRefreshListenable(ref);
 
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: refreshListenable,
     redirect: (context, state) {
       final isLoggedIn =
           authState.whenData((user) => user != null).value ?? false;

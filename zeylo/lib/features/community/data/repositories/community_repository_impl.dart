@@ -100,6 +100,18 @@ class CommunityRepositoryImpl implements CommunityRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> deletePost(String postId) async {
+    try {
+      await remoteDataSource.deletePost(postId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
   // Helper method to convert Post entity to PostModel
   PostModel _postToModel(Post post) {
     return PostModel(

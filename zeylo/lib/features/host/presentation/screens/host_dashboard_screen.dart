@@ -23,6 +23,7 @@ import '../../../../features/booking/presentation/widgets/report_sheet.dart';
 import '../../../../features/home/presentation/providers/home_provider.dart';
 import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
 import '../../../../features/booking/domain/entities/booking_entity.dart';
+import '../../../../features/booking/presentation/providers/booking_provider.dart';
 
 /// Host dashboard screen
 class HostDashboardScreen extends ConsumerWidget {
@@ -215,10 +216,9 @@ class HostDashboardScreen extends ConsumerWidget {
                         return PendingBookingTile(
                           booking: data,
                           onAccept: () {
-                            FirebaseFirestore.instance
-                                .collection('bookings')
-                                .doc(doc.id)
-                                .update({'status': 'confirmed'});
+                            ref
+                                .read(bookingRepositoryProvider)
+                                .updateBookingStatus(doc.id, 'accepted');
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Booking accepted!',
@@ -227,10 +227,9 @@ class HostDashboardScreen extends ConsumerWidget {
                             );
                           },
                           onReject: () {
-                            FirebaseFirestore.instance
-                                .collection('bookings')
-                                .doc(doc.id)
-                                .update({'status': 'rejected'});
+                            ref
+                                .read(bookingRepositoryProvider)
+                                .updateBookingStatus(doc.id, 'rejected');
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Booking rejected.')),
@@ -290,7 +289,8 @@ class HostDashboardScreen extends ConsumerWidget {
                     final allBookings = snapshot.data?.docs ?? [];
                     final confirmedBookings = allBookings.where((doc) {
                       final data = doc.data() as Map<String, dynamic>;
-                      return data['status'] == 'confirmed';
+                      final status = data['status'];
+                      return status == 'confirmed' || status == 'accepted';
                     }).toList();
 
                     if (confirmedBookings.isEmpty) {
@@ -389,10 +389,10 @@ class HostDashboardScreen extends ConsumerWidget {
                                     height: 38,
                                     child: ElevatedButton(
                                       onPressed: () async {
-                                        await FirebaseFirestore.instance
-                                            .collection('bookings')
-                                            .doc(doc.id)
-                                            .update({'status': 'ongoing'});
+                                        await ref
+                                            .read(bookingRepositoryProvider)
+                                            .updateBookingStatus(
+                                                doc.id, 'ongoing');
 
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context).showSnackBar(
@@ -716,7 +716,8 @@ class HostDashboardScreen extends ConsumerWidget {
                                         final bStatus =
                                             booking.data()['status'];
                                         if (bStatus == 'pending' ||
-                                            bStatus == 'confirmed') {
+                                            bStatus == 'confirmed' ||
+                                            bStatus == 'accepted') {
                                           await booking.reference.update(
                                               {'status': 'cancelled_by_host'});
 

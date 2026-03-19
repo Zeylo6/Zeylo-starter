@@ -11,6 +11,13 @@ app.use(express.json());
 app.use('/api', apiRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+// Export the app for serverless platforms like Netlify Functions
+module.exports = app;
+
+// Only start the server locally if run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}

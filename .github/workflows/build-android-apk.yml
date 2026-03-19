@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'zeylo/**'
+      - '.github/workflows/build-android-apk.yml'
+  workflow_dispatch: # Allows manual trigger of this workflow from GitHub UI
+
+defaults:
+  run:
+    working-directory: ./zeylo
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Build APK
+        run: flutter build apk --release
+        env:
+          _JAVA_OPTIONS: "-Xmx4g"
+        
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zeylo-release-apk
+          path: zeylo/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7

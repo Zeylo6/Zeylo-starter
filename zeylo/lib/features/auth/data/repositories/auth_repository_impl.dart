@@ -15,9 +15,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserEntity?> get authStateChanges {
-    return dataSource.authStateChanges.asyncMap((fbUser) async {
-      if (fbUser == null) return null;
-      return await dataSource.getCurrentUser();
+    return dataSource.authStateChanges.asyncExpand((fbUser) {
+      if (fbUser == null) return Stream.value(null);
+      return dataSource.userSnapshots(fbUser.uid);
     });
   }
 

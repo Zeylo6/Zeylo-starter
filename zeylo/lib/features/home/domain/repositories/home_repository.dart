@@ -38,6 +38,12 @@ abstract class HomeRepository {
   /// Get experience stream by ID
   Stream<Experience> getExperienceStream(String id);
 
+  /// Watch featured experiences
+  Stream<List<Experience>> watchFeaturedExperiences();
+
+  /// Watch experiences by category
+  Stream<List<Experience>> watchExperiencesByCategory(String category);
+
   /// Get multiple experiences by IDs
   Future<Either<Failure, List<Experience>>> getExperiencesByIds(List<String> ids);
 

@@ -3,6 +3,7 @@ const router = express.Router();
 const surprisesController = require('../controllers/surprises');
 const adminController = require('../controllers/adminController');
 const aiController = require('../controllers/aiController');
+const paymentController = require('../controllers/paymentController');
 const verifyToken = require('../middleware/auth');
 
 router.get('/health', (req, res) => res.status(200).send('OK'));
@@ -19,5 +20,9 @@ router.post('/admin/delete-experience', verifyToken, adminController.deleteExper
 router.post('/ai/enhance', verifyToken, aiController.enhanceText);
 router.post('/ai/chain/generate', verifyToken, aiController.generateChain);
 router.post('/ai/mystery/generate', verifyToken, aiController.generateSurprise);
+
+// Payment Routes
+router.post('/payments/create-intent', verifyToken, paymentController.createIntent);
+router.post('/payments/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
 module.exports = router;

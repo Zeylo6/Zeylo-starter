@@ -38,7 +38,7 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
       final snapshot = await FirebaseFirestore.instance
           .collection('bookings')
           .where('hostId', isEqualTo: user.uid)
-          .where('status', isEqualTo: 'confirmed')
+          .where('status', whereIn: ['accepted', 'confirmed', 'ongoing', 'completed'])
           .get();
 
       final newMap = <DateTime, List<Map<String, dynamic>>>{};
@@ -228,10 +228,34 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    exp['experienceTitle'] ?? 'Experience',
-                                    style: AppTypography.labelLarge
-                                        .copyWith(fontWeight: FontWeight.bold),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          exp['experienceTitle'] ?? 'Experience',
+                                          style: AppTypography.labelLarge
+                                              .copyWith(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      if (exp['isBlock'] != true)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(exp['status']).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: _getStatusColor(exp['status'])),
+                                          ),
+                                          child: Text(
+                                            (exp['status'] == 'accepted' ? 'upcoming' : (exp['status'] ?? 'pending')).toUpperCase(),
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: _getStatusColor(exp['status']),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
                                   if (exp['isBlock'] == true) ...[
@@ -255,7 +279,10 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                                     Text('Price: Rs. ${exp['totalPrice'] ?? 0}',
                                         style: AppTypography.bodySmall),
                                     const SizedBox(height: AppSpacing.sm),
-                                    if (exp['status'] != 'cancelled_by_host')
+                                    if (exp['status'] != 'cancelled_by_host' &&
+                                        exp['status'] != 'completed' &&
+                                        exp['status'] != 'rejected' &&
+                                        exp['status'] != 'cancelled_by_seeker')
                                       TextButton(
                                         onPressed: () => _cancelBooking(exp),
                                         style: TextButton.styleFrom(
@@ -265,12 +292,7 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
                                           alignment: Alignment.centerLeft,
                                         ),
                                         child: const Text('Cancel Booking'),
-                                      )
-                                    else
-                                      Text('Cancelled',
-                                          style: AppTypography.bodySmall
-                                              .copyWith(
-                                                  color: AppColors.error)),
+                                      ),
                                   ],
                                 ],
                               ),
@@ -384,5 +406,24 @@ class _HostCalendarScreenState extends ConsumerState<HostCalendarScreen> {
         ],
       ),
     );
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'accepted':
+        return Colors.blue;
+      case 'confirmed':
+        return Colors.green;
+      case 'ongoing':
+        return AppColors.primary;
+      case 'completed':
+        return Colors.grey;
+      case 'cancelled_by_host':
+      case 'cancelled_by_seeker':
+      case 'rejected':
+        return AppColors.error;
+      default:
+        return AppColors.textSecondary;
+    }
   }
 }
