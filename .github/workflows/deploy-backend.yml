@@ -1,4 +1,4 @@
-name: Node.js Backend CI & Render Deploy
+name: Node.js Backend CI (Netlify Auto-Deploy)
 
 on:
   push:
@@ -27,21 +27,5 @@ jobs:
         cache: 'npm'
         cache-dependency-path: 'backend/package-lock.json'
     - run: npm ci
-    # Add testing commands below if you add tests in the future:
-    # - run: npm test
-
-  deploy-to-render:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Trigger Render Deployment
-        # Render has a unique deploy hook URL for each web service you create there.
-        # Add the URL to standard GitHub Secrets as RENDER_DEPLOY_HOOK_URL
-        run: |
-          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-            echo "Deploy hooked triggered successfully."
-          else
-            echo "::warning title=Render Deploy Hook Missing::No RENDER_DEPLOY_HOOK_URL secret found. Skipping automatic deploy."
-          fi
+    # Note: Deployment logic is stripped here because Netlify listens to your GitHub repository natively.
+    # Just link your repo under Netlify.com to automate deployments on every push.
