@@ -127,6 +127,51 @@ class BookingModel extends BookingEntity {
     };
   }
 
+  @override
+  BookingModel copyWith({
+    String? id,
+    String? experienceId,
+    String? experienceTitle,
+    String? experienceCoverImage,
+    String? userId,
+    String? hostId,
+    DateTime? date,
+    String? startTime,
+    int? guests,
+    double? totalPrice,
+    String? status,
+    String? paymentStatus,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isRatedByHost,
+    bool? isRatedBySeeker,
+    String? seekerName,
+    String? seekerPhotoUrl,
+    bool? isEarningsCollected,
+  }) {
+    return BookingModel(
+      id: id ?? this.id,
+      experienceId: experienceId ?? this.experienceId,
+      experienceTitle: experienceTitle ?? this.experienceTitle,
+      experienceCoverImage: experienceCoverImage ?? this.experienceCoverImage,
+      userId: userId ?? this.userId,
+      hostId: hostId ?? this.hostId,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      guests: guests ?? this.guests,
+      totalPrice: totalPrice ?? this.totalPrice,
+      status: status ?? this.status,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isRatedByHost: isRatedByHost ?? this.isRatedByHost,
+      isRatedBySeeker: isRatedBySeeker ?? this.isRatedBySeeker,
+      seekerName: seekerName ?? this.seekerName,
+      seekerPhotoUrl: seekerPhotoUrl ?? this.seekerPhotoUrl,
+      isEarningsCollected: isEarningsCollected ?? this.isEarningsCollected,
+    );
+  }
+
   /// Parse DateTime from various formats
   static DateTime _parseDateTime(dynamic dateValue) {
     if (dateValue is DateTime) {

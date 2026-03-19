@@ -67,16 +67,10 @@ final priceRangeProvider = StateProvider<RangeValues>((ref) {
 final discoverySortModeProvider =
     StateProvider<DiscoverySortMode>((ref) => DiscoverySortMode.relevance);
 
-// Future Providers
-final featuredExperiencesProvider =
-    FutureProvider<List<Experience>>((ref) async {
-  final useCase = ref.watch(getFeaturedExperiencesUseCaseProvider);
-  final result = await useCase.call(NoParams());
-
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (experiences) => experiences,
-  );
+// Stream Providers
+final featuredExperiencesProvider = StreamProvider<List<Experience>>((ref) {
+  final repository = ref.watch(homeRepositoryProvider);
+  return repository.watchFeaturedExperiences();
 });
 
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
@@ -100,8 +94,7 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   );
 });
 
-final experiencesByFilterProvider =
-    FutureProvider<List<Experience>>((ref) async {
+final experiencesByFilterProvider = StreamProvider<List<Experience>>((ref) {
   final selectedCategory = ref.watch(selectedCategoryProvider);
   final searchQuery = ref.watch(searchQueryProvider);
   final selectedRating = ref.watch(selectedRatingProvider);
@@ -110,54 +103,42 @@ final experiencesByFilterProvider =
 
   final repository = ref.watch(homeRepositoryProvider);
 
-  late final List<Experience> baseResults;
+  Stream<List<Experience>> baseStream;
 
   if (searchQuery.isNotEmpty) {
-    final result = await repository.searchExperiences(searchQuery);
-    baseResults = result.fold(
-      (failure) => throw Exception(failure.message),
-      (experiences) => experiences,
-    );
+    // Search is still Future-based in repository, convert to stream for consistency
+    baseStream = Stream.fromFuture(repository.searchExperiences(searchQuery).then(
+          (result) => result.fold(
+            (failure) => throw Exception(failure.message),
+            (experiences) => experiences,
+          ),
+        ));
   } else if (selectedCategory != null &&
       selectedCategory.isNotEmpty &&
       selectedCategory != 'All') {
-    final result = await repository.getExperiencesByCategory(selectedCategory);
-    baseResults = result.fold(
-      (failure) => throw Exception(failure.message),
-      (experiences) => experiences,
-    );
-  } else if (selectedCategory == 'All') {
-    final result = await repository.getAllExperiences();
-    baseResults = result.fold(
-      (failure) => throw Exception(failure.message),
-      (experiences) => experiences,
-    );
+    baseStream = repository.watchExperiencesByCategory(selectedCategory);
   } else {
-    final result = await repository.getFeaturedExperiences();
-    baseResults = result.fold(
-      (failure) => throw Exception(failure.message),
-      (experiences) => experiences,
-    );
+    baseStream = repository.watchFeaturedExperiences();
   }
 
-  final sorted = DiscoveryUtils.rankExperiences(
-    experiences: baseResults,
-    sortMode: sortMode,
-    query: searchQuery,
-    preferredCategory: selectedCategory,
-    minPrice: priceRange.start,
-    maxPrice: priceRange.end,
-    userLatitude: null,
-    userLongitude: null,
-  );
+  return baseStream.map((experiences) {
+    final sorted = DiscoveryUtils.rankExperiences(
+      experiences: experiences,
+      sortMode: sortMode,
+      query: searchQuery,
+      preferredCategory: selectedCategory,
+      minPrice: priceRange.start,
+      maxPrice: priceRange.end,
+      userLatitude: null,
+      userLongitude: null,
+    );
 
-  final ratingFiltered = selectedRating == null
-      ? sorted
-      : sorted
-          .where((experience) => experience.averageRating >= selectedRating)
-          .toList();
-
-  return ratingFiltered;
+    return selectedRating == null
+        ? sorted
+        : sorted
+            .where((experience) => experience.averageRating >= selectedRating)
+            .toList();
+  });
 });
 
 final experienceDetailProvider =

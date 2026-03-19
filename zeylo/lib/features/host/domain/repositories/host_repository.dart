@@ -17,6 +17,9 @@ abstract class HostRepository {
   /// Get trend percentage
   Future<Either<Failure, double>> getEarningsTrend(String hostId);
 
+  /// Watch host statistics reactively
+  Stream<Either<Failure, HostStatsEntity>> watchHostStats(String hostId);
+
   /// Watch this month's earnings reactively
   Stream<Either<Failure, double>> watchThisMonthEarnings(String hostId);
 }

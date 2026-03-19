@@ -85,3 +85,17 @@ final unlikePostProvider = FutureProvider.family<void, String>(
     );
   },
 );
+
+final deletePostProvider = FutureProvider.family<void, String>(
+  (ref, postId) async {
+    final repository = ref.watch(communityRepositoryProvider);
+    final result = await repository.deletePost(postId);
+
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (_) {
+        ref.invalidate(communityPostsProvider);
+      },
+    );
+  },
+);

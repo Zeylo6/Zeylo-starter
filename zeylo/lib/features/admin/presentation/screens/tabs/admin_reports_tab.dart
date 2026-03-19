@@ -636,25 +636,34 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
 
           if (response.statusCode == 200) {
             debugPrint('$actionType executed successfully on backend');
+            if (context.mounted) {
+              final message = actionType == 'ban_user'
+                  ? 'User Account Banned successfully.'
+                  : 'Warning Email Sent successfully.';
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(message),
+                backgroundColor: AppColors.success,
+              ));
+            }
           } else {
             debugPrint(
                 'Backend API responded with error: ${response.statusCode} - ${response.body}');
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Backend Error (${response.statusCode}): ${response.body}'),
+                backgroundColor: AppColors.error,
+              ));
+            }
           }
         }
       } catch (backendError) {
         debugPrint('Backend call failed: $backendError');
-      }
-
-      if (context.mounted) {
-        final message = actionType == 'ban_user'
-            ? 'User Account Banned successfully.'
-            : actionType == 'warning_email'
-                ? 'Warning Email Sent.'
-                : 'User Restricted successfully.';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.success,
-        ));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Backend connection failed. Please check AppConfig.baseUrl.'),
+            backgroundColor: AppColors.error,
+          ));
+        }
       }
     } catch (e) {
       if (context.mounted) {

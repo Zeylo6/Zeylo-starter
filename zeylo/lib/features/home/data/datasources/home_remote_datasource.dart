@@ -35,6 +35,12 @@ abstract class HomeRemoteDataSource {
 
   /// Get all active experiences
   Future<List<ExperienceModel>> getAllExperiences();
+
+  /// Watch featured experiences
+  Stream<List<ExperienceModel>> watchFeaturedExperiences();
+
+  /// Watch experiences by category
+  Stream<List<ExperienceModel>> watchExperiencesByCategory(String category);
 }
 
 /// Implementation of HomeRemoteDataSource using Firestore
@@ -270,6 +276,36 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
     final c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return earthRadiusKm * c;
+  }
+
+  @override
+  Stream<List<ExperienceModel>> watchFeaturedExperiences() {
+    return _firestore
+        .collection('experiences')
+        .where('isActive', isEqualTo: true)
+        .limit(10)
+        .snapshots()
+        .map((snapshot) {
+      final results = snapshot.docs
+          .map((doc) => ExperienceModel.fromFirestore(doc))
+          .toList();
+      results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return results;
+    });
+  }
+
+  @override
+  Stream<List<ExperienceModel>> watchExperiencesByCategory(String category) {
+    return _firestore
+        .collection('experiences')
+        .where('category', isEqualTo: category)
+        .where('isActive', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => ExperienceModel.fromFirestore(doc))
+          .toList();
+    });
   }
 
   double _degreesToRadians(double degrees) {

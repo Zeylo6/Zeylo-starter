@@ -30,4 +30,7 @@ abstract class CommunityRepository {
 
   /// Create a new post
   Future<Either<Failure, String>> createPost(Post post);
+
+  /// Delete a post
+  Future<Either<Failure, void>> deletePost(String postId);
 }

@@ -113,6 +113,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         _cvcError == null &&
         _cardholderError == null) {
       _submitBooking();
+    } else {
+      // Show feedback if validation fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please correct the errors in the form.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -329,6 +337,10 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               expiry: formState.expiry,
               cvc: formState.cvc,
               cardholderName: formState.cardholderName,
+              cardNumberError: _cardNumberError,
+              expiryError: _expiryError,
+              cvcError: _cvcError,
+              cardholderNameError: _cardholderError,
               onCardNumberChanged: (value) {
                 ref.read(bookingFormProvider.notifier).updateCardNumber(value);
                 if (_cardNumberError != null) {
@@ -434,27 +446,38 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   }
 
   Widget _summaryRow(String label, String value, {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100, // Fixed width for label to avoid layout issues
+            child: Text(
+              label,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
-        ),
-        Text(
-          value,
-          style: isBold
-              ? AppTypography.labelLarge.copyWith(
-                  color: AppColors.primary,
-                )
-              : AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-        ),
-      ],
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: isBold
+                  ? AppTypography.labelLarge.copyWith(
+                      color: AppColors.primary,
+                    )
+                  : AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
