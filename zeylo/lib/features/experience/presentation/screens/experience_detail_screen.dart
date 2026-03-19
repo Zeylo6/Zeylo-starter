@@ -3,12 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../home/presentation/providers/home_provider.dart';
+import '../../../messaging/presentation/providers/messaging_provider.dart';
 import '../widgets/experience_info_section.dart';
 import '../widgets/host_info_card.dart';
 import '../../../../core/widgets/partial_star_rating.dart';
@@ -123,6 +125,7 @@ class _ExperienceDetailScreenState
                                 reviewCount: experience.reviewCount,
                                 bio:
                                     'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
+                                onMessageTap: () => _openChatWithHost(context, experience),
                               ),
                               const SizedBox(height: AppSpacing.xxxl),
 
@@ -240,6 +243,21 @@ class _ExperienceDetailScreenState
             ),
           ),
         );
+  }
+
+  Future<void> _openChatWithHost(BuildContext context, Experience experience) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final conversation = await ref.read(
+      getOrCreateConversationProvider((currentUser.uid, experience.hostId)).future,
+    );
+    if (mounted) {
+      context.push('/chat/${conversation.id}', extra: {
+        'otherUserName': experience.hostName,
+        'currentUserId': currentUser.uid,
+      });
+    }
   }
 
   Widget _buildCoverImage(String imageUrl) {
