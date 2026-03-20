@@ -128,17 +128,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ],
               ),
             ),
-            // Filter icon
-            GestureDetector(
-              onTap: () {
-                // Handle filter/settings
-              },
-              child: Icon(
-                Icons.tune,
-                color: AppColors.textPrimary,
-                size: 24,
-              ),
-            ),
           ],
         ),
       ),
