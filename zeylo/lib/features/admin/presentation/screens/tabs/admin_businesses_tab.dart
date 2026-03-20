@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_radius.dart';
 import '../../../../../core/theme/app_spacing.dart';
@@ -134,16 +135,31 @@ class AdminBusinessesTab extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.location_on,
-                                    size: 16, color: AppColors.textSecondary),
-                                const SizedBox(width: 4),
-                                Text(data['location'] ?? 'Not provided',
-                                    style: TextStyle(
-                                        color: AppColors.textSecondary)),
-                              ],
-                            ),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on,
+                                      size: 16, color: AppColors.textSecondary),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () =>
+                                          _openInMaps(data['location']),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.xs),
+                                      child: Text(
+                                        _getLocationString(data['location']),
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          decoration: TextDecoration.underline,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             const Divider(height: 32),
                             const Text('Original Description (By User):',
                                 style: TextStyle(fontWeight: FontWeight.bold)),
@@ -192,5 +208,42 @@ class AdminBusinessesTab extends StatelessWidget {
         ],
       ),
     );
+  }
+  String _getLocationString(dynamic location) {
+    if (location == null) return 'Not provided';
+    if (location is String) return location;
+    if (location is Map) {
+      return location['address']?.toString() ?? 'Unknown Address';
+    }
+    return location.toString();
+  }
+
+  Future<void> _openInMaps(dynamic locationData) async {
+    if (locationData == null) return;
+
+    String query = '';
+    if (locationData is String) {
+      query = Uri.encodeComponent(locationData);
+    } else if (locationData is Map) {
+      final geo = locationData['geoPoint'] as Map?;
+      if (geo != null) {
+        final lat = geo['latitude'];
+        final lng = geo['longitude'];
+        query = '$lat,$lng';
+      } else {
+        query = Uri.encodeComponent(locationData['address']?.toString() ?? '');
+      }
+    }
+
+    if (query.isEmpty) return;
+
+    final googleMapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    final appleMapsUrl = Uri.parse('https://maps.apple.com/?q=$query');
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    } else if (await canLaunchUrl(appleMapsUrl)) {
+      await launchUrl(appleMapsUrl, mode: LaunchMode.externalApplication);
+    }
   }
 }

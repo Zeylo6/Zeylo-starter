@@ -24,6 +24,7 @@ class ExperienceCard extends StatefulWidget {
   final String? heroTag;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteTap;
+  final VoidCallback? onMessageTap;
 
   const ExperienceCard({
     required this.imageUrl,
@@ -43,6 +44,7 @@ class ExperienceCard extends StatefulWidget {
     this.heroTag,
     this.onTap,
     this.onFavoriteTap,
+    this.onMessageTap,
     super.key,
   });
 
@@ -173,19 +175,64 @@ class _ExperienceCardState extends State<ExperienceCard> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildPrice(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryExtraLight,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'View Details',
-                            style: AppTypography.labelLarge.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
+                        Row(
+                          children: [
+                            if (widget.onMessageTap != null)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: InkWell(
+                                  onTap: widget.onMessageTap,
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primary.withOpacity(0.05),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.chat_bubble_outline_rounded,
+                                          color: AppColors.primary,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Message',
+                                          style: AppTypography.labelLarge.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryExtraLight,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'View Details',
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),

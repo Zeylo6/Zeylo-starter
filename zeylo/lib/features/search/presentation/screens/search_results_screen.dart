@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -8,6 +9,8 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../../core/discovery/discovery_utils.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/filter_sheet.dart';
+import '../../../messaging/presentation/providers/messaging_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Search results screen
 ///
@@ -318,6 +321,8 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                         rating: experience.averageRating,
                         ratingCount: experience.reviewCount,
                         onTap: () => _navigateToDetail(experience.id),
+                        onMessageTap: () =>
+                            _messageHost(experience.hostId, experience.hostName),
                       ),
                     );
                   },
@@ -373,6 +378,49 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
       '/experience-detail',
       arguments: experienceId,
     );
+  }
+
+  Future<void> _messageHost(String hostId, String hostName) async {
+    final currentUser = ref.read(currentUserProvider).value;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to message hosts')),
+      );
+      return;
+    }
+
+    if (currentUser.uid == hostId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot message yourself')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Starting conversation...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      final conversation = await ref.read(
+        getOrCreateConversationProvider((currentUser.uid, hostId)).future,
+      );
+
+      if (mounted) {
+        context.push('/chat/${conversation.id}', extra: {
+          'otherUserName': hostName,
+          'currentUserId': currentUser.uid,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting conversation: $e')),
+        );
+      }
+    }
   }
 
   void _showTripPlanner() {
@@ -456,6 +504,10 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                                 Navigator.of(context).pop();
                                 _navigateToDetail(leg.experience.id);
                               },
+                              onMessageTap: () => _messageHost(
+                                leg.experience.hostId,
+                                leg.experience.hostName,
+                              ),
                             ),
                           ],
                         ),
