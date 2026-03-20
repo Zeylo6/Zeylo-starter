@@ -47,7 +47,7 @@ class MomentsBar extends ConsumerWidget {
             data: (moments) {
               // Group moments by user if needed, or just show unique users with new moments
               // For simplicity, showing individual moments for now
-              
+
               return ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 scrollDirection: Axis.horizontal,
@@ -56,7 +56,7 @@ class MomentsBar extends ConsumerWidget {
                   if (index == 0) {
                     return _buildAddMomentButton(context, ref);
                   }
-                  
+
                   final moment = moments[index - 1];
                   return _buildMomentItem(context, moment);
                 },
@@ -147,7 +147,8 @@ class MomentsBar extends ConsumerWidget {
                 ),
                 child: CircleAvatar(
                   radius: 28,
-                  backgroundImage: CachedNetworkImageProvider(moment.userAvatar),
+                  backgroundImage:
+                      CachedNetworkImageProvider(moment.userAvatar),
                 ),
               ),
             ),

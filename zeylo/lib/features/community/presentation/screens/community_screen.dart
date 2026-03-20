@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -11,7 +13,6 @@ import '../providers/community_provider.dart';
 import '../widgets/community_post_card.dart';
 import '../widgets/suggested_user_card.dart';
 import '../widgets/moments_bar.dart';
-import 'package:go_router/go_router.dart';
 
 /// Community screen displaying community posts feed
 ///
@@ -270,11 +271,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
   }
 
   void _sharePost(String postId) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Post shared'),
-        duration: Duration(seconds: 2),
-      ),
+    Share.share(
+      'Check out this post on Zeylo: https://zeylolk.netlify.app/community/post/$postId',
+      subject: 'New Zeylo Post',
     );
   }
 }
@@ -318,7 +317,12 @@ class _TopBar extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.share_outlined),
-              onPressed: () {},
+              onPressed: () {
+                Share.share(
+                  'Explore Zeylo Community: https://zeylolk.netlify.app/community',
+                  subject: 'Zeylo Community',
+                );
+              },
               color: AppColors.textPrimary,
             ),
           ],

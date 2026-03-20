@@ -55,7 +55,8 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this post? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -278,9 +279,11 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    Icon(Icons.delete_outline,
+                        color: AppColors.error, size: 20),
                     SizedBox(width: 8),
-                    Text('Delete Post', style: TextStyle(color: AppColors.error)),
+                    Text('Delete Post',
+                        style: TextStyle(color: AppColors.error)),
                   ],
                 ),
               ),
@@ -293,7 +296,10 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   Widget _buildCaption() {
     // Parse caption and tags
     final parts = widget.post.caption.split(RegExp(r'#\w+'));
-    final tags = RegExp(r'#\w+').allMatches(widget.post.caption).map((m) => m.group(0)!).toList();
+    final tags = RegExp(r'#\w+')
+        .allMatches(widget.post.caption)
+        .map((m) => m.group(0)!)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +346,8 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 14, color: AppColors.primary),
+                          const Icon(Icons.location_on_outlined,
+                              size: 14, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
                             widget.post.experienceTag!,
@@ -370,12 +377,13 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             icon: isLiked ? Icons.favorite : Icons.favorite_border,
             label: '${widget.post.likesCount}',
             iconColor: isLiked ? AppColors.error : AppColors.textSecondary,
-            onTap: () {
+            onTap: () async {
               if (isLiked) {
-                ref.read(unlikePostProvider(widget.post.id));
+                await ref.read(unlikePostProvider(widget.post.id).future);
               } else {
-                ref.read(likePostProvider(widget.post.id));
+                await ref.read(likePostProvider(widget.post.id).future);
               }
+              widget.onLikeTap?.call();
             },
           ),
           loading: () => const SizedBox(
@@ -395,7 +403,10 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
         _ActionButton(
           icon: Icons.comment_outlined,
           label: '${widget.post.commentsCount}',
-          onTap: () => context.push('/post-comments/${widget.post.id}'),
+          onTap: () {
+            context.push('/post-comments/${widget.post.id}');
+            widget.onCommentTap?.call();
+          },
         ),
         const SizedBox(width: AppSpacing.lg),
 

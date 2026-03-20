@@ -51,6 +51,7 @@ import '../features/mood/presentation/screens/mood_results_screen.dart';
 
 // Community
 import '../features/community/presentation/screens/community_screen.dart';
+import '../features/community/presentation/screens/create_moment_screen.dart';
 import '../features/community/presentation/screens/create_post_screen.dart';
 import '../features/community/presentation/screens/comments_screen.dart';
 
@@ -474,6 +475,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return CommentsScreen(postId: id);
         },
+      ),
+      GoRoute(
+        path: '/create-moment',
+        builder: (context, state) => const CreateMomentScreen(),
       ),
       GoRoute(
         path: '/messages',
