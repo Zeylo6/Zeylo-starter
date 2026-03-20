@@ -209,8 +209,7 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
         .collection(_conversationsCollection)
         .doc(conversationId)
         .snapshots()
-        .map((doc) => ConversationModel.fromFirestore(
-            doc as DocumentSnapshot<Map<String, dynamic>>));
+        .map((doc) => ConversationModel.fromFirestore(doc));
   }
 
   @override

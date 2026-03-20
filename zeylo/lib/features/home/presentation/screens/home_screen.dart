@@ -15,6 +15,7 @@ import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/category_chip_list.dart';
 import '../../../../core/widgets/role_capsule.dart';
+import '../../../messaging/presentation/providers/messaging_provider.dart';
 
 /// Home screen of the Zeylo application
 ///
@@ -254,6 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         isFavorite: ref.watch(isFavoritedProvider(experience.id)),
                         onTap: () => _navigateToDetail(experience.id),
                         onFavoriteTap: () => _toggleFavorite(experience.id),
+                        onMessageTap: () => _messageHost(experience.hostId, experience.hostName),
                       ),
                     );
                   },
@@ -328,6 +330,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _messageHost(String hostId, String hostName) async {
+    final currentUser = ref.read(currentUserProvider).value;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to message hosts')),
+      );
+      return;
+    }
+
+    if (currentUser.uid == hostId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot message yourself')),
+      );
+      return;
+    }
+
+    // Show loading status
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Starting conversation...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      final conversation = await ref.read(
+        getOrCreateConversationProvider((currentUser.uid, hostId)).future,
+      );
+
+      if (mounted) {
+        context.push('/chat/${conversation.id}', extra: {
+          'otherUserName': hostName,
+          'currentUserId': currentUser.uid,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting conversation: $e')),
+        );
+      }
+    }
   }
 }
 
