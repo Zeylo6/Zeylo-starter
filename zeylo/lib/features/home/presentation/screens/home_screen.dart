@@ -427,11 +427,6 @@ class _TopBar extends ConsumerWidget {
               },
               color: AppColors.textPrimary,
             ),
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              onPressed: () {},
-              color: AppColors.textPrimary,
-            ),
           ],
         ),
       ],

@@ -143,7 +143,10 @@ class FavoritesBottomSheet extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/home');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
