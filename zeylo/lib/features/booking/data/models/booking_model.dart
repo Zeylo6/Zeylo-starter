@@ -23,6 +23,8 @@ class BookingModel extends BookingEntity {
     super.seekerName,
     super.seekerPhotoUrl,
     super.isEarningsCollected = false,
+    super.isMystery = false,
+    super.mysteryId,
   });
 
   /// Create a BookingModel from JSON
@@ -47,6 +49,8 @@ class BookingModel extends BookingEntity {
       seekerName: (json['seekerName'] ?? json['seeker_name']) as String?,
       seekerPhotoUrl: (json['seekerPhotoUrl'] ?? json['seeker_photo_url']) as String?,
       isEarningsCollected: json['isEarningsCollected'] as bool? ?? false,
+      isMystery: json['isMystery'] as bool? ?? false,
+      mysteryId: json['mysteryId'] as String?,
     );
   }
 
@@ -75,6 +79,8 @@ class BookingModel extends BookingEntity {
       seekerName: (data['seekerName'] ?? data['seeker_name']) as String?,
       seekerPhotoUrl: (data['seekerPhotoUrl'] ?? data['seeker_photo_url']) as String?,
       isEarningsCollected: data['isEarningsCollected'] as bool? ?? false,
+      isMystery: data['isMystery'] as bool? ?? false,
+      mysteryId: data['mysteryId'] as String?,
     );
   }
 
@@ -100,6 +106,8 @@ class BookingModel extends BookingEntity {
       'seekerName': seekerName,
       'seekerPhotoUrl': seekerPhotoUrl,
       'isEarningsCollected': isEarningsCollected,
+      'isMystery': isMystery,
+      'mysteryId': mysteryId,
     };
   }
 
@@ -124,6 +132,8 @@ class BookingModel extends BookingEntity {
       'seekerName': seekerName,
       'seekerPhotoUrl': seekerPhotoUrl,
       'isEarningsCollected': isEarningsCollected,
+      'isMystery': isMystery,
+      'mysteryId': mysteryId,
     };
   }
 
@@ -148,6 +158,8 @@ class BookingModel extends BookingEntity {
     String? seekerName,
     String? seekerPhotoUrl,
     bool? isEarningsCollected,
+    bool? isMystery,
+    String? mysteryId,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -169,6 +181,8 @@ class BookingModel extends BookingEntity {
       seekerName: seekerName ?? this.seekerName,
       seekerPhotoUrl: seekerPhotoUrl ?? this.seekerPhotoUrl,
       isEarningsCollected: isEarningsCollected ?? this.isEarningsCollected,
+      isMystery: isMystery ?? this.isMystery,
+      mysteryId: mysteryId ?? this.mysteryId,
     );
   }
 
