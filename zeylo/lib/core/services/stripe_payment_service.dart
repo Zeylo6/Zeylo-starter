@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import '../config/app_config.dart';
 
 class StripePaymentService {
   static Future<void> makePayment(double amount, String bookingId, String email) async {
@@ -13,7 +14,7 @@ class StripePaymentService {
 
       // 2. Call backend to create PaymentIntent
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/payments/create-intent'),
+        Uri.parse('${AppConfig.baseUrl}/api/payments/create-intent'),
         body: jsonEncode({'amount': amount, 'bookingId': bookingId, 'email': email}),
         headers: {
           'Content-Type': 'application/json',

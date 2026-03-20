@@ -13,6 +13,7 @@ class ConversationTile extends StatelessWidget {
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final bool isOnline;
+  final bool isUnread;
   final VoidCallback? onPressed;
 
   const ConversationTile({
@@ -22,6 +23,7 @@ class ConversationTile extends StatelessWidget {
     this.lastMessage,
     this.lastMessageTime,
     this.isOnline = false,
+    this.isUnread = false,
     this.onPressed,
     super.key,
   });
@@ -30,10 +32,26 @@ class ConversationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          vertical: AppSpacing.md,
+        ),
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              offset: const Offset(0, 2),
+              blurRadius: 10,
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -56,7 +74,7 @@ class ConversationTile extends StatelessWidget {
                     userName,
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -66,21 +84,40 @@ class ConversationTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: isUnread ? AppColors.textPrimary : AppColors.textSecondary,
+                        fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                 ],
               ),
             ),
 
-            // Last message time
-            if (lastMessageTime != null)
-              Text(
-                _formatTime(lastMessageTime!),
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
+            // Last message time and unread dot
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (lastMessageTime != null)
+                  Text(
+                    _formatTime(lastMessageTime!),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isUnread ? AppColors.primary : AppColors.textSecondary,
+                      fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                if (isUnread) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ],
         ),
       ),

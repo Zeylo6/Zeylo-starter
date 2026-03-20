@@ -39,12 +39,33 @@ class MessagingRepositoryImpl implements MessagingRepository {
   Future<Either<Failure, MessageEntity>> sendMessage(
     String conversationId,
     String senderId,
-    String text,
+    String text, {
+    String messageType = 'text',
+    String? imageUrl,
+  }) async {
+    try {
+      final message = await _datasource.sendMessage(
+        conversationId,
+        senderId,
+        text,
+        messageType: messageType,
+        imageUrl: imageUrl,
+      );
+      return Right(message);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> setTypingStatus(
+    String conversationId,
+    String userId,
+    bool isTyping,
   ) async {
     try {
-      final message =
-          await _datasource.sendMessage(conversationId, senderId, text);
-      return Right(message);
+      await _datasource.setTypingStatus(conversationId, userId, isTyping);
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

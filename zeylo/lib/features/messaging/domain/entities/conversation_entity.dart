@@ -5,6 +5,7 @@ import 'message_entity.dart';
 class ConversationEntity extends Equatable {
   final String id;
   final List<String> participants;
+  final List<String> typingUsers;
   final MessageEntity? lastMessage;
   final DateTime lastMessageAt;
   final DateTime createdAt;
@@ -12,6 +13,7 @@ class ConversationEntity extends Equatable {
   const ConversationEntity({
     required this.id,
     required this.participants,
+    this.typingUsers = const [],
     this.lastMessage,
     required this.lastMessageAt,
     required this.createdAt,
@@ -21,6 +23,7 @@ class ConversationEntity extends Equatable {
   List<Object?> get props => [
         id,
         participants,
+        typingUsers,
         lastMessage,
         lastMessageAt,
         createdAt,
@@ -29,6 +32,7 @@ class ConversationEntity extends Equatable {
   ConversationEntity copyWith({
     String? id,
     List<String>? participants,
+    List<String>? typingUsers,
     MessageEntity? lastMessage,
     DateTime? lastMessageAt,
     DateTime? createdAt,
@@ -36,6 +40,7 @@ class ConversationEntity extends Equatable {
     return ConversationEntity(
       id: id ?? this.id,
       participants: participants ?? this.participants,
+      typingUsers: typingUsers ?? this.typingUsers,
       lastMessage: lastMessage ?? this.lastMessage,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       createdAt: createdAt ?? this.createdAt,

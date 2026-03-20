@@ -6,6 +6,7 @@ on:
     paths:
       - 'zeylo/**'
       - '.github/workflows/deploy-frontend-web.yml'
+  workflow_dispatch:
 
 defaults:
   run:

@@ -12,8 +12,16 @@ class SendMessageUseCase {
   Future<Either<Failure, MessageEntity>> call(
     String conversationId,
     String senderId,
-    String text,
-  ) async {
-    return await repository.sendMessage(conversationId, senderId, text);
+    String text, {
+    String messageType = 'text',
+    String? imageUrl,
+  }) async {
+    return await repository.sendMessage(
+      conversationId,
+      senderId,
+      text,
+      messageType: messageType,
+      imageUrl: imageUrl,
+    );
   }
 }
