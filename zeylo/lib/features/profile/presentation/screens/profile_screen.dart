@@ -427,14 +427,6 @@ class ProfileScreen extends ConsumerWidget {
               color: const Color(0xFF8E2DE2),
               onTap: () => context.push('/admin-dashboard'),
             ),
-          _buildActionCard(
-            context: context,
-            title: 'Privacy & Security',
-            subtitle: 'Manage your data and account',
-            icon: Icons.security_rounded,
-            color: Colors.blueGrey,
-            onTap: () => context.push('/settings'),
-          ),
         ],
       ),
     );
