@@ -126,4 +126,29 @@ class ApiAiService implements AIService {
       throw Exception('Failed to communicate with AI Server.');
     }
   }
+
+  /// Pings the backend to Match and Book a Mystery Experience directly.
+  Future<Map<String, dynamic>> matchAndBookMystery(
+      Map<String, dynamic> payload) async {
+    try {
+      final headers = await _getSecurityHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/mystery/match-and-book'),
+        headers: headers,
+        body: json.encode(payload),
+      );
+
+      final data = json.decode(response.body);
+      
+      if (response.statusCode == 200) {
+        return data['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(
+            'Mystery Match failed: ${response.statusCode} - ${data['error']}');
+      }
+    } catch (e) {
+      debugPrint('ApiAiService MatchAndBook Error: $e');
+      throw Exception('Failed to communicate with AI Server for matching.');
+    }
+  }
 }
