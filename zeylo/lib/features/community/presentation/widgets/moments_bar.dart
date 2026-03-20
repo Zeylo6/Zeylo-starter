@@ -6,6 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/moment_entity.dart';
 import '../providers/community_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 
 class MomentsBar extends ConsumerWidget {
   const MomentsBar({super.key});
@@ -76,60 +77,64 @@ class MomentsBar extends ConsumerWidget {
   }
 
   Widget _buildAddMomentButton(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.only(right: AppSpacing.md),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.surface,
-                  border: Border.all(color: AppColors.divider),
-                ),
-                child: const Icon(
-                  Icons.add,
-                  color: AppColors.primary,
-                  size: 32,
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
+    return GestureDetector(
+      onTap: () => context.push('/create-moment'),
+      child: Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.md),
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    color: AppColors.surface,
+                    border: Border.all(color: AppColors.divider),
                   ),
                   child: const Icon(
-                    Icons.camera_alt,
-                    size: 14,
-                    color: Colors.white,
+                    Icons.add,
+                    color: AppColors.primary,
+                    size: 32,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Your Moment',
-            style: AppTypography.labelSmall,
-          ),
-        ],
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Your Moment',
+              style: AppTypography.labelSmall,
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildMomentItem(BuildContext context, Moment moment) {
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.md),
       child: GestureDetector(
         onTap: () {
-          // TODO: Open story viewer
+          context.push('/moment-viewer', extra: moment);
         },
         child: Column(
           children: [

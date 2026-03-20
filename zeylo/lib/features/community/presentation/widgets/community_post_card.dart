@@ -244,25 +244,31 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.border),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.full),
-            child: CachedNetworkImage(
-              imageUrl: widget.post.userAvatar,
-              fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  Container(color: AppColors.surface),
-              errorWidget: (context, url, error) =>
-                  Container(color: AppColors.surface),
+          child: GestureDetector(
+            onTap: () => context.push('/user/${widget.post.userId}'),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.full),
+              child: CachedNetworkImage(
+                imageUrl: widget.post.userAvatar,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    Container(color: AppColors.surface),
+                errorWidget: (context, url, error) =>
+                    Container(color: AppColors.surface),
+              ),
             ),
           ),
         ),
         const SizedBox(width: AppSpacing.md),
         // Name
         Expanded(
-          child: Text(
-            widget.post.userName,
-            style: AppTypography.titleMedium,
-            overflow: TextOverflow.ellipsis,
+          child: GestureDetector(
+            onTap: () => context.push('/user/${widget.post.userId}'),
+            child: Text(
+              widget.post.userName,
+              style: AppTypography.titleMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
         // More menu

@@ -19,9 +19,16 @@ class CreateMomentScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
+  final _captionController = TextEditingController();
   File? _imageFile;
   bool _isUploading = false;
   final _picker = ImagePicker();
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -69,6 +76,7 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
         userName: user.displayName,
         userAvatar: user.photoUrl ?? '',
         imageUrl: imageUrl,
+        caption: _captionController.text.trim().isEmpty ? null : _captionController.text.trim(),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(hours: 24)),
       );
@@ -122,11 +130,12 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
       ),
       body: Stack(
         children: [
-          Center(
+          SingleChildScrollView(
             child: _imageFile == null
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const SizedBox(height: 100),
                       Icon(Icons.camera_alt_outlined,
                           size: 64, color: Colors.white.withOpacity(0.5)),
                       const SizedBox(height: AppSpacing.xxl),
@@ -154,11 +163,40 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
                       ),
                     ],
                   )
-                : Image.file(
-                    _imageFile!,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
+                : Column(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: FileImage(_imageFile!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: TextField(
+                          controller: _captionController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.black54,
+                            hintText: 'Add a caption...',
+                            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            prefixIcon: const Icon(Icons.edit, color: Colors.white70),
+                          ),
+                          maxLines: 3,
+                          minLines: 1,
+                        ),
+                      ),
+                    ],
                   ),
           ),
           if (_isUploading)

@@ -54,6 +54,8 @@ import '../features/community/presentation/screens/community_screen.dart';
 import '../features/community/presentation/screens/create_moment_screen.dart';
 import '../features/community/presentation/screens/create_post_screen.dart';
 import '../features/community/presentation/screens/comments_screen.dart';
+import '../features/community/presentation/screens/moment_viewer_screen.dart';
+import '../features/community/domain/entities/moment_entity.dart';
 
 // Messaging
 import '../features/messaging/presentation/screens/message_list_screen.dart';
@@ -479,6 +481,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/create-moment',
         builder: (context, state) => const CreateMomentScreen(),
+      ),
+      GoRoute(
+        path: '/moment-viewer',
+        builder: (context, state) {
+          final moment = state.extra as Moment;
+          return MomentViewerScreen(moment: moment);
+        },
       ),
       GoRoute(
         path: '/messages',

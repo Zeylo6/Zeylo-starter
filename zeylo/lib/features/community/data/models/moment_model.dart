@@ -10,6 +10,7 @@ class MomentModel extends Moment {
     required super.imageUrl,
     required super.createdAt,
     required super.expiresAt,
+    super.caption,
     super.experienceId,
   });
 
@@ -23,6 +24,7 @@ class MomentModel extends Moment {
       imageUrl: data['imageUrl'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       expiresAt: (data['expiresAt'] as Timestamp).toDate(),
+      caption: data['caption'],
       experienceId: data['experienceId'],
     );
   }
@@ -35,6 +37,7 @@ class MomentModel extends Moment {
       'imageUrl': imageUrl,
       'createdAt': Timestamp.fromDate(createdAt),
       'expiresAt': Timestamp.fromDate(expiresAt),
+      'caption': caption,
       'experienceId': experienceId,
     };
   }
@@ -48,6 +51,7 @@ class MomentModel extends Moment {
       imageUrl: entity.imageUrl,
       createdAt: entity.createdAt,
       expiresAt: entity.expiresAt,
+      caption: entity.caption,
       experienceId: entity.experienceId,
     );
   }
@@ -61,6 +65,7 @@ class MomentModel extends Moment {
       imageUrl: imageUrl,
       createdAt: createdAt,
       expiresAt: expiresAt,
+      caption: caption,
       experienceId: experienceId,
     );
   }

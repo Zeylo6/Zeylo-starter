@@ -8,6 +8,7 @@ class Moment extends Equatable {
   final String imageUrl;
   final DateTime createdAt;
   final DateTime expiresAt;
+  final String? caption;
   final String? experienceId;
 
   const Moment({
@@ -18,6 +19,7 @@ class Moment extends Equatable {
     required this.imageUrl,
     required this.createdAt,
     required this.expiresAt,
+    this.caption,
     this.experienceId,
   });
 
@@ -32,6 +34,7 @@ class Moment extends Equatable {
         imageUrl,
         createdAt,
         expiresAt,
+        caption,
         experienceId,
       ];
 }
