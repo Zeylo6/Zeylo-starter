@@ -84,6 +84,9 @@ class FirebaseAuthDataSource {
     required String password,
     String role = 'seeker',
   }) async {
+    // Safety check: Don't allow signing up as admin from the client
+    final securedRole = role == 'admin' ? 'seeker' : role;
+    
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -106,7 +109,7 @@ class FirebaseAuthDataSource {
       );
 
       final data = userModel.toFirestore();
-      data['role'] = role; // Persist selected role
+      data['role'] = securedRole; // Persist selected role
 
       await _firestore.collection('users').doc(user.uid).set(data);
 

@@ -70,6 +70,7 @@ import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/followers_screen.dart';
 import '../features/profile/presentation/screens/following_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
+import '../features/profile/presentation/screens/legal_content_screen.dart';
 
 // Notifications
 import '../features/notifications/presentation/screens/notifications_screen.dart';
@@ -255,17 +256,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             },
           ),
 
-          // Edit Profile route
-          GoRoute(
-            path: '/edit-profile',
-            builder: (context, state) {
-              final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
-              return EditProfileScreen(
-                userId: currentUser?.uid ?? '',
-              );
-            },
-          ),
-
           // Notifications route
           GoRoute(
             path: '/notifications',
@@ -327,6 +317,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SeekerDashboardScreen(),
           ),
         ],
+      ),
+
+      // Legal routes
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const LegalContentScreen(
+          type: LegalContentType.privacyPolicy,
+        ),
+      ),
+      GoRoute(
+        path: '/terms-of-service',
+        builder: (context, state) => const LegalContentScreen(
+          type: LegalContentType.termsOfService,
+        ),
+      ),
+
+      // Edit Profile route (Full screen)
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) {
+          final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
+          return EditProfileScreen(
+            userId: currentUser?.uid ?? '',
+          );
+        },
       ),
 
       // Experience routes
