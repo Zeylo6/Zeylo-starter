@@ -50,6 +50,19 @@ final followingProvider = FutureProvider.family<List<UserProfileEntity>, String>
   },
 );
 
+/// Provider to search for user profiles
+final searchProfilesProvider = FutureProvider.family<List<UserProfileEntity>, String>(
+  (ref, query) async {
+    if (query.isEmpty) return [];
+    final repository = ref.watch(profileRepositoryProvider);
+    final result = await repository.searchProfiles(query);
+    return result.fold(
+      (failure) => throw failure.message,
+      (profiles) => profiles,
+    );
+  },
+);
+
 // Is following provider family
 final isFollowingProvider =
     FutureProvider.family<bool, (String currentUserId, String targetUserId)>(

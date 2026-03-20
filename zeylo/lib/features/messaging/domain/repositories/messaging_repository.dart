@@ -19,7 +19,16 @@ abstract class MessagingRepository {
   Future<Either<Failure, MessageEntity>> sendMessage(
     String conversationId,
     String senderId,
-    String text,
+    String text, {
+    String messageType = 'text',
+    String? imageUrl,
+  });
+
+  /// Set typing status
+  Future<Either<Failure, void>> setTypingStatus(
+    String conversationId,
+    String userId,
+    bool isTyping,
   );
 
   /// Mark message as read

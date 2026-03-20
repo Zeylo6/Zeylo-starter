@@ -56,4 +56,7 @@ abstract class ProfileRepository {
 
   /// Synchronize host profile to experiences
   Future<Either<Failure, void>> syncHostProfileToExperiences(String hostId, String name, String? photoUrl);
+
+  /// Search for user profiles by a query string
+  Future<Either<Failure, List<UserProfileEntity>>> searchProfiles(String query);
 }

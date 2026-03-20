@@ -192,56 +192,79 @@ class _AdminHostVerificationTabState extends State<AdminHostVerificationTab> {
   }
 
   Future<void> _updateVerificationStatus(String verificationId, String hostId, String status, {String? rejectionReason}) async {
-    final batch = FirebaseFirestore.instance.batch();
-
-    // 1. Update verification document
-    final verificationRef = FirebaseFirestore.instance.collection('host_verifications').doc(verificationId);
-    batch.update(verificationRef, {
-      'status': status,
-      'reviewedAt': FieldValue.serverTimestamp(),
-      if (rejectionReason != null) 'rejectionReason': rejectionReason,
-    });
-
-    // 2. Update user profile document
-    final userRef = FirebaseFirestore.instance.collection('users').doc(hostId);
-    batch.update(userRef, {
-      'hostVerificationStatus': status,
-    });
-
-    // 2.5 Sync existing experiences
-    final experiencesQuery = await FirebaseFirestore.instance
-        .collection('experiences')
-        .where('hostId', isEqualTo: hostId)
-        .get();
-        
-    for (var doc in experiencesQuery.docs) {
-      batch.update(doc.reference, {
-        'isHostVerified': status == 'verified'
-      });
-    }
-
-    // 3. Send Notification to Host
-    final notificationRef = FirebaseFirestore.instance.collection('activities').doc();
-    batch.set(notificationRef, {
-      'userId': hostId,
-      'title': status == 'verified' ? 'Verification Approved' : 'Verification Rejected',
-      'message': status == 'verified' 
-          ? 'Congratulations! Your host verification request has been approved. You can now host experiences.'
-          : 'Your host verification request was rejected. Reason: ${rejectionReason ?? "Please check community guidelines."}',
-      'type': 'host_verification',
-      'isRead': false,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
 
     try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      // 1. Update verification document
+      final verificationRef = FirebaseFirestore.instance.collection('host_verifications').doc(verificationId);
+      batch.update(verificationRef, {
+        'status': status,
+        'reviewedAt': FieldValue.serverTimestamp(),
+        if (rejectionReason != null) 'rejectionReason': rejectionReason,
+      });
+
+      // 2. Update user profile document
+      final userRef = FirebaseFirestore.instance.collection('users').doc(hostId);
+      
+      Map<String, dynamic> userUpdates = {
+        'hostVerificationStatus': status,
+      };
+      
+      // If verified, also ensure the role is set to host
+      if (status == 'verified') {
+        userUpdates['role'] = 'host';
+      }
+
+      batch.update(userRef, userUpdates);
+
+      // 2.5 Sync existing experiences (optional but helpful)
+      try {
+        final experiencesQuery = await FirebaseFirestore.instance
+            .collection('experiences')
+            .where('hostId', isEqualTo: hostId)
+            .get();
+            
+        for (var doc in experiencesQuery.docs) {
+          batch.update(doc.reference, {
+            'isHostVerified': status == 'verified'
+          });
+        }
+      } catch (e) {
+        debugPrint('Experience sync error (likely missing index): $e');
+        // We continue even if experience sync fails to not block the main verification
+      }
+
+      // 3. Send Notification to Host
+      final notificationRef = FirebaseFirestore.instance.collection('activities').doc();
+      batch.set(notificationRef, {
+        'userId': hostId,
+        'title': status == 'verified' ? 'Verification Approved' : 'Verification Rejected',
+        'message': status == 'verified' 
+            ? 'Congratulations! Your host verification request has been approved. You can now host experiences.'
+            : 'Your host verification request was rejected. Reason: ${rejectionReason ?? "Please check community guidelines."}',
+        'type': 'host_verification',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
       await batch.commit();
+      
       if (mounted) {
+        Navigator.pop(context); // Remove loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text('Host marked as $status successfully.'))
         );
       }
     } catch (e) {
       if (mounted) {
+        Navigator.pop(context); // Remove loading dialog
          ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text('Failed to update status: $e'), backgroundColor: AppColors.error)
          );
@@ -398,10 +421,12 @@ class _AdminHostVerificationTabState extends State<AdminHostVerificationTab> {
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
                       ),
                       onPressed: () {
+                        final hostId = data['uid'] ?? verificationId;
                         Navigator.pop(ctx);
-                        _showRejectDialog(context, verificationId, verificationId);
+                        _showRejectDialog(context, verificationId, hostId);
                       },
                     ),
+                    const SizedBox(width: AppSpacing.md),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.check, size: 20),
                       label: const Text('Approve', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -413,8 +438,9 @@ class _AdminHostVerificationTabState extends State<AdminHostVerificationTab> {
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
                       ),
                       onPressed: () {
+                        final hostId = data['uid'] ?? verificationId;
                         Navigator.pop(ctx);
-                        _updateVerificationStatus(verificationId, verificationId, 'verified');
+                        _updateVerificationStatus(verificationId, hostId, 'verified');
                       },
                     ),
                   ],

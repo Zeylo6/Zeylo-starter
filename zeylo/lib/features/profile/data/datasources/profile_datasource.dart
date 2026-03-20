@@ -42,6 +42,9 @@ abstract class ProfileDatasource {
 
   /// Synchronize host profile changes to their experiences
   Future<void> syncHostProfileToExperiences(String hostId, String name, String? photoUrl);
+
+  /// Search for users prefix-matching a query in their displayName
+  Future<List<UserProfileModel>> searchProfiles(String query);
 }
 
 /// Firestore implementation of profile datasource
@@ -335,5 +338,41 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
     }
 
     await batch.commit();
+  }
+
+  @override
+  Future<List<UserProfileModel>> searchProfiles(String query) async {
+    if (query.isEmpty) return [];
+
+    try {
+      final lowercaseQuery = query.toLowerCase();
+      
+      // We will perform a simple where query. Note that to support a true
+      // prefix search across user names regardless of casing, it's best to have
+      // a 'searchKeywords' or lowercase name array. Since we only have 'displayName' 
+      // or similar, we'll fetch a batch and filter client side if the dataset isn't huge, 
+      // OR we can rely on a basic prefix search on displayName assuming case sensitivity, 
+      // but let's just do a basic fetch and simple filter for basic implementation, 
+      // or simply rely on Firestore >= and <=. Let's do a reliable fetch-filter for now
+      // since we don't know the exact schema optimizations. 
+      // Assuming a relatively small user base for Zeylo right now:
+      final snapshot = await _firestore.collection(_usersCollection).get();
+      
+      final results = <UserProfileModel>[];
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final displayName = (data['displayName'] as String?)?.toLowerCase() ?? '';
+        final email = (data['email'] as String?)?.toLowerCase() ?? '';
+        
+        if (displayName.contains(lowercaseQuery) || email.contains(lowercaseQuery)) {
+          results.add(UserProfileModel.fromFirestore(doc));
+        }
+      }
+      
+      return results;
+    } catch (e) {
+      debugPrint('Search profiles error: $e');
+      return [];
+    }
   }
 }

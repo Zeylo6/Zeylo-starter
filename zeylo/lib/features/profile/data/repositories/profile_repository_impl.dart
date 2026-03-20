@@ -147,6 +147,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Either<Failure, List<UserProfileEntity>>> searchProfiles(String query) async {
+    try {
+      final models = await _datasource.searchProfiles(query);
+      return Right(models);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> syncHostProfileToExperiences(String hostId, String name, String? photoUrl) async {
     try {
       await _datasource.syncHostProfileToExperiences(hostId, name, photoUrl);

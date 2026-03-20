@@ -14,8 +14,10 @@ abstract class MessagingDatasource {
   Future<MessageModel> sendMessage(
     String conversationId,
     String senderId,
-    String text,
-  );
+    String text, {
+    String messageType = 'text',
+    String? imageUrl,
+  });
 
   /// Mark message as read
   Future<void> markMessageAsRead(String conversationId, String messageId);
@@ -25,6 +27,9 @@ abstract class MessagingDatasource {
     String userId,
     String otherUserId,
   );
+
+  /// Set typing status
+  Future<void> setTypingStatus(String conversationId, String userId, bool isTyping);
 
   /// Stream messages for a conversation
   Stream<List<MessageModel>> streamMessages(String conversationId);
@@ -78,8 +83,10 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
   Future<MessageModel> sendMessage(
     String conversationId,
     String senderId,
-    String text,
-  ) async {
+    String text, {
+    String messageType = 'text',
+    String? imageUrl,
+  }) async {
     final messageRef = _firestore
         .collection(_conversationsCollection)
         .doc(conversationId)
@@ -91,6 +98,8 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
       conversationId: conversationId,
       senderId: senderId,
       text: text,
+      messageType: messageType,
+      imageUrl: imageUrl,
       createdAt: DateTime.now(),
       isRead: false,
     );
@@ -151,6 +160,7 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
     final conversation = ConversationModel(
       id: conversationRef.id,
       participants: [userId, otherUserId],
+      typingUsers: const [],
       lastMessageAt: DateTime.now(),
       createdAt: DateTime.now(),
     );
@@ -158,6 +168,21 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
     await conversationRef.set(conversation.toFirestore());
 
     return conversation;
+  }
+
+  @override
+  Future<void> setTypingStatus(String conversationId, String userId, bool isTyping) async {
+    final docRef = _firestore.collection(_conversationsCollection).doc(conversationId);
+    
+    if (isTyping) {
+      await docRef.update({
+        'typingUsers': FieldValue.arrayUnion([userId])
+      });
+    } else {
+      await docRef.update({
+        'typingUsers': FieldValue.arrayRemove([userId])
+      });
+    }
   }
 
   @override
