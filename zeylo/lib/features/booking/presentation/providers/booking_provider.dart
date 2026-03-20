@@ -137,7 +137,7 @@ final createBookingProvider =
   return useCase(booking);
 });
 
-/// Past bookings provider (completed or cancelled) for profile display
+/// Past bookings provider — filters completed/cancelled bookings for profile display
 final pastBookingsProvider = FutureProvider.family<List<BookingEntity>, String>(
   (ref, userId) async {
     final useCase = ref.watch(getUserBookingsUseCaseProvider);
