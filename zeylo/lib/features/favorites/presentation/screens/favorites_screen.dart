@@ -62,7 +62,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                   ? EmptyFavoritesWidget(
                       onExplore: () {
                         // Navigate to explore/home
-                        Navigator.pop(context);
+                        context.go('/home');
                       },
                     )
                   : _buildFavoritesList(state),
