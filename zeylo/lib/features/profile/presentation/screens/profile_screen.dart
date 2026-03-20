@@ -440,6 +440,85 @@ class ProfileScreen extends ConsumerWidget {
         title: Text(title, style: AppTypography.labelLarge),
         subtitle: Text(subtitle, style: AppTypography.labelSmall),
         trailing: const Icon(Icons.chevron_right, size: 20),
+<<<<<<< HEAD
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmallSecondary,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.textHint.withOpacity(0.5),
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+=======
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        side: BorderSide(color: AppColors.border),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(title, style: AppTypography.labelLarge),
+        subtitle: Text(subtitle, style: AppTypography.labelSmall),
+        trailing: const Icon(Icons.chevron_right, size: 20),
+>>>>>>> 9b34c0d95a1df91e0c497255d53a922e51e90083
       ),
     );
   }
