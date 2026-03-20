@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/services/cloudinary_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -28,6 +31,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
+  bool _isUploadingImage = false;
 
   @override
   void dispose() {
@@ -132,17 +136,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: const Icon(
-                    Icons.add,
-                    color: AppColors.textSecondary,
-                    size: 24,
+                GestureDetector(
+                  onTap: _isUploadingImage ? null : _pickAndSendImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: _isUploadingImage
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Padding(
+                              padding: EdgeInsets.all(2.0),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.add,
+                            color: AppColors.textSecondary,
+                            size: 24,
+                          ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -219,5 +235,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       'text',
       null,
     )).future);
+  }
+
+  Future<void> _pickAndSendImage() async {
+    final picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      setState(() => _isUploadingImage = true);
+
+      final imageUrl = await CloudinaryService.uploadImage(File(image.path));
+
+      if (imageUrl != null && mounted) {
+        await ref.read(sendMessageProvider((
+          widget.conversationId,
+          widget.currentUserId,
+          'Sent an image',
+          'image',
+          imageUrl,
+        )).future);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload image to Cloudinary')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting an image: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingImage = false);
+      }
+    }
   }
 }
