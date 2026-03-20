@@ -6,6 +6,7 @@ import '../../domain/entities/conversation_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/messaging_repository.dart';
 import '../../domain/usecases/send_message_usecase.dart';
+import '../../domain/usecases/set_typing_status_usecase.dart';
 
 // Datasource provider
 final messagingDatasourceProvider = Provider((ref) {
@@ -22,6 +23,12 @@ final messagingRepositoryProvider = Provider<MessagingRepository>((ref) {
 final sendMessageUseCaseProvider = Provider((ref) {
   final repository = ref.watch(messagingRepositoryProvider);
   return SendMessageUseCase(repository);
+});
+
+// Set typing status use case provider
+final setTypingStatusUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(messagingRepositoryProvider);
+  return SetTypingStatusUseCase(repository);
 });
 
 // Conversations stream provider
@@ -45,18 +52,40 @@ final messagesStreamProvider =
 // Send message provider
 final sendMessageProvider = FutureProvider.family<
     void,
-    (String conversationId, String senderId, String text)>(
+    (String conversationId, String senderId, String text, String messageType, String? imageUrl)>(
   (ref, params) async {
     final repository = ref.watch(messagingRepositoryProvider);
-    final (conversationId, senderId, text) = params;
+    final (conversationId, senderId, text, messageType, imageUrl) = params;
 
-    final result = await repository.sendMessage(conversationId, senderId, text);
+    final result = await repository.sendMessage(
+      conversationId,
+      senderId,
+      text,
+      messageType: messageType,
+      imageUrl: imageUrl,
+    );
     result.fold(
       (failure) => throw failure.message,
       (_) {
         // Invalidate messages stream
         ref.invalidate(messagesStreamProvider(conversationId));
       },
+    );
+  },
+);
+
+// Set typing status provider
+final setTypingStatusProvider = FutureProvider.family<
+    void,
+    (String conversationId, String userId, bool isTyping)>(
+  (ref, params) async {
+    final useCase = ref.watch(setTypingStatusUseCaseProvider);
+    final (conversationId, userId, isTyping) = params;
+
+    final result = await useCase(conversationId, userId, isTyping);
+    result.fold(
+      (failure) => throw failure.message,
+      (_) => null,
     );
   },
 );

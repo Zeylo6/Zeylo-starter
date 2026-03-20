@@ -5,7 +5,24 @@ const fs = require('fs');
 if (!admin.apps.length) {
   const serviceAccountPath = path.join(__dirname, '../../service-account.json');
 
-  if (fs.existsSync(serviceAccountPath)) {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      let serviceAccount;
+      const accountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
+      // Check if it's raw JSON or Base64 encoded
+      if (accountStr.trim().startsWith('{')) {
+        serviceAccount = JSON.parse(accountStr);
+      } else {
+        serviceAccount = JSON.parse(Buffer.from(accountStr, 'base64').toString('utf8'));
+      }
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      console.log('Firebase Admin initialized from FIREBASE_SERVICE_ACCOUNT env var.');
+    } catch (e) {
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT env var:', e);
+    }
+  } else if (fs.existsSync(serviceAccountPath)) {
     // Use service account file (required for local development)
     const serviceAccount = require(serviceAccountPath);
     admin.initializeApp({

@@ -8,6 +8,7 @@ class ConversationModel extends ConversationEntity {
   const ConversationModel({
     required super.id,
     required super.participants,
+    super.typingUsers = const [],
     super.lastMessage,
     required super.lastMessageAt,
     required super.createdAt,
@@ -22,6 +23,7 @@ class ConversationModel extends ConversationEntity {
     return ConversationModel(
       id: doc.id,
       participants: List<String>.from(data['participants'] as List? ?? []),
+      typingUsers: List<String>.from(data['typingUsers'] as List? ?? []),
       lastMessage: lastMessageData != null
           ? MessageModel.fromMap(lastMessageData)
           : null,
@@ -34,6 +36,7 @@ class ConversationModel extends ConversationEntity {
   Map<String, dynamic> toFirestore() {
     return {
       'participants': participants,
+      'typingUsers': typingUsers,
       'lastMessage': lastMessage != null
           ? (lastMessage as MessageModel?)?.toMap()
           : null,
@@ -46,6 +49,7 @@ class ConversationModel extends ConversationEntity {
   ConversationModel copyWith({
     String? id,
     List<String>? participants,
+    List<String>? typingUsers,
     MessageEntity? lastMessage,
     DateTime? lastMessageAt,
     DateTime? createdAt,
@@ -53,6 +57,7 @@ class ConversationModel extends ConversationEntity {
     return ConversationModel(
       id: id ?? this.id,
       participants: participants ?? this.participants,
+      typingUsers: typingUsers ?? this.typingUsers,
       lastMessage: lastMessage ?? this.lastMessage,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       createdAt: createdAt ?? this.createdAt,
