@@ -5,14 +5,17 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_button.dart';
-import '../../../../core/widgets/custom_text_field.dart';
+// Removed unused import
+import '../../../../core/services/stripe_payment_service.dart';
 import '../widgets/credit_card_widget.dart';
 
 /// Add payment screen for entering credit card details
 /// Based on Figma design "iPhone 16 Pro Max - 27"
 class AddPaymentScreen extends StatefulWidget {
   /// Callback when payment is confirmed
-  final Function(String cardNumber, String expiry, String cvc, String cardholderName)? onPaymentConfirmed;
+  final Function(
+          String cardNumber, String expiry, String cvc, String cardholderName)?
+      onPaymentConfirmed;
 
   const AddPaymentScreen({
     this.onPaymentConfirmed,
@@ -55,10 +58,12 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
   void _validateAndConfirm() {
     setState(() {
-      _cardNumberError = Validators.validateCardNumber(_cardNumberController.text);
+      _cardNumberError =
+          Validators.validateCardNumber(_cardNumberController.text);
       _expiryError = Validators.validateExpiry(_expiryController.text);
       _cvcError = Validators.validateCVC(_cvcController.text);
-      _cardholderError = Validators.validateRequired(_cardholderNameController.text);
+      _cardholderError =
+          Validators.validateRequired(_cardholderNameController.text);
     });
 
     if (_cardNumberError == null &&
@@ -69,22 +74,16 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     }
   }
 
-  void _submitPayment() {
+  void _submitPayment() async {
     setState(() => _isLoading = true);
-
-    // Simulate payment processing
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        widget.onPaymentConfirmed?.call(
-          _cardNumberController.text,
-          _expiryController.text,
-          _cvcController.text,
-          _cardholderNameController.text,
-        );
-        Navigator.pop(context);
-      }
-    });
+    try {
+      await StripePaymentService.makePayment(50.0, "current_booking_id", "test@example.com");
+      // Handle success (navigate to success screen)
+    } catch (e) {
+      // Handle error (show snackbar)
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   String _formatCardNumber(String value) {

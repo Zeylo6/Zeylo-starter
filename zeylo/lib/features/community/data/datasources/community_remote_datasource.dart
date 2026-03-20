@@ -23,6 +23,9 @@ abstract class CommunityRemoteDataSource {
 
   /// Create a new post
   Future<String> createPost(PostModel post);
+
+  /// Delete a post
+  Future<void> deletePost(String postId);
 }
 
 /// Implementation of CommunityRemoteDataSource using Firestore
@@ -122,6 +125,15 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
     try {
       final doc = await _firestore.collection('posts').add(post.toFirestore());
       return doc.id;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    try {
+      await _firestore.collection('posts').doc(postId).delete();
     } catch (e) {
       rethrow;
     }

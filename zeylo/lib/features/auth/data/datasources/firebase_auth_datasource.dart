@@ -310,6 +310,20 @@ class FirebaseAuthDataSource {
     }
   }
 
+  /// Get a real-time stream of the user document
+  Stream<UserModel?> userSnapshots(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) {
+        return null;
+      }
+      return UserModel.fromFirestore(doc.data() ?? {}, uid);
+    });
+  }
+
   /// Get user from Firestore by UID
   Future<UserModel?> getUserById(String uid) async {
     try {

@@ -34,14 +34,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       appBar: isDesktop
           ? null
           : AppBar(
-              title: const Text('Admin Console', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text('Admin Console',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               backgroundColor: AppColors.surface,
               elevation: 1,
             ),
-      drawer: isDesktop ? null : _buildSidebar(),
+      drawer: isDesktop ? null : _buildSidebar(isDrawer: true),
       body: Row(
         children: [
-          if (isDesktop) _buildSidebar(),
+          if (isDesktop) _buildSidebar(isDrawer: false),
           Expanded(
             child: _buildCurrentTab(),
           ),
@@ -50,58 +51,76 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildSidebar() {
-    return Drawer(
-      backgroundColor: AppColors.surface,
-      elevation: 0,
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(right: BorderSide(color: AppColors.border)),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 48),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: const Icon(Icons.admin_panel_settings, color: Colors.white, size: 36),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Zeylo Admin',
-              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            _buildNavItem(0, Icons.dashboard_rounded, 'Overview'),
-            _buildNavItem(1, Icons.storefront_rounded, 'Business Approvals'),
-            _buildNavItem(2, Icons.verified_user_rounded, 'Host Approvals'),
-            _buildNavItem(3, Icons.flag_rounded, 'User Reports'),
-            _buildNavItem(4, Icons.people_rounded, 'User Management'),
-            const Spacer(),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app, color: AppColors.error),
-              title: const Text('Exit Console', style: TextStyle(color: AppColors.error)),
-              onTap: () => context.pop(),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
-        ),
+  Widget _buildSidebar({bool isDrawer = false}) {
+    final sidebarContent = Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: isDrawer
+            ? null
+            : const Border(right: BorderSide(color: AppColors.border)),
       ),
+      child: Column(
+        children: [
+          const SizedBox(height: 48),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+              ),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: const Icon(Icons.admin_panel_settings,
+                color: Colors.white, size: 36),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Zeylo Admin',
+            style:
+                AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          _buildNavItem(0, Icons.dashboard_rounded, 'Overview'),
+          _buildNavItem(1, Icons.storefront_rounded, 'Business Approvals'),
+          _buildNavItem(2, Icons.verified_user_rounded, 'Host Approvals'),
+          _buildNavItem(3, Icons.flag_rounded, 'User Reports'),
+          _buildNavItem(4, Icons.people_rounded, 'User Management'),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.exit_to_app, color: AppColors.error),
+            title: const Text('Exit Console',
+                style: TextStyle(color: AppColors.error)),
+            onTap: () => context.pop(),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
+
+    if (isDrawer) {
+      return Drawer(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        child: sidebarContent,
+      );
+    }
+
+    return SizedBox(
+      width: 280,
+      child: sidebarContent,
     );
   }
 
   Widget _buildNavItem(int index, IconData icon, String title) {
     final isSelected = _selectedIndex == index;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      margin:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withOpacity(0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: ListTile(
@@ -118,9 +137,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ),
         onTap: () {
           setState(() => _selectedIndex = index);
-          if (!MediaQuery.of(context).size.width.isFinite) {
-             // Closes drawer if on mobile
-             Navigator.pop(context); 
+          final isDesktop = MediaQuery.of(context).size.width > 800;
+          if (!isDesktop) {
+            Navigator.pop(context);
           }
         },
       ),

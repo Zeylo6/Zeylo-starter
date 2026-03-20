@@ -10,6 +10,9 @@ abstract class ProfileDatasource {
   /// Get user profile by ID
   Future<UserProfileModel> getProfile(String userId);
 
+  /// Watch user profile by ID
+  Stream<UserProfileModel> watchProfile(String userId);
+
   /// Update user profile
   Future<UserProfileModel> updateProfile(
     String userId,
@@ -62,6 +65,20 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
     return UserProfileModel.fromFirestore(
       doc,
     );
+  }
+
+  @override
+  Stream<UserProfileModel> watchProfile(String userId) {
+    return _firestore
+        .collection(_usersCollection)
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) {
+        throw Exception('User profile not found');
+      }
+      return UserProfileModel.fromFirestore(doc);
+    });
   }
 
   @override

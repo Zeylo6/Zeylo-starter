@@ -149,7 +149,10 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
   }
 
   Widget _buildSummaryHeader(List<ReviewEntity> reviews) {
-    return Row(
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         // Green badge like in the reference image
         Container(
@@ -166,9 +169,9 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
             ),
           ),
         ),
-        const SizedBox(width: AppSpacing.md),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             PartialStarRating(
               rating: widget.experience.averageRating,
@@ -297,12 +300,17 @@ class _AllReviewsScreenState extends ConsumerState<AllReviewsScreen> {
                 child: const Icon(Icons.person, color: AppColors.primary, size: 16),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Seeker',
-                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'Seeker',
+                  style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: AppSpacing.sm),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
                   const SizedBox(width: 4),

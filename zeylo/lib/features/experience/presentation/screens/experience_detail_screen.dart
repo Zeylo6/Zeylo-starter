@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../home/presentation/providers/home_provider.dart';
+import '../../../messaging/presentation/providers/messaging_provider.dart';
 import '../widgets/experience_info_section.dart';
 import '../widgets/host_info_card.dart';
 import '../../../../core/widgets/partial_star_rating.dart';
@@ -123,6 +125,7 @@ class _ExperienceDetailScreenState
                                 reviewCount: experience.reviewCount,
                                 bio:
                                     'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
+                                onMessageTap: () => _openChatWithHost(context, experience),
                               ),
                               const SizedBox(height: AppSpacing.xxxl),
 
@@ -242,6 +245,21 @@ class _ExperienceDetailScreenState
         );
   }
 
+  Future<void> _openChatWithHost(BuildContext context, Experience experience) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final conversation = await ref.read(
+      getOrCreateConversationProvider((currentUser.uid, experience.hostId)).future,
+    );
+    if (mounted) {
+      context.push('/chat/${conversation.id}', extra: {
+        'otherUserName': experience.hostName,
+        'currentUserId': currentUser.uid,
+      });
+    }
+  }
+
   Widget _buildCoverImage(String imageUrl) {
     return SizedBox(
       width: double.infinity,
@@ -268,47 +286,53 @@ class _ExperienceDetailScreenState
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.sm,
               children: [
-                Text(
-                  'Guest Reviews',
-                  style:
-                      AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                // Rating summary
-                if (experience.reviewCount > 0) ...[
-                  Text(
-                    experience.averageRating.toStringAsFixed(1),
-                    style: AppTypography.titleLarge.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Guest Reviews',
+                      style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  PartialStarRating(
-                    rating: experience.averageRating,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  // Modern Review Count Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: Text(
-                      '${experience.reviewCount}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(width: AppSpacing.md),
+                    // Rating summary
+                    if (experience.reviewCount > 0) ...[
+                      Text(
+                        experience.averageRating.toStringAsFixed(1),
+                        style: AppTypography.titleLarge.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-                const Spacer(),
+                      const SizedBox(width: 8),
+                      PartialStarRating(
+                        rating: experience.averageRating,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      // Modern Review Count Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                        child: Text(
+                          '${experience.reviewCount}',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 if (experience.reviewCount > 3)
                   TextButton(
                     onPressed: () {
@@ -319,7 +343,13 @@ class _ExperienceDetailScreenState
                         ),
                       );
                     },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'View All',
@@ -377,24 +407,29 @@ class _ExperienceDetailScreenState
                                     color: AppColors.primary, size: 16),
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                'Seeker', // Masking real name unless fetched explicitly
-                                style: AppTypography.labelMedium
-                                    .copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const Spacer(),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star_rounded,
-                                      color: Color(0xFFFFB800), size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    review.rating.toStringAsFixed(1),
-                                    style: AppTypography.labelSmall
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
+                               Expanded(
+                                 child: Text(
+                                   'Seeker', // Masking real name unless fetched explicitly
+                                   style: AppTypography.labelMedium
+                                       .copyWith(fontWeight: FontWeight.bold),
+                                   maxLines: 1,
+                                   overflow: TextOverflow.ellipsis,
+                                 ),
+                               ),
+                               const SizedBox(width: AppSpacing.sm),
+                               Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   const Icon(Icons.star_rounded,
+                                       color: Color(0xFFFFB800), size: 16),
+                                   const SizedBox(width: 4),
+                                   Text(
+                                     review.rating.toStringAsFixed(1),
+                                     style: AppTypography.labelSmall
+                                         .copyWith(fontWeight: FontWeight.bold),
+                                   ),
+                                 ],
+                               ),
                             ],
                           ),
                           if (review.message != null && review.message!.isNotEmpty) ...[
@@ -624,7 +659,14 @@ class _ExperienceDetailScreenState
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: InkWell(
-            onTap: () => _bookNow(experience),
+            onTap: () {
+              context.push('/booking/${experience.id}', extra: {
+                'experienceTitle': experience.title,
+                'experienceCoverImage': experience.coverImage,
+                'hostId': experience.hostId,
+                'totalPrice': experience.price,
+              });
+            },
             child: Center(
               child: Text(
                 'Book Now',
@@ -652,66 +694,4 @@ class _ExperienceDetailScreenState
     );
   }
 
-  Future<void> _bookNow(dynamic experience) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to book this experience.')),
-      );
-      return;
-    }
-
-    try {
-      // Create a pending booking document
-      final docRef = FirebaseFirestore.instance.collection('bookings').doc();
-
-      await docRef.set({
-        'id': docRef.id,
-        'experienceId': experience.id,
-        'experienceTitle': experience.title,
-        'experienceCoverImage': experience.coverImage,
-        'userId': user.uid,
-        'hostId': experience.hostId,
-        'date': Timestamp.fromDate(DateTime.now().add(const Duration(
-            days:
-                1))), // Placeholder for next day (User should usually pick date)
-        'startTime': '10:00 AM', // Placeholder
-        'guests': 1, // Placeholder
-        'totalPrice': experience.price,
-        'status': 'pending',
-        'paymentStatus': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Add notification for the host
-      await FirebaseFirestore.instance.collection('activities').add({
-        'userId': experience.hostId, // Target the host
-        'title': 'New Booking Request',
-        'message': 'You have a new booking request for ${experience.title}!',
-        'createdAt': FieldValue.serverTimestamp(),
-        'type': 'new_booking',
-        'isRead': false,
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking request sent to host!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to book: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 }

@@ -64,8 +64,11 @@ class UserEntity {
   /// List of favorite experience IDs
   final List<String> favorites;
 
-  /// User settings/preferences
+  /// User setting/preferences
   final Map<String, dynamic> settings;
+
+  /// User statistics (average rating, total reviews)
+  final Map<String, dynamic> stats;
 
   /// Whether the user is banned
   final bool isBanned;
@@ -91,6 +94,7 @@ class UserEntity {
     this.fcmToken,
     this.favorites = const [],
     this.settings = const {},
+    this.stats = const {},
     this.isBanned = false,
     this.banReason,
   });
@@ -114,6 +118,7 @@ class UserEntity {
     String? fcmToken,
     List<String>? favorites,
     Map<String, dynamic>? settings,
+    Map<String, dynamic>? stats,
     bool? isBanned,
     String? banReason,
   }) {
@@ -136,6 +141,7 @@ class UserEntity {
       fcmToken: fcmToken ?? this.fcmToken,
       favorites: favorites ?? this.favorites,
       settings: settings ?? this.settings,
+      stats: stats ?? this.stats,
       isBanned: isBanned ?? this.isBanned,
       banReason: banReason ?? this.banReason,
     );

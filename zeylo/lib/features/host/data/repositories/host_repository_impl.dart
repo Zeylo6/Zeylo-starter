@@ -52,7 +52,14 @@ class HostRepositoryImpl implements HostRepository {
   }
 
   @override
+  Stream<Either<Failure, HostStatsEntity>> watchHostStats(String hostId) {
+    return _datasource.watchHostStats(hostId).map((stats) => Right(stats));
+  }
+
+  @override
   Stream<Either<Failure, double>> watchThisMonthEarnings(String hostId) {
-    return _datasource.watchThisMonthEarnings(hostId).map((total) => Right(total));
+    return _datasource
+        .watchThisMonthEarnings(hostId)
+        .map((total) => Right(total));
   }
 }

@@ -6,6 +6,9 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../providers/profile_provider.dart';
 
@@ -28,6 +31,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _bioController;
   bool _isLoading = false;
+  Uint8List? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -118,6 +123,47 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Profile Picture Section
+            Center(
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: AppColors.divider,
+                    backgroundImage: _selectedImage != null
+                        ? MemoryImage(_selectedImage!)
+                        : (profile.photoUrl != null
+                            ? CachedNetworkImageProvider(profile.photoUrl!)
+                            : null) as ImageProvider?,
+                    child: _selectedImage == null && profile.photoUrl == null
+                        ? const Icon(Icons.person,
+                            size: 60, color: AppColors.textHint)
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
             // Name field
             ZeyloTextField(
               label: 'Full Name',
@@ -167,6 +213,30 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+
+      if (image != null) {
+        final Uint8List imageBytes = await image.readAsBytes();
+        setState(() {
+          _selectedImage = imageBytes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _handleSave() async {
     setState(() {
       _isLoading = true;
@@ -177,31 +247,66 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final profile = profileAsync.valueOrNull;
       if (profile == null) return;
 
+      final repository = ref.read(profileRepositoryProvider);
+      String? newPhotoUrl = profile.photoUrl;
+
+      // 1. Upload new image if selected
+      if (_selectedImage != null) {
+        final uploadResult = await repository.uploadProfileImage(
+          widget.userId,
+          _selectedImage!,
+        );
+
+        uploadResult.fold(
+          (failure) => throw Exception('Image upload failed: ${failure.message}'),
+          (url) => newPhotoUrl = url,
+        );
+      }
+
+      // 2. Update profile
       final updatedProfile = profile.copyWith(
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
         bio: _bioController.text,
+        photoUrl: newPhotoUrl,
       );
 
-      final repository = ref.read(profileRepositoryProvider);
-      final result = await repository.updateProfile(widget.userId, updatedProfile);
+      final result =
+          await repository.updateProfile(widget.userId, updatedProfile);
 
       if (!mounted) return;
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${failure.message}')),
           );
         },
-        (_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
+        (_) async {
+          // 3. Sync profile to experiences if it's a host
+          // We don't have a clear "isHost" check here easily, but we can call it anyway
+          // or check if they have any experiences. For simplicity, we call it.
+          await repository.syncHostProfileToExperiences(
+            widget.userId,
+            _nameController.text,
+            newPhotoUrl,
           );
-          Navigator.pop(context);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Profile updated successfully')),
+            );
+            Navigator.pop(context);
+          }
         },
       );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

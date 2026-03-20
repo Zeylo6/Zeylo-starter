@@ -1,3 +1,7 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../providers/community_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -14,7 +18,7 @@ import '../../domain/entities/post_entity.dart';
 /// - Full-width image with overlay text
 /// - Post metadata below image
 /// - Like, comment, and share buttons
-class CommunityPostCard extends StatefulWidget {
+class CommunityPostCard extends ConsumerStatefulWidget {
   /// The post to display
   final Post post;
 
@@ -36,16 +40,54 @@ class CommunityPostCard extends StatefulWidget {
   });
 
   @override
-  State<CommunityPostCard> createState() => _CommunityPostCardState();
+  ConsumerState<CommunityPostCard> createState() => _CommunityPostCardState();
 }
 
-class _CommunityPostCardState extends State<CommunityPostCard> {
+class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   late bool _isLiked;
 
   @override
   void initState() {
     super.initState();
     _isLiked = false;
+  }
+
+  Future<void> _deletePost() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ref.read(deletePostProvider(widget.post.id).future);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Post deleted successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete post: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -189,6 +231,10 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
   }
 
   Widget _buildUserInfo() {
+    final currentUser = ref.watch(currentUserProvider).value;
+    final isOwner = currentUser?.uid == widget.post.userId;
+    final isAdmin = currentUser?.role == UserRole.admin;
+
     return Row(
       children: [
         // Avatar
@@ -220,6 +266,28 @@ class _CommunityPostCardState extends State<CommunityPostCard> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        // More menu
+        if (isOwner || isAdmin)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+            onSelected: (value) {
+              if (value == 'delete') {
+                _deletePost();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    SizedBox(width: 8),
+                    Text('Delete Post', style: TextStyle(color: AppColors.error)),
+                  ],
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
