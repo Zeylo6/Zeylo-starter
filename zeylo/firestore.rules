@@ -116,10 +116,36 @@ service cloud.firestore {
       allow update: if request.auth != null && (
         request.auth.uid == resource.data.userId || 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount'])
+        request.resource.data.diff(resource.data).affectedKeys().hasAny(['likesCount', 'commentsCount'])
       );
       allow delete: if request.auth != null && (
         request.auth.uid == resource.data.userId || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+
+      // Likes sub-collection
+      match /likes/{userId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Comments sub-collection
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null && (
+          resource.data.userId == request.auth.uid || 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        );
+      }
+    }
+
+    // Moments collection (Stories)
+    match /moments/{momentId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
     }

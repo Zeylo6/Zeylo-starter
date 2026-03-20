@@ -11,6 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
 import '../../domain/entities/post_entity.dart';
+import 'package:go_router/go_router.dart';
 
 /// Community post card widget
 ///
@@ -44,12 +45,9 @@ class CommunityPostCard extends ConsumerStatefulWidget {
 }
 
 class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
-  late bool _isLiked;
-
   @override
   void initState() {
     super.initState();
-    _isLiked = false;
   }
 
   Future<void> _deletePost() async {
@@ -57,7 +55,8 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this post? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -245,25 +244,31 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.border),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.full),
-            child: CachedNetworkImage(
-              imageUrl: widget.post.userAvatar,
-              fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  Container(color: AppColors.surface),
-              errorWidget: (context, url, error) =>
-                  Container(color: AppColors.surface),
+          child: GestureDetector(
+            onTap: () => context.push('/user/${widget.post.userId}'),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.full),
+              child: CachedNetworkImage(
+                imageUrl: widget.post.userAvatar,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    Container(color: AppColors.surface),
+                errorWidget: (context, url, error) =>
+                    Container(color: AppColors.surface),
+              ),
             ),
           ),
         ),
         const SizedBox(width: AppSpacing.md),
         // Name
         Expanded(
-          child: Text(
-            widget.post.userName,
-            style: AppTypography.titleMedium,
-            overflow: TextOverflow.ellipsis,
+          child: GestureDetector(
+            onTap: () => context.push('/user/${widget.post.userId}'),
+            child: Text(
+              widget.post.userName,
+              style: AppTypography.titleMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
         // More menu
@@ -280,9 +285,11 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                    Icon(Icons.delete_outline,
+                        color: AppColors.error, size: 20),
                     SizedBox(width: 8),
-                    Text('Delete Post', style: TextStyle(color: AppColors.error)),
+                    Text('Delete Post',
+                        style: TextStyle(color: AppColors.error)),
                   ],
                 ),
               ),
@@ -295,7 +302,10 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   Widget _buildCaption() {
     // Parse caption and tags
     final parts = widget.post.caption.split(RegExp(r'#\w+'));
-    final tags = RegExp(r'#\w+').allMatches(widget.post.caption).map((m) => m.group(0)!).toList();
+    final tags = RegExp(r'#\w+')
+        .allMatches(widget.post.caption)
+        .map((m) => m.group(0)!)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,19 +330,38 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                   ),
                 ),
                 if (widget.post.experienceTag != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Text(
-                      widget.post.experienceTag!,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.primary,
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to experience detail
+                      // The experienceTag might be "Experience Name #ID" or just "ID"
+                      // For now, assuming it's the experience ID or the ID is extractable
+                      final id = widget.post.experienceTag!.contains('#')
+                          ? widget.post.experienceTag!.split('#').last.trim()
+                          : widget.post.experienceTag!;
+                      context.push('/experience/$id');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_outlined,
+                              size: 14, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.post.experienceTag!,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -344,19 +373,35 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   }
 
   Widget _buildActionButtons() {
+    final isLikedAsync = ref.watch(isPostLikedProvider(widget.post.id));
+
     return Row(
       children: [
         // Like button
-        _ActionButton(
-          icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-          label: '${widget.post.likesCount}',
-          iconColor: _isLiked ? AppColors.error : AppColors.textSecondary,
-          onTap: () {
-            setState(() {
-              _isLiked = !_isLiked;
-            });
-            widget.onLikeTap?.call();
-          },
+        isLikedAsync.when(
+          data: (isLiked) => _ActionButton(
+            icon: isLiked ? Icons.favorite : Icons.favorite_border,
+            label: '${widget.post.likesCount}',
+            iconColor: isLiked ? AppColors.error : AppColors.textSecondary,
+            onTap: () async {
+              if (isLiked) {
+                await ref.read(unlikePostProvider(widget.post.id).future);
+              } else {
+                await ref.read(likePostProvider(widget.post.id).future);
+              }
+              widget.onLikeTap?.call();
+            },
+          ),
+          loading: () => const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          error: (_, __) => _ActionButton(
+            icon: Icons.favorite_border,
+            label: '${widget.post.likesCount}',
+            onTap: () => ref.read(likePostProvider(widget.post.id)),
+          ),
         ),
         const SizedBox(width: AppSpacing.lg),
 
@@ -364,7 +409,10 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
         _ActionButton(
           icon: Icons.comment_outlined,
           label: '${widget.post.commentsCount}',
-          onTap: widget.onCommentTap,
+          onTap: () {
+            context.push('/post-comments/${widget.post.id}');
+            widget.onCommentTap?.call();
+          },
         ),
         const SizedBox(width: AppSpacing.lg),
 

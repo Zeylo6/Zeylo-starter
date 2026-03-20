@@ -12,7 +12,28 @@
           "package_name": "com.zeylo.zeylo"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "808246523710-14t6j9kqacali2qdtsdg8ch34f7hjs68.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zeylo.zeylo",
+            "certificate_hash": "9d714a79161b72546bc9e16975f5e189208b49de"
+          }
+        },
+        {
+          "client_id": "808246523710-f9lf4q8173ve5c2q3rrq8kgg9svqflcm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zeylo.zeylo",
+            "certificate_hash": "fbc2d3c19db9987cd6b45765f78bda3128b2c97f"
+          }
+        },
+        {
+          "client_id": "808246523710-t5fkep8blkat42qupksn0juu0kdffan0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBrB8E8bY4R1Bls_t9XBk9xDMh-aNnyJxM"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "808246523710-t5fkep8blkat42qupksn0juu0kdffan0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "808246523710-52fab786376lv3oh9njodsfat8p91km5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.zeylo.zeylo"
+              }
+            }
+          ]
         }
       }
     }

@@ -4,6 +4,7 @@ const surprisesController = require('../controllers/surprises');
 const adminController = require('../controllers/adminController');
 const aiController = require('../controllers/aiController');
 const paymentController = require('../controllers/paymentController');
+const communityController = require('../controllers/communityController');
 const verifyToken = require('../middleware/auth');
 
 router.get('/health', (req, res) => res.status(200).send('OK'));
@@ -24,5 +25,9 @@ router.post('/ai/mystery/generate', verifyToken, aiController.generateSurprise);
 // Payment Routes
 router.post('/payments/create-intent', verifyToken, paymentController.createIntent);
 router.post('/payments/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
+
+// Community Routes
+router.post('/community/notify-like', verifyToken, communityController.handleLikeNotification);
+router.post('/community/notify-comment', verifyToken, communityController.handleCommentNotification);
 
 module.exports = router;

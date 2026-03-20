@@ -40,7 +40,7 @@ class ProfileScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: AppColors.background,
         automaticallyImplyLeading: false,
-        leadingWidth: 100,
+        leadingWidth: 150,
         leading: Row(
           children: [
             if (!isCurrentUser)
