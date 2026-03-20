@@ -57,6 +57,12 @@ class BookingEntity {
   /// Whether the earnings for this booking have been collected by the host
   final bool isEarningsCollected;
 
+  /// Whether this booking is a mystery experience
+  final bool isMystery;
+
+  /// Mystery document ID (links to mysteries collection)
+  final String? mysteryId;
+
   const BookingEntity({
     required this.id,
     required this.experienceId,
@@ -77,6 +83,8 @@ class BookingEntity {
     this.seekerName,
     this.seekerPhotoUrl,
     this.isEarningsCollected = false,
+    this.isMystery = false,
+    this.mysteryId,
   });
 
   /// Create a copy of this booking entity with some fields replaced
@@ -100,6 +108,8 @@ class BookingEntity {
     String? seekerName,
     String? seekerPhotoUrl,
     bool? isEarningsCollected,
+    bool? isMystery,
+    String? mysteryId,
   }) {
     return BookingEntity(
       id: id ?? this.id,
@@ -121,6 +131,8 @@ class BookingEntity {
       seekerName: seekerName ?? this.seekerName,
       seekerPhotoUrl: seekerPhotoUrl ?? this.seekerPhotoUrl,
       isEarningsCollected: isEarningsCollected ?? this.isEarningsCollected,
+      isMystery: isMystery ?? this.isMystery,
+      mysteryId: mysteryId ?? this.mysteryId,
     );
   }
 
@@ -132,6 +144,8 @@ class BookingEntity {
       'status: $status, '
       'paymentStatus: $paymentStatus, '
       'isRatedByHost: $isRatedByHost, '
-      'isRatedBySeeker: $isRatedBySeeker'
+      'isRatedBySeeker: $isRatedBySeeker, '
+      'isMystery: $isMystery, '
+      'mysteryId: $mysteryId'
       ')';
 }
