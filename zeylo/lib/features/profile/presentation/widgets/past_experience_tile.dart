@@ -7,16 +7,18 @@ import 'package:zeylo/core/theme/app_typography.dart';
 class PastExperienceTile extends StatelessWidget {
   final String experienceId;
   final String title;
-  final double rating;
-  final int ratingCount;
   final double price;
+  final DateTime date;
+  final String status;
+  final String? imageUrl;
 
   const PastExperienceTile({
     required this.experienceId,
     required this.title,
-    required this.rating,
-    required this.ratingCount,
     required this.price,
+    required this.date,
+    required this.status,
+    this.imageUrl,
     super.key,
   });
 
@@ -32,14 +34,18 @@ class PastExperienceTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: const Icon(Icons.history, color: AppColors.primary),
+          // Experience thumbnail or fallback icon
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: imageUrl != null && imageUrl!.isNotEmpty
+                ? Image.network(
+                    imageUrl!,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _fallbackIcon(),
+                  )
+                : _fallbackIcon(),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -48,35 +54,74 @@ class PastExperienceTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTypography.labelLarge
+                      .copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      rating.toStringAsFixed(1),
-                      style: AppTypography.labelSmall,
+                    Icon(
+                      Icons.calendar_today,
+                      size: 12,
+                      color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '($ratingCount)',
-                      style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                      '${date.day}/${date.month}/${date.year}',
+                      style: AppTypography.labelSmall
+                          .copyWith(color: AppColors.textSecondary),
                     ),
+                    const SizedBox(width: 8),
+                    _buildStatusBadge(),
                   ],
                 ),
               ],
             ),
           ),
           Text(
-            '\$$price',
+            'Rs. ${price.toStringAsFixed(0)}',
             style: AppTypography.labelLarge.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: const Icon(Icons.history, color: AppColors.primary),
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    final isCompleted = status == 'completed';
+    final badgeColor = isCompleted ? AppColors.success : AppColors.error;
+    final label = isCompleted ? 'Completed' : 'Cancelled';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: badgeColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.labelSmall.copyWith(
+          color: badgeColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
