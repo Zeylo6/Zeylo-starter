@@ -83,96 +83,206 @@ class _MessageListScreenState extends ConsumerState<MessageListScreen> {
 
             // Conversations list
             Expanded(
-              child: conversationsAsync.when(
-                data: (conversations) {
-                  if (conversations.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.chat_bubble_outline, size: 64, color: AppColors.textSecondary.withOpacity(0.5)),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'No conversations yet',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            'Start a conversation from a user\'s profile',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: conversations.length,
-                    itemBuilder: (context, index) {
-                      final conversation = conversations[index];
-                      final otherUserId = conversation.participants
-                          .firstWhere((id) => id != widget.userId, orElse: () => widget.userId);
-
-                      final isUnread = conversation.lastMessage != null &&
-                          !conversation.lastMessage!.isRead &&
-                          conversation.lastMessage!.senderId != widget.userId;
-
-                      return Dismissible(
-                        key: ValueKey(conversation.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: AppSpacing.lg),
-                          color: AppColors.error,
-                          child: const Icon(Icons.delete_outline, color: Colors.white),
-                        ),
-                        confirmDismiss: (direction) async {
-                          return await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Conversation?'),
-                              content: const Text('This action cannot be undone.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
+              child: CustomScrollView(
+                slivers: [
+                  conversationsAsync.when(
+                    data: (conversations) {
+                      if (conversations.isEmpty) {
+                        return SliverToBoxAdapter(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(height: 60),
+                                Icon(Icons.chat_bubble_outline, size: 64, color: AppColors.textSecondary.withOpacity(0.5)),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  'No conversations yet',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  style: TextButton.styleFrom(foregroundColor: AppColors.error),
-                                  child: const Text('Delete'),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  'Start a conversation from a user\'s profile or search above',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                        onDismissed: (direction) {
-                          // Handle delete logic here natively down the line
-                        },
-                        child: _ConversationItem(
-                          otherUserId: otherUserId,
-                          conversationId: conversation.id,
-                          lastMessage: conversation.lastMessage?.text,
-                          lastMessageTime: conversation.lastMessageAt,
-                          searchQuery: _searchQuery,
-                          currentUserId: widget.userId,
-                          isUnread: isUnread,
-                          onConversationSelected: widget.onConversationSelected,
+                          ),
+                        );
+                      }
+
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final conversation = conversations[index];
+                            final otherUserId = conversation.participants
+                                .firstWhere((id) => id != widget.userId, orElse: () => widget.userId);
+
+                            final isUnread = conversation.lastMessage != null &&
+                                !conversation.lastMessage!.isRead &&
+                                conversation.lastMessage!.senderId != widget.userId;
+
+                            return Dismissible(
+                              key: ValueKey(conversation.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: AppSpacing.lg),
+                                color: AppColors.error,
+                                child: const Icon(Icons.delete_outline, color: Colors.white),
+                              ),
+                              confirmDismiss: (direction) async {
+                                return await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Delete Conversation?'),
+                                    content: const Text('This action cannot be undone.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, true),
+                                        style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              onDismissed: (direction) {
+                                // Handle delete logic here natively down the line
+                              },
+                              child: _ConversationItem(
+                                otherUserId: otherUserId,
+                                conversationId: conversation.id,
+                                lastMessage: conversation.lastMessage?.text,
+                                lastMessageTime: conversation.lastMessageAt,
+                                searchQuery: _searchQuery,
+                                currentUserId: widget.userId,
+                                isUnread: isUnread,
+                                onConversationSelected: widget.onConversationSelected,
+                              ),
+                            );
+                          },
+                          childCount: conversations.length,
                         ),
                       );
                     },
-                  );
-                },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-                error: (error, stack) => Center(
-                  child: Text('Error: $error'),
-                ),
+                    loading: () => const SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                    error: (error, stack) => SliverToBoxAdapter(
+                      child: Center(
+                        child: Text('Error: $error'),
+                      ),
+                    ),
+                  ),
+
+                  // Global Search Header
+                  if (_searchQuery.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.sm),
+                        child: Text(
+                          'Other Users',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Global Search Results
+                  if (_searchQuery.isNotEmpty)
+                    ref.watch(searchProfilesProvider(_searchQuery)).when(
+                      data: (profiles) {
+                        final results = profiles.where((p) => p.id != widget.userId).toList();
+                        
+                        if (results.isEmpty) {
+                          return SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              child: Center(
+                                child: Text(
+                                  'No other users found',
+                                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final profile = results[index];
+                              return ConversationTile(
+                                userId: profile.id,
+                                userName: profile.name,
+                                userPhotoUrl: profile.photoUrl,
+                                lastMessage: 'Tap to start a conversation',
+                                lastMessageTime: DateTime.now(), // Fallback time for display
+                                isUnread: false,
+                                onPressed: () async {
+                                  try {
+                                    // Make sure it doesn't spam double clicks
+                                    showDialog(
+                                      context: context, 
+                                      barrierDismissible: false,
+                                      builder: (_) => const Center(child: CircularProgressIndicator())
+                                    );
+                                    
+                                    final conversation = await ref.read(getOrCreateConversationProvider((widget.userId, profile.id)).future);
+                                    
+                                    if (context.mounted) {
+                                      // Close loader
+                                      Navigator.pop(context);
+
+                                      if (widget.onConversationSelected != null) {
+                                        widget.onConversationSelected!(conversation.id, profile.id);
+                                      } else {
+                                        context.push('/chat/${conversation.id}', extra: {
+                                          'otherUserName': profile.name,
+                                          'currentUserId': widget.userId,
+                                        });
+                                      }
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      Navigator.pop(context); // close loader
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error starting conversation: $e')));
+                                    }
+                                  }
+                                },
+                              );
+                            },
+                            childCount: results.length,
+                          ),
+                        );
+                      },
+                      loading: () => const SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(AppSpacing.lg),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      ),
+                      error: (e, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+                    ),
+                ],
               ),
             ),
           ],
