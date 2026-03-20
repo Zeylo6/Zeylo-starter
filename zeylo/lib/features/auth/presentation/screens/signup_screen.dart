@@ -276,7 +276,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     _buildRoleCard('seeker', '🔍', 'Seeker', 'Discover'),
                     _buildRoleCard('host', '🏡', 'Host', 'List'),
                     _buildRoleCard('business', '💼', 'Business', 'Group'),
-                    _buildRoleCard('admin', '🛡️', 'Admin', 'Manage'),
                   ],
                 ),
                 const SizedBox(height: 24),

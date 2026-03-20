@@ -141,6 +141,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                             ? 'User unbanned'
                                             : 'User banned')));
                               }
+                            } else if (value == 'make_admin' || value == 'make_seeker') {
+                              final newRole = value == 'make_admin' ? 'admin' : 'seeker';
+                              await doc.reference.update({'role': newRole});
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Role updated to ${newRole.toUpperCase()}')));
+                              }
                             } else if (value == 'view') {
                               Navigator.push(
                                 context,
@@ -155,12 +162,16 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                             const PopupMenuItem(
                                 value: 'view', child: Text('View Details')),
                             PopupMenuItem(
-                              value: 'ban',
-                              child: Text(isBanned ? 'Unban User' : 'Ban User',
-                                  style: TextStyle(
-                                      color: isBanned
-                                          ? AppColors.success
-                                          : AppColors.error)),
+                              value: role == 'admin' ? 'make_seeker' : 'make_admin',
+                              child: Text(role == 'admin' ? 'Demote to Seeker' : 'Promote to Admin'),
+                            ),
+                            PopupMenuItem(
+                                value: 'ban',
+                                child: Text(isBanned ? 'Unban User' : 'Ban User',
+                                    style: TextStyle(
+                                        color: isBanned
+                                            ? AppColors.success
+                                            : AppColors.error)),
                             ),
                           ],
                         ),
