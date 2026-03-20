@@ -12,6 +12,7 @@ import 'package:zeylo/features/profile/presentation/providers/profile_provider.d
 import 'package:zeylo/features/profile/presentation/widgets/photo_grid.dart';
 import 'package:zeylo/features/profile/presentation/widgets/profile_header.dart';
 import '../widgets/past_experience_tile.dart';
+import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../favorites/presentation/widgets/favorites_bottom_sheet.dart';
 
@@ -196,28 +197,65 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
 
-          // Past experiences list
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Column(
-              children: [
-                PastExperienceTile(
-                  experienceId: '1',
-                  title: 'Traditional Cooking Adventure',
-                  rating: 4.9,
-                  ratingCount: 234,
-                  price: 45,
+          // Past experiences list (from real bookings)
+          if (isCurrentUser)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: ref.watch(pastBookingsProvider(userId)).when(
+                data: (pastBookings) {
+                  if (pastBookings.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.history_rounded,
+                              size: 40,
+                              color: AppColors.textSecondary.withOpacity(0.4),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              'No past experiences yet',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: pastBookings.map<Widget>((booking) {
+                      return PastExperienceTile(
+                        experienceId: booking.experienceId,
+                        title: booking.experienceTitle,
+                        price: booking.totalPrice,
+                        date: booking.date,
+                        status: booking.status,
+                        imageUrl: booking.experienceCoverImage,
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-                PastExperienceTile(
-                  experienceId: '2',
-                  title: 'Sunrise watching',
-                  rating: 4.8,
-                  ratingCount: 156,
-                  price: 35,
+                error: (error, _) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Center(
+                    child: Text(
+                      'Could not load past experiences',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
 
           const SizedBox(height: AppSpacing.lg),
 
