@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/post_entity.dart';
+import '../entities/comment_entity.dart';
+import '../entities/moment_entity.dart';
 
 /// Abstract repository for community feature
 abstract class CommunityRepository {
@@ -23,14 +25,29 @@ abstract class CommunityRepository {
   });
 
   /// Like a post
-  Future<Either<Failure, void>> likePost(String postId);
+  Future<Either<Failure, void>> likePost(String postId, String userId, String userName);
 
   /// Unlike a post
-  Future<Either<Failure, void>> unlikePost(String postId);
+  Future<Either<Failure, void>> unlikePost(String postId, String userId);
+
+  /// Check if a post is liked by a user
+  Future<Either<Failure, bool>> isPostLiked(String postId, String userId);
+
+  /// Watch comments for a post
+  Stream<List<Comment>> watchComments(String postId);
+
+  /// Add a comment to a post
+  Future<Either<Failure, void>> addComment(String postId, Comment comment);
 
   /// Create a new post
   Future<Either<Failure, String>> createPost(Post post);
 
   /// Delete a post
   Future<Either<Failure, void>> deletePost(String postId);
+
+  /// Watch moments (stories) — real-time stream
+  Stream<List<Moment>> watchMoments();
+
+  /// Add a moment (story)
+  Future<Either<Failure, void>> addMoment(Moment moment);
 }

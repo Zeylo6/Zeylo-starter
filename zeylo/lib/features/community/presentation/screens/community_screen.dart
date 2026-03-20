@@ -10,6 +10,7 @@ import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/community_provider.dart';
 import '../widgets/community_post_card.dart';
 import '../widgets/suggested_user_card.dart';
+import '../widgets/moments_bar.dart';
 import 'package:go_router/go_router.dart';
 
 /// Community screen displaying community posts feed
@@ -51,6 +52,14 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
               pinned: false,
               toolbarHeight: 56,
               title: const _TopBar(),
+            ),
+
+            // Moments (Stories)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: AppSpacing.md),
+                child: MomentsBar(),
+              ),
             ),
 
             // Community section header
@@ -257,10 +266,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
   }
 
   void _navigateToComments(String postId) {
-    Navigator.of(context).pushNamed(
-      '/post-comments',
-      arguments: postId,
-    );
+    context.push('/post-comments/$postId');
   }
 
   void _sharePost(String postId) {

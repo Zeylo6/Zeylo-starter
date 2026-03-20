@@ -11,6 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/loading_shimmer.dart';
 import '../../domain/entities/post_entity.dart';
+import 'package:go_router/go_router.dart';
 
 /// Community post card widget
 ///
@@ -44,12 +45,9 @@ class CommunityPostCard extends ConsumerStatefulWidget {
 }
 
 class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
-  late bool _isLiked;
-
   @override
   void initState() {
     super.initState();
-    _isLiked = false;
   }
 
   Future<void> _deletePost() async {
@@ -320,19 +318,37 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
                   ),
                 ),
                 if (widget.post.experienceTag != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Text(
-                      widget.post.experienceTag!,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.primary,
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to experience detail
+                      // The experienceTag might be "Experience Name #ID" or just "ID"
+                      // For now, assuming it's the experience ID or the ID is extractable
+                      final id = widget.post.experienceTag!.contains('#')
+                          ? widget.post.experienceTag!.split('#').last.trim()
+                          : widget.post.experienceTag!;
+                      context.push('/experience/$id');
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 14, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.post.experienceTag!,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -344,19 +360,34 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
   }
 
   Widget _buildActionButtons() {
+    final isLikedAsync = ref.watch(isPostLikedProvider(widget.post.id));
+
     return Row(
       children: [
         // Like button
-        _ActionButton(
-          icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-          label: '${widget.post.likesCount}',
-          iconColor: _isLiked ? AppColors.error : AppColors.textSecondary,
-          onTap: () {
-            setState(() {
-              _isLiked = !_isLiked;
-            });
-            widget.onLikeTap?.call();
-          },
+        isLikedAsync.when(
+          data: (isLiked) => _ActionButton(
+            icon: isLiked ? Icons.favorite : Icons.favorite_border,
+            label: '${widget.post.likesCount}',
+            iconColor: isLiked ? AppColors.error : AppColors.textSecondary,
+            onTap: () {
+              if (isLiked) {
+                ref.read(unlikePostProvider(widget.post.id));
+              } else {
+                ref.read(likePostProvider(widget.post.id));
+              }
+            },
+          ),
+          loading: () => const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          error: (_, __) => _ActionButton(
+            icon: Icons.favorite_border,
+            label: '${widget.post.likesCount}',
+            onTap: () => ref.read(likePostProvider(widget.post.id)),
+          ),
         ),
         const SizedBox(width: AppSpacing.lg),
 
@@ -364,7 +395,7 @@ class _CommunityPostCardState extends ConsumerState<CommunityPostCard> {
         _ActionButton(
           icon: Icons.comment_outlined,
           label: '${widget.post.commentsCount}',
-          onTap: widget.onCommentTap,
+          onTap: () => context.push('/post-comments/${widget.post.id}'),
         ),
         const SizedBox(width: AppSpacing.lg),
 

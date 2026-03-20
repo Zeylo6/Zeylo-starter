@@ -52,6 +52,7 @@ import '../features/mood/presentation/screens/mood_results_screen.dart';
 // Community
 import '../features/community/presentation/screens/community_screen.dart';
 import '../features/community/presentation/screens/create_post_screen.dart';
+import '../features/community/presentation/screens/comments_screen.dart';
 
 // Messaging
 import '../features/messaging/presentation/screens/message_list_screen.dart';
@@ -463,10 +464,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const MoodResultsScreen(),
       ),
 
-      // Social routes
       GoRoute(
         path: '/create-post',
         builder: (context, state) => const CreatePostScreen(),
+      ),
+      GoRoute(
+        path: '/post-comments/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return CommentsScreen(postId: id);
+        },
       ),
       GoRoute(
         path: '/messages',
