@@ -46,6 +46,9 @@ abstract class MessagingRepository {
   /// Stream messages for a conversation
   Stream<List<MessageEntity>> streamMessages(String conversationId);
 
+  /// Stream a single conversation
+  Stream<ConversationEntity> streamConversation(String conversationId);
+
   /// Stream conversations for a user
   Stream<List<ConversationEntity>> streamConversations(String userId);
 }

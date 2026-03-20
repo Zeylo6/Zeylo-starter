@@ -34,6 +34,9 @@ abstract class MessagingDatasource {
   /// Stream messages for a conversation
   Stream<List<MessageModel>> streamMessages(String conversationId);
 
+  /// Stream a single conversation
+  Stream<ConversationModel> streamConversation(String conversationId);
+
   /// Stream conversations for a user
   Stream<List<ConversationModel>> streamConversations(String userId);
 }
@@ -195,10 +198,19 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
-              .map((doc) => MessageModel.fromFirestore(
-                  doc as DocumentSnapshot<Map<String, dynamic>>))
+              .map((doc) => MessageModel.fromFirestore(doc))
               .toList();
         });
+  }
+
+  @override
+  Stream<ConversationModel> streamConversation(String conversationId) {
+    return _firestore
+        .collection(_conversationsCollection)
+        .doc(conversationId)
+        .snapshots()
+        .map((doc) => ConversationModel.fromFirestore(
+            doc as DocumentSnapshot<Map<String, dynamic>>));
   }
 
   @override
@@ -210,8 +222,7 @@ class MessagingFirestoreDatasource implements MessagingDatasource {
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
-              .map((doc) => ConversationModel.fromFirestore(
-                  doc as DocumentSnapshot<Map<String, dynamic>>))
+              .map((doc) => ConversationModel.fromFirestore(doc))
               .toList();
         });
   }

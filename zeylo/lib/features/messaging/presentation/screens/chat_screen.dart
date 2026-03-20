@@ -58,13 +58,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           color: AppColors.textPrimary,
           onPressed: widget.onBackPressed ?? () => Navigator.pop(context),
         ),
-        title: Text(
-          widget.otherUserName,
-          style: AppTypography.titleLarge.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
+        title: Column(
+          children: [
+            Text(
+              widget.otherUserName,
+              style: AppTypography.titleLarge.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            ref.watch(conversationStreamProvider(widget.conversationId)).when(
+                  data: (conv) {
+                    final isOtherTyping = conv.typingUsers
+                        .any((uid) => uid != widget.currentUserId);
+                    if (isOtherTyping) {
+                      return Text(
+                        'typing...',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+          ],
         ),
         centerTitle: true,
       ),

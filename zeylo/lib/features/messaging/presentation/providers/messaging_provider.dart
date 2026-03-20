@@ -40,6 +40,15 @@ final conversationsStreamProvider =
   },
 );
 
+// Individual conversation stream provider
+final conversationStreamProvider =
+    StreamProvider.family<ConversationEntity, String>(
+  (ref, conversationId) {
+    final repository = ref.watch(messagingRepositoryProvider);
+    return repository.streamConversation(conversationId);
+  },
+);
+
 // Messages stream provider
 final messagesStreamProvider =
     StreamProvider.family<List<MessageEntity>, String>(

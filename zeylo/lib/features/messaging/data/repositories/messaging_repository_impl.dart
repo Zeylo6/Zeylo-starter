@@ -104,6 +104,11 @@ class MessagingRepositoryImpl implements MessagingRepository {
   }
 
   @override
+  Stream<ConversationEntity> streamConversation(String conversationId) {
+    return _datasource.streamConversation(conversationId);
+  }
+
+  @override
   Stream<List<ConversationEntity>> streamConversations(String userId) {
     return _datasource.streamConversations(userId);
   }
