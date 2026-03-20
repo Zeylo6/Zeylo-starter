@@ -419,11 +419,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/mystery/create',
         builder: (context, state) {
-          // CreateMysteryScreen requires userId passed via extra.
+          // Always get userId from FirebaseAuth — never rely on extra
+          // to avoid mystery bookings being written with empty userId.
           final extra = state.extra as Map<String, dynamic>?;
-          return CreateMysteryScreen(
-            userId: extra?['userId'] ?? '',
-          );
+          final authUserId = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+          final userId = (extra?['userId'] as String?)?.isNotEmpty == true
+              ? extra!['userId'] as String
+              : authUserId;
+          return CreateMysteryScreen(userId: userId);
         },
       ),
       GoRoute(
