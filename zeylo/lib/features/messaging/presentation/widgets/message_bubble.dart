@@ -55,8 +55,10 @@ class MessageBubble extends StatelessWidget {
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(AppRadius.lg),
                 topRight: const Radius.circular(AppRadius.lg),
-                bottomLeft: Radius.circular(isSent ? AppRadius.lg : AppRadius.xs),
-                bottomRight: Radius.circular(isSent ? AppRadius.xs : AppRadius.lg),
+                bottomLeft:
+                    Radius.circular(isSent ? AppRadius.lg : AppRadius.xs),
+                bottomRight:
+                    Radius.circular(isSent ? AppRadius.xs : AppRadius.lg),
               ),
               boxShadow: isSent
                   ? [
@@ -78,8 +80,10 @@ class MessageBubble extends StatelessWidget {
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(AppRadius.lg),
                 topRight: const Radius.circular(AppRadius.lg),
-                bottomLeft: Radius.circular(isSent ? AppRadius.lg : AppRadius.xs),
-                bottomRight: Radius.circular(isSent ? AppRadius.xs : AppRadius.lg),
+                bottomLeft:
+                    Radius.circular(isSent ? AppRadius.lg : AppRadius.xs),
+                bottomRight:
+                    Radius.circular(isSent ? AppRadius.xs : AppRadius.lg),
               ),
               child: _buildContent(textColor),
             ),
@@ -87,7 +91,8 @@ class MessageBubble extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: isSent ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isSent ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
               Text(
                 _formatTime(timestamp),
