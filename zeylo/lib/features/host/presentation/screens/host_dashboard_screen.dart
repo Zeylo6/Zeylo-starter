@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -1226,7 +1226,8 @@ class HostDashboardScreen extends ConsumerWidget {
     final cityController = TextEditingController(text: location?['city'] ?? '');
 
     String currentImageUrl = data['coverImage'] ?? '';
-    File? selectedImage;
+    XFile? selectedImage;
+    Uint8List? selectedImageBytes;
     bool isSaving = false;
     final ImagePicker picker = ImagePicker();
 
@@ -1253,7 +1254,11 @@ class HostDashboardScreen extends ConsumerWidget {
                   imageQuality: 85,
                 );
                 if (image != null) {
-                  setSheetState(() => selectedImage = File(image.path));
+                  final bytes = await image.readAsBytes();
+                  setSheetState(() {
+                    selectedImage = image;
+                    selectedImageBytes = bytes;
+                  });
                 }
               } catch (e) {
                 debugPrint("Picker error: $e");
@@ -1261,14 +1266,15 @@ class HostDashboardScreen extends ConsumerWidget {
             }
 
             Future<String?> uploadToCloudinary() async {
-              if (selectedImage == null) return currentImageUrl;
+              if (selectedImage == null || selectedImageBytes == null) return currentImageUrl;
               try {
                 final url = Uri.parse(
                     'https://api.cloudinary.com/v1_1/$cloudName/image/upload');
                 final request = http.MultipartRequest('POST', url)
                   ..fields['upload_preset'] = uploadPreset
-                  ..files.add(await http.MultipartFile.fromPath(
-                      'file', selectedImage!.path));
+                  ..files.add(http.MultipartFile.fromBytes(
+                      'file', selectedImageBytes!,
+                      filename: selectedImage!.name));
 
                 final response = await request.send();
                 final responseData = await response.stream.toBytes();
@@ -1322,11 +1328,11 @@ class HostDashboardScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(color: AppColors.border),
                         ),
-                        child: selectedImage != null
+                        child: selectedImageBytes != null
                             ? ClipRRect(
                                 borderRadius:
                                     BorderRadius.circular(AppRadius.md),
-                                child: Image.file(selectedImage!,
+                                child: Image.memory(selectedImageBytes!,
                                     fit: BoxFit.cover),
                               )
                             : (currentImageUrl.isNotEmpty

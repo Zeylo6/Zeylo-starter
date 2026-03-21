@@ -1,21 +1,22 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// A centralized service for uploading images to Cloudinary.
+/// Works on web, Android, and iOS (no dart:io dependency).
 class CloudinaryService {
   static const String cloudName = 'deukwmcoi';
   static const String uploadPreset = 'Zeylo_images';
 
-  /// Uploads an image file to Cloudinary and returns the secure URL.
+  /// Uploads image bytes to Cloudinary and returns the secure URL.
   /// Returns [null] if the upload fails.
-  static Future<String?> uploadImage(File imageFile) async {
+  static Future<String?> uploadImage(Uint8List imageBytes, {String filename = 'image.jpg'}) async {
     try {
       final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
       final request = http.MultipartRequest('POST', url)
         ..fields['upload_preset'] = uploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+        ..files.add(http.MultipartFile.fromBytes('file', imageBytes, filename: filename));
 
       final response = await request.send();
       final responseData = await response.stream.toBytes();

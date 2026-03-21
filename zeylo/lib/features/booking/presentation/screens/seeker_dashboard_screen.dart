@@ -1060,10 +1060,17 @@ class _BookingCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        final errStr = e.toString();
+        final isWebNotSupported = e is UnsupportedError ||
+            errStr.contains('WebUnsupportedError') ||
+            errStr.contains('not supported for Web');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to accept: $e'),
+            content: Text(isWebNotSupported
+                ? 'Payments are only available on the Zeylo mobile app.\nDownload the app on Android or iOS.'
+                : 'Failed to accept: $e'),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

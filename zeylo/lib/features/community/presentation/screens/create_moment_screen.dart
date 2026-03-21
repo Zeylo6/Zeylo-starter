@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +20,8 @@ class CreateMomentScreen extends ConsumerStatefulWidget {
 
 class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
   final _captionController = TextEditingController();
-  File? _imageFile;
+  XFile? _xFile;
+  Uint8List? _imageBytes;
   bool _isUploading = false;
   final _picker = ImagePicker();
 
@@ -40,8 +41,10 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
       );
 
       if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
         setState(() {
-          _imageFile = File(pickedFile.path);
+          _xFile = pickedFile;
+          _imageBytes = bytes;
         });
       }
     } catch (e) {
@@ -54,14 +57,14 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
   }
 
   Future<void> _uploadAndPost() async {
-    if (_imageFile == null) return;
+    if (_imageBytes == null || _xFile == null) return;
 
     setState(() {
       _isUploading = true;
     });
 
     try {
-      final imageUrl = await CloudinaryService.uploadImage(_imageFile!);
+      final imageUrl = await CloudinaryService.uploadImage(_imageBytes!, filename: _xFile!.name);
 
       if (imageUrl == null) {
         throw Exception('Failed to upload image to Cloudinary');
@@ -117,7 +120,7 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          if (_imageFile != null && !_isUploading)
+          if (_imageBytes != null && !_isUploading)
             TextButton(
               onPressed: _uploadAndPost,
               child: Text(
@@ -131,7 +134,7 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            child: _imageFile == null
+            child: _imageBytes == null
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -170,7 +173,7 @@ class _CreateMomentScreenState extends ConsumerState<CreateMomentScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: FileImage(_imageFile!),
+                              image: MemoryImage(_imageBytes!),
                               fit: BoxFit.cover,
                             ),
                           ),

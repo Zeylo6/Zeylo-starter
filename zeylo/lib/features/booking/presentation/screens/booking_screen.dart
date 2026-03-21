@@ -176,10 +176,20 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     } catch (e) {
       formNotifier.setLoading(false);
       if (mounted) {
+        // Stripe throws WebUnsupportedError (not Dart's UnsupportedError) on web.
+        // Detect it by message string so we can show a friendly UI message.
+        final errStr = e.toString();
+        final isWebNotSupported = e is UnsupportedError ||
+            errStr.contains('WebUnsupportedError') ||
+            errStr.contains('not supported for Web');
+        final message = isWebNotSupported
+            ? 'Payments are only available on the Zeylo mobile app.\nDownload the app on Android or iOS to complete booking.'
+            : 'Payment failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(message),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
