@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -24,7 +24,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _captionController = TextEditingController();
   final _tagController = TextEditingController();
   final List<String> _tags = [];
-  final List<File> _images = [];
+  final List<_SelectedPostImage> _images = [];
   final ImagePicker _picker = ImagePicker();
   bool _isPublishing = false;
 
@@ -44,8 +44,15 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
 
       if (pickedFiles.isNotEmpty) {
+        final pickedImages = await Future.wait(
+          pickedFiles.map((file) async {
+            final bytes = await file.readAsBytes();
+            return _SelectedPostImage(file: file, bytes: bytes);
+          }),
+        );
+
         setState(() {
-          _images.addAll(pickedFiles.map((file) => File(file.path)));
+          _images.addAll(pickedImages);
         });
       }
     } catch (e) {
@@ -68,12 +75,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     const uploadPreset = 'Zeylo_images';
     final List<String> imageUrls = [];
 
-    for (final file in _images) {
+    for (final image in _images) {
       try {
-        final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+        final url = Uri.parse(
+            'https://api.cloudinary.com/v1_1/$cloudName/image/upload');
         final request = http.MultipartRequest('POST', url)
           ..fields['upload_preset'] = uploadPreset
-          ..files.add(await http.MultipartFile.fromPath('file', file.path));
+          ..files.add(
+            http.MultipartFile.fromBytes(
+              'file',
+              image.bytes,
+              filename: image.file.name,
+            ),
+          );
 
         final response = await request.send();
         final responseData = await response.stream.toBytes();
@@ -83,7 +97,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         if (response.statusCode == 200) {
           imageUrls.add(jsonMap['secure_url'] as String);
         } else {
-          debugPrint('Cloudinary Error: ${jsonMap['error']?['message'] ?? 'Unknown error'}');
+          debugPrint(
+              'Cloudinary Error: ${jsonMap['error']?['message'] ?? 'Unknown error'}');
         }
       } catch (e) {
         debugPrint("Upload error: $e");
@@ -113,7 +128,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write something or add an image to post')),
+        const SnackBar(
+            content: Text('Please write something or add an image to post')),
       );
       return;
     }
@@ -158,7 +174,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         (failure) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to publish post: ${failure.message}')),
+              SnackBar(
+                  content: Text('Failed to publish post: ${failure.message}')),
             );
           }
         },
@@ -202,7 +219,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: ElevatedButton(
               onPressed: _isPublishing ? null : _publishPost,
               style: ElevatedButton.styleFrom(
@@ -219,7 +237,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.textInverse),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.textInverse),
                       ),
                     )
                   : const Text('Publish'),
@@ -237,12 +256,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundImage: user?.photoUrl != null && user!.photoUrl!.isNotEmpty
-                        ? NetworkImage(user.photoUrl!)
-                        : null,
+                    backgroundImage:
+                        user?.photoUrl != null && user!.photoUrl!.isNotEmpty
+                            ? NetworkImage(user.photoUrl!)
+                            : null,
                     backgroundColor: AppColors.surface,
                     child: user?.photoUrl == null || user!.photoUrl!.isEmpty
-                        ? const Icon(Icons.person, color: AppColors.textSecondary)
+                        ? const Icon(Icons.person,
+                            color: AppColors.textSecondary)
                         : null,
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -261,12 +282,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 minLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Share your experience...',
-                  hintStyle: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
+                  hintStyle: AppTypography.bodyLarge
+                      .copyWith(color: AppColors.textSecondary),
                   border: InputBorder.none,
                 ),
                 style: AppTypography.bodyLarge,
               ),
-              
+
               const SizedBox(height: AppSpacing.md),
 
               // Image Preview
@@ -276,17 +298,32 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _images.length,
-                    separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       return Stack(
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(AppRadius.md),
-                            child: Image.file(
-                              _images[index],
+                            child: Image.memory(
+                              _images[index].bytes,
                               height: 120,
                               width: 120,
                               fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 120,
+                                  width: 120,
+                                  color: AppColors.surface,
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    kIsWeb
+                                        ? Icons.broken_image_outlined
+                                        : Icons.image_not_supported,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           Positioned(
@@ -343,7 +380,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          borderSide: const BorderSide(color: AppColors.primary),
+                          borderSide:
+                              const BorderSide(color: AppColors.primary),
                         ),
                       ),
                       onSubmitted: (_) => _addTag(),
@@ -352,47 +390,58 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   const SizedBox(width: AppSpacing.sm),
                   IconButton(
                     onPressed: _addTag,
-                    icon: const Icon(Icons.add_circle, color: AppColors.primary),
+                    icon:
+                        const Icon(Icons.add_circle, color: AppColors.primary),
                   ),
                 ],
               ),
-              
+
               if (_tags.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
                 Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.sm,
-                  children: _tags.map((tag) => Chip(
-                    label: Text(tag, style: AppTypography.bodySmall.copyWith(color: AppColors.primary)),
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    deleteIconColor: AppColors.primary,
-                    onDeleted: () => _removeTag(tag),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      side: BorderSide.none,
-                    ),
-                  )).toList(),
+                  children: _tags
+                      .map((tag) => Chip(
+                            label: Text(tag,
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: AppColors.primary)),
+                            backgroundColor:
+                                AppColors.primary.withValues(alpha: 0.1),
+                            deleteIconColor: AppColors.primary,
+                            onDeleted: () => _removeTag(tag),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              side: BorderSide.none,
+                            ),
+                          ))
+                      .toList(),
                 ),
               ],
-              
+
               const SizedBox(height: AppSpacing.xl),
-              
+
               // Interaction Buttons
               Row(
                 children: [
                   TextButton.icon(
                     onPressed: _pickImages,
-                    icon: const Icon(Icons.image_outlined, color: AppColors.primary),
-                    label: Text('Add Photos', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                    icon: const Icon(Icons.image_outlined,
+                        color: AppColors.primary),
+                    label: Text('Add Photos',
+                        style: AppTypography.labelLarge
+                            .copyWith(color: AppColors.primary)),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Link experience coming soon!')),
+                        const SnackBar(
+                            content: Text('Link experience coming soon!')),
                       );
                     },
-                    icon: const Icon(Icons.location_on_outlined, color: AppColors.textSecondary),
+                    icon: const Icon(Icons.location_on_outlined,
+                        color: AppColors.textSecondary),
                   ),
                 ],
               )
@@ -402,4 +451,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       ),
     );
   }
+}
+
+class _SelectedPostImage {
+  const _SelectedPostImage({
+    required this.file,
+    required this.bytes,
+  });
+
+  final XFile file;
+  final Uint8List bytes;
 }
