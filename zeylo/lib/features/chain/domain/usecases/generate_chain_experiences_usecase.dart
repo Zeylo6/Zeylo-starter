@@ -7,11 +7,15 @@ class GenerateChainExperiencesParams {
   final String prompt;
   final String location;
   final String date;
+  final String totalTime;
+  final List<String> interests;
 
   GenerateChainExperiencesParams({
     required this.prompt,
     required this.location,
     required this.date,
+    required this.totalTime,
+    required this.interests,
   });
 }
 
@@ -21,8 +25,14 @@ class GenerateChainExperiencesUseCase {
   GenerateChainExperiencesUseCase({required this.repository});
 
   Future<Either<Failure, List<ChainExperience>>> call(
-      GenerateChainExperiencesParams params) async {
+    GenerateChainExperiencesParams params,
+  ) async {
     return await repository.generateChainExperiences(
-        params.prompt, params.location, params.date);
+      prompt: params.prompt,
+      location: params.location,
+      date: params.date,
+      totalTime: params.totalTime,
+      interests: params.interests,
+    );
   }
 }
