@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../../core/theme/app_typography.dart';
@@ -25,17 +25,18 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     
     if (image != null) {
+      final bytes = await image.readAsBytes();
       final notifier = ref.read(hostVerificationFlowProvider.notifier);
       
       switch (type) {
         case 'nic':
-          notifier.updateDocuments(nic: image);
+          notifier.updateDocuments(nic: image, nicBytes: bytes);
           break;
         case 'passport':
-          notifier.updateDocuments(passport: image);
+          notifier.updateDocuments(passport: image, passportBytes: bytes);
           break;
         case 'license':
-          notifier.updateDocuments(license: image);
+          notifier.updateDocuments(license: image, licenseBytes: bytes);
           break;
       }
     }
@@ -117,6 +118,7 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
                       title: 'National Identity Card (NIC)',
                       subtitle: 'Required',
                       file: state.nicFile,
+                      bytes: state.nicBytes,
                       isRequired: true,
                       onTap: () => _pickImage('nic'),
                     ),
@@ -125,6 +127,7 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
                       title: 'Passport',
                       subtitle: 'Optional',
                       file: state.passportFile,
+                      bytes: state.passportBytes,
                       isRequired: false,
                       onTap: () => _pickImage('passport'),
                     ),
@@ -133,6 +136,7 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
                       title: 'Driver\'s License',
                       subtitle: 'Optional',
                       file: state.driverLicenseFile,
+                      bytes: state.driverLicenseBytes,
                       isRequired: false,
                       onTap: () => _pickImage('license'),
                     ),
@@ -159,6 +163,7 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
     required String title,
     required String subtitle,
     required XFile? file,
+    required Uint8List? bytes,
     required bool isRequired,
     required VoidCallback onTap,
   }) {
@@ -187,11 +192,9 @@ class _HostVerificationDocumentsScreenState extends ConsumerState<HostVerificati
               ),
               borderRadius: BorderRadius.circular(12),
               color: file != null ? AppColors.primary.withOpacity(0.05) : AppColors.surface,
-              image: file != null
+              image: bytes != null
                   ? DecorationImage(
-                      image: kIsWeb 
-                          ? NetworkImage(file.path) as ImageProvider
-                          : FileImage(File(file.path)),
+                      image: MemoryImage(bytes),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
                         Colors.black.withOpacity(0.4),
