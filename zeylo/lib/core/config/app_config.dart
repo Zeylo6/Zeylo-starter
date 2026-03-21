@@ -4,7 +4,7 @@ class AppConfig {
   /// For Android Emulator, use 'http://10.0.2.2:3000'
   /// For iOS Simulator or Web, use 'http://localhost:3000'
   /// For physical devices, use your machine's local IP or a tunnel (e.g., ngrok)
-  static const String baseUrl = 'http://localhost:3000';
+  static const String baseUrl = 'https://zeylolk.netlify.app';
 
   /// Helper to get the full API base path
   static String get apiBase => '$baseUrl/api';
