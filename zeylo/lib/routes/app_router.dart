@@ -436,6 +436,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final extra = state.extra as Map<String, dynamic>?;
           return MysteryRevealScreen(
             mysteryId: extra?['mysteryId'] ?? '',
+            price: (extra?['price'] as num?)?.toDouble() ?? 0.0,
             experienceTitle: extra?['experienceTitle'] ?? '',
             experienceImage: extra?['experienceImage'] ?? '',
             experienceDescription: extra?['experienceDescription'] ?? '',

@@ -16,4 +16,16 @@ const createPaymentIntent = async (amount, currency = 'usd', metadata = {}, rece
   }
 };
 
-module.exports = { createPaymentIntent };
+const refundPayment = async (paymentIntentId) => {
+  try {
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+    });
+    return refund;
+  } catch (error) {
+    console.error('Stripe Refund Error:', error);
+    throw error;
+  }
+};
+
+module.exports = { createPaymentIntent, refundPayment };
