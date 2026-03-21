@@ -29,6 +29,7 @@ class RateAndReviewSheet extends ConsumerStatefulWidget {
 
 class _RateAndReviewSheetState extends ConsumerState<RateAndReviewSheet> {
   int _rating = 0;
+  int _hostRating = 0;
   final TextEditingController _messageController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -42,7 +43,17 @@ class _RateAndReviewSheetState extends ConsumerState<RateAndReviewSheet> {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a rating (1-5 stars).'),
+          content: Text('Please select a rating for the experience.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (widget.reviewerRole == 'seeker' && _hostRating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a rating for the host.'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -69,6 +80,7 @@ class _RateAndReviewSheetState extends ConsumerState<RateAndReviewSheet> {
         revieweeId: revieweeId,
         role: widget.reviewerRole,
         rating: _rating.toDouble(),
+        hostRating: widget.reviewerRole == 'seeker' ? _hostRating.toDouble() : null,
         message: _messageController.text.trim().isNotEmpty 
             ? _messageController.text.trim() 
             : null,
@@ -172,7 +184,18 @@ class _RateAndReviewSheetState extends ConsumerState<RateAndReviewSheet> {
             ),
             const SizedBox(height: AppSpacing.xl),
 
-            // Interactive Stars
+            // Experience Rating
+            if (widget.reviewerRole == 'seeker')
+              Text(
+                'Experience Rating',
+                style: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            if (widget.reviewerRole == 'seeker')
+              const SizedBox(height: AppSpacing.sm),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
@@ -190,14 +213,52 @@ class _RateAndReviewSheetState extends ConsumerState<RateAndReviewSheet> {
                       child: Icon(
                         isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
                         color: isSelected ? const Color(0xFFFFB800) : AppColors.border,
-                        size: 48,
+                        size: widget.reviewerRole == 'seeker' ? 36 : 48,
                       ),
                     ),
                   ),
                 );
               }),
             ),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Host Rating (only if seeker is reviewing)
+            if (widget.reviewerRole == 'seeker') ...[
+              Text(
+                'Host Rating',
+                style: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final isSelected = index < _hostRating;
+                  return GestureDetector(
+                    onTap: () => setState(() => _hostRating = index + 1),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        transform: isSelected 
+                            ? (Matrix4.identity()..scale(1.2)) 
+                            : Matrix4.identity(),
+                        child: Icon(
+                          isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+                          color: isSelected ? const Color(0xFFFFB800) : AppColors.border,
+                          size: 36,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+            ],
 
             // Optional Message Text Field
             Text(

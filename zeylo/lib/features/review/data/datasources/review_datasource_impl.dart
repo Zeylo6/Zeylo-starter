@@ -64,7 +64,8 @@ class ReviewDatasourceImpl implements ReviewDatasource {
         final currentTotalCount = (userStats['totalReviews'] as num?)?.toInt() ?? 0;
         
         final newTotalCount = currentTotalCount + 1;
-        final newAvg = ((currentAvg * currentTotalCount) + review.rating) / newTotalCount;
+        final ratingToAdd = review.hostRating ?? review.rating;
+        final newAvg = ((currentAvg * currentTotalCount) + ratingToAdd) / newTotalCount;
         
         batch.update(userRef, {
           'stats.averageRating': newAvg,
@@ -186,6 +187,7 @@ class ReviewDatasourceImpl implements ReviewDatasource {
     
     final reviewData = reviewDoc.data()!;
     final double rating = (reviewData['rating'] as num?)?.toDouble() ?? 0.0;
+    final double? hostRating = (reviewData['hostRating'] as num?)?.toDouble();
     final String experienceId = reviewData['experienceId'] ?? '';
     final String hostId = reviewData['revieweeId'] ?? '';
     final String role = reviewData['role'] ?? '';
@@ -229,7 +231,8 @@ class ReviewDatasourceImpl implements ReviewDatasource {
           
           if (currentTotalCount > 1) {
             final newTotalCount = currentTotalCount - 1;
-            final newAvg = ((currentAvg * currentTotalCount) - rating) / newTotalCount;
+            final ratingToRemove = hostRating ?? rating;
+            final newAvg = ((currentAvg * currentTotalCount) - ratingToRemove) / newTotalCount;
             batch.update(userRef, {
               'stats.averageRating': newAvg,
               'stats.totalReviews': newTotalCount,
