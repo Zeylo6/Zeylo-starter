@@ -128,14 +128,11 @@ class HostDashboardScreen extends ConsumerWidget {
             },
           ),
 
-          // Profile completion section
-          _buildProfileCompletionSection(context, stats.profileCompletion),
 
-          const SizedBox(height: AppSpacing.md),
 
           // Performance section
           PerformanceSection(
-            responseRate: stats.responseRate,
+            completionRate: stats.completionRate,
             acceptanceRate: stats.acceptanceRate,
             totalBookings: stats.totalBookings,
           ),
@@ -1207,101 +1204,6 @@ class HostDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfileCompletionSection(BuildContext context, int completion) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Profile Completion',
-                style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryExtraLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$completion%',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Progress bar
-          Stack(
-            children: [
-              Container(
-                height: 10,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.divider,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(seconds: 1),
-                height: 10,
-                width: (MediaQuery.of(context).size.width - 80) * (completion / 100),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, Color(0xFF7C3AED)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Completion message
-          Row(
-            children: [
-              const Icon(Icons.info_outline, size: 14, color: AppColors.textHint),
-              const SizedBox(width: 8),
-              Text(
-                'Add 2 more photos to reach 100%',
-                style: AppTypography.bodySmallSecondary,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showEditExperienceSheet(
       BuildContext context, String expId, Map<String, dynamic> data) {
