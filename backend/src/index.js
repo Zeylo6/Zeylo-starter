@@ -1,23 +1,30 @@
 require('dotenv').config();
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Aggressive bypass for self-signed certs (e.g. corporate proxies)
 const express = require('express');
 const cors = require('cors');
-const apiRoutes = require('./routes/api');
+const serverless = require('serverless-http');
+
+const aiRoutes = require('./routes/ai');
+// import your other existing routes here, e.g.:
+// const authRoutes = require('./routes/auth');
+// const bookingRoutes = require('./routes/booking');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-app.use('/api', apiRoutes);
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use('/api/ai', aiRoutes);
+// app.use('/api/auth', authRoutes);
+// app.use('/api/bookings', bookingRoutes);
 
-const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => res.json({ status: 'ok' }));
 
-// Export the app for serverless platforms like Netlify Functions
-module.exports = app;
-
-// Only start the server locally if run directly
+// ── Local dev server ──────────────────────────────────────────────────────────
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
+
+// ── Serverless export (Netlify) ───────────────────────────────────────────────
+module.exports.handler = serverless(app);
