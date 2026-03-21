@@ -8,6 +8,7 @@ class ReviewEntity extends Equatable {
   final String revieweeId;
   final String role; // 'host' or 'seeker'
   final double rating; // 1-5
+  final double? hostRating; // 1-5, only used when seeker rates host
   final String? message;
   final List<String> helpfulUserIds;
   final bool isReported;
@@ -21,6 +22,7 @@ class ReviewEntity extends Equatable {
     required this.revieweeId,
     required this.role,
     required this.rating,
+    this.hostRating,
     this.message,
     this.helpfulUserIds = const [],
     this.isReported = false,
@@ -36,6 +38,7 @@ class ReviewEntity extends Equatable {
         revieweeId,
         role,
         rating,
+        hostRating,
         message,
         helpfulUserIds,
         isReported,

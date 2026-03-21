@@ -24,8 +24,8 @@ class HostInfoCard extends StatelessWidget {
   /// Host rating
   final double rating;
 
-  /// Number of reviews
-  final int reviewCount;
+  /// Number of reviews (optional, hidden by default)
+  final int? reviewCount;
 
   /// Host bio/description
   final String bio;
@@ -37,7 +37,7 @@ class HostInfoCard extends StatelessWidget {
     required this.hostName,
     required this.hostPhotoUrl,
     required this.rating,
-    required this.reviewCount,
+    this.reviewCount,
     required this.bio,
     this.onMessageTap,
     super.key,
@@ -99,14 +99,16 @@ class HostInfoCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '$rating',
+                          rating.toStringAsFixed(1),
                           style: AppTypography.labelMedium,
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          '($reviewCount reviews)',
-                          style: AppTypography.bodySmallSecondary,
-                        ),
+                        if (reviewCount != null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            '($reviewCount reviews)',
+                            style: AppTypography.bodySmallSecondary,
+                          ),
+                        ],
                       ],
                     ),
                   ],

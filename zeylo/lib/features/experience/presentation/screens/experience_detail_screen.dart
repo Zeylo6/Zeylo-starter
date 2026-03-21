@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,6 +19,19 @@ import 'package:zeylo/features/review/presentation/providers/review_provider.dar
 import '../../../home/domain/entities/experience_entity.dart';
 import 'package:zeylo/features/review/presentation/screens/all_reviews_screen.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
+
+final hostStatsProvider = FutureProvider.family<double, String>((ref, hostId) async {
+  try {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(hostId).get();
+    if (doc.exists) {
+      final stats = doc.data()?['stats'] as Map<String, dynamic>?;
+      return (stats?['averageRating'] as num?)?.toDouble() ?? 0.0;
+    }
+  } catch (e) {
+    // Fallback to 0.0 on error
+  }
+  return 0.0;
+});
 
 /// Experience detail screen
 ///
@@ -118,14 +132,17 @@ class _ExperienceDetailScreenState
                                 const SizedBox(height: AppSpacing.xxl),
 
                               // Host bio card
-                              HostInfoCard(
-                                hostName: experience.hostName,
-                                hostPhotoUrl: experience.hostPhotoUrl,
-                                rating: experience.averageRating,
-                                reviewCount: experience.reviewCount,
-                                bio:
-                                    'Experienced host with ${experience.reviewCount} reviews. Specializes in ${experience.category} experiences.',
-                                onMessageTap: () => _openChatWithHost(context, experience),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final hostRatingAsync = ref.watch(hostStatsProvider(experience.hostId));
+                                  return HostInfoCard(
+                                    hostName: experience.hostName,
+                                    hostPhotoUrl: experience.hostPhotoUrl,
+                                    rating: hostRatingAsync.value ?? 0.0,
+                                    bio: 'Experienced host. Specializes in ${experience.category} experiences.',
+                                    onMessageTap: () => _openChatWithHost(context, experience),
+                                  );
+                                },
                               ),
                               const SizedBox(height: AppSpacing.xxxl),
 
