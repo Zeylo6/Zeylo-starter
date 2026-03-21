@@ -63,6 +63,9 @@ class BookingEntity {
   /// Mystery document ID (links to mysteries collection)
   final String? mysteryId;
 
+  /// Stripe Payment Intent ID
+  final String? paymentId;
+
   const BookingEntity({
     required this.id,
     required this.experienceId,
@@ -85,6 +88,7 @@ class BookingEntity {
     this.isEarningsCollected = false,
     this.isMystery = false,
     this.mysteryId,
+    this.paymentId,
   });
 
   /// Create a copy of this booking entity with some fields replaced
@@ -110,6 +114,7 @@ class BookingEntity {
     bool? isEarningsCollected,
     bool? isMystery,
     String? mysteryId,
+    String? paymentId,
   }) {
     return BookingEntity(
       id: id ?? this.id,
@@ -133,6 +138,7 @@ class BookingEntity {
       isEarningsCollected: isEarningsCollected ?? this.isEarningsCollected,
       isMystery: isMystery ?? this.isMystery,
       mysteryId: mysteryId ?? this.mysteryId,
+      paymentId: paymentId ?? this.paymentId,
     );
   }
 
@@ -146,6 +152,7 @@ class BookingEntity {
       'isRatedByHost: $isRatedByHost, '
       'isRatedBySeeker: $isRatedBySeeker, '
       'isMystery: $isMystery, '
-      'mysteryId: $mysteryId'
+      'mysteryId: $mysteryId, '
+      'paymentId: $paymentId'
       ')';
 }

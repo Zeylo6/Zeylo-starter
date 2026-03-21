@@ -29,6 +29,7 @@ router.post('/users/fcm-token', verifyToken, userController.saveFCMToken);
 
 // Payment Routes
 router.post('/payments/create-intent', verifyToken, paymentController.createIntent);
+router.post('/payments/refund', verifyToken, paymentController.refundBooking);
 router.post('/payments/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
 // Community Routes

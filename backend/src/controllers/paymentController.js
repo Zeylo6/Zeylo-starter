@@ -4,12 +4,15 @@ const { db } = require('../config/firebase');
 
 const createIntent = async (req, res) => {
   try {
-    const { amount, bookingId, email } = req.body;
-    const paymentIntent = await stripeService.createPaymentIntent(amount, 'usd', { bookingId }, email);
+    const { amount, bookingId, email, type = 'booking', mysteryId } = req.body;
+    const metadata = { bookingId, type };
+    if (mysteryId) metadata.mysteryId = mysteryId;
+    const paymentIntent = await stripeService.createPaymentIntent(amount, 'usd', metadata, email);
     
     res.status(200).json({
       clientSecret: paymentIntent.client_secret,
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      paymentIntentId: paymentIntent.id,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -29,16 +32,71 @@ const handleWebhook = async (req, res) => {
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object;
     const bookingId = paymentIntent.metadata.bookingId;
+    const type = paymentIntent.metadata.type || 'booking';
     
-    // Update booking status in Firestore
-    await db.collection('bookings').doc(bookingId).update({
-      status: 'confirmed',
-      paymentId: paymentIntent.id,
-      paidAt: new Date().toISOString(),
-    });
+    if (type === 'mystery') {
+      const mysteryId = paymentIntent.metadata.mysteryId;
+      if (mysteryId) {
+        // Update mystery status in Firestore
+        await db.collection('mysteries').doc(mysteryId).update({
+          status: 'accepted',
+          paymentId: paymentIntent.id,
+          paidAt: new Date().toISOString(),
+        });
+      }
+      
+      // Update booking status in Firestore to pending for the host to accept
+      await db.collection('bookings').doc(bookingId).update({
+        status: 'pending',
+        paymentStatus: 'paid',
+        paymentId: paymentIntent.id,
+        paidAt: new Date().toISOString(),
+      });
+    } else {
+      // Update booking status in Firestore
+      await db.collection('bookings').doc(bookingId).update({
+        status: 'confirmed',
+        paymentId: paymentIntent.id,
+        paidAt: new Date().toISOString(),
+      });
+    }
   }
 
   res.json({ received: true });
 };
 
-module.exports = { createIntent, handleWebhook };
+const refundBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    
+    // Get booking doc
+    const bookingRef = db.collection('bookings').doc(bookingId);
+    const bookingDoc = await bookingRef.get();
+    
+    if (!bookingDoc.exists) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    
+    const bookingData = bookingDoc.data();
+    if (!bookingData.paymentId) {
+      return res.status(400).json({ error: 'No payment ID found for this booking' });
+    }
+
+    // Call Stripe to refund
+    const refund = await stripeService.refundPayment(bookingData.paymentId);
+    
+    // Update booking
+    await bookingRef.update({
+      status: 'rejected',
+      paymentStatus: 'refunded',
+      refundId: refund.id,
+      updatedAt: new Date().toISOString(),
+    });
+    
+    res.status(200).json({ success: true, refund });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { createIntent, handleWebhook, refundBooking };

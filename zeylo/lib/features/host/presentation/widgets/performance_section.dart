@@ -6,12 +6,12 @@ import '../../../../core/theme/app_typography.dart';
 
 /// Performance stats section widget
 class PerformanceSection extends StatelessWidget {
-  final double responseRate;
+  final double completionRate;
   final double acceptanceRate;
   final int totalBookings;
 
   const PerformanceSection({
-    required this.responseRate,
+    required this.completionRate,
     required this.acceptanceRate,
     required this.totalBookings,
     super.key,
@@ -51,9 +51,9 @@ class PerformanceSection extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _PerformanceCard(
-                      label: 'Response Rate',
-                      value: '${responseRate.toStringAsFixed(0)}%',
-                      icon: Icons.speed_rounded,
+                      label: 'Completion',
+                      value: '${completionRate.toStringAsFixed(0)}%',
+                      icon: Icons.task_alt_rounded,
                       color: Colors.blue,
                     ),
                   ),

@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../providers/mystery_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/services/stripe_payment_service.dart';
 
 /// Mystery reveal screen
 ///
@@ -19,6 +21,9 @@ import '../providers/mystery_provider.dart';
 class MysteryRevealScreen extends ConsumerStatefulWidget {
   /// Mystery ID that was revealed
   final String mysteryId;
+  
+  /// Price of the matched experience
+  final double price;
 
   /// Experience details (title, description, image, etc)
   final String experienceTitle;
@@ -33,6 +38,7 @@ class MysteryRevealScreen extends ConsumerStatefulWidget {
 
   const MysteryRevealScreen({
     required this.mysteryId,
+    required this.price,
     required this.experienceTitle,
     required this.experienceImage,
     required this.experienceDescription,
@@ -280,11 +286,39 @@ class _MysteryRevealScreenState extends ConsumerState<MysteryRevealScreen> {
                       onPressed: revealState.isLoading
                           ? null
                           : () async {
-                              final success = await ref
-                                  .read(revealMysteryProvider.notifier)
-                                  .acceptMystery(widget.mysteryId);
-                              if (success && mounted) {
-                                Navigator.of(context).pop(true);
+                              final user = FirebaseAuth.instance.currentUser;
+                              if (user == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('User not logged in')),
+                                );
+                                return;
+                              }
+                              
+                              try {
+                                // 1. Trigger Stripe Payment
+                                await StripePaymentService.makePayment(
+                                  widget.price,
+                                  widget.mysteryId,
+                                  user.email ?? '',
+                                  type: 'mystery',
+                                );
+                                
+                                // 2. Accept Mystery only after successful payment
+                                final success = await ref
+                                    .read(revealMysteryProvider.notifier)
+                                    .acceptMystery(widget.mysteryId);
+                                if (success && mounted) {
+                                  Navigator.of(context).pop(true);
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Payment failed: $e'),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
                               }
                             },
                     ),

@@ -48,22 +48,54 @@ class HostFirestoreDatasource implements HostDatasource {
     // 2. Get the User document for the aggregated rating stats (updated by reviews)
     final userDoc = await _firestore.collection('users').doc(hostId).get();
     double averageRating = 0.0;
-    int totalBookings = 0; // Or total reviews
     
     if (userDoc.exists) {
       final userData = userDoc.data()!;
       final statsMap = userData['stats'] as Map<String, dynamic>? ?? {};
       averageRating = (statsMap['averageRating'] as num?)?.toDouble() ?? 0.0;
-      totalBookings = (statsMap['totalReviews'] as num?)?.toInt() ?? 0;
     }
+
+    // 3. Get bookings for live stats
+    final bookingsSnapshot = await _firestore.collection('bookings').where('hostId', isEqualTo: hostId).get();
+    int totalBookingsCount = 0;
+    int totalRequests = 0;
+    int acceptedRequests = 0;
+    int totalConfirmedOrAbove = 0;
+    int cancelledByHost = 0;
+
+    for (var doc in bookingsSnapshot.docs) {
+      final data = doc.data();
+      final status = data['status'] as String? ?? '';
+      
+      if (status != 'pending' && status != 'expired' && status != 'cancelled' && status != 'mystery_declined') {
+         totalRequests++;
+         if (status == 'accepted' || status == 'confirmed' || status == 'completed' || status == 'ongoing') {
+             acceptedRequests++;
+         }
+      }
+
+      if (status == 'confirmed' || status == 'completed' || status == 'ongoing' || status == 'cancelled_by_host') {
+         totalConfirmedOrAbove++;
+         if (status == 'cancelled_by_host') {
+             cancelledByHost++;
+         }
+      }
+
+      if (status == 'completed' || status == 'confirmed' || status == 'accepted' || status == 'ongoing') {
+         totalBookingsCount++;
+      }
+    }
+
+    double calcAcceptanceRate = totalRequests > 0 ? (acceptedRequests / totalRequests) * 100.0 : 100.0;
+    double calcCompletionRate = totalConfirmedOrAbove > 0 ? ((totalConfirmedOrAbove - cancelledByHost) / totalConfirmedOrAbove) * 100.0 : 100.0;
 
     return HostStatsModel(
       hostId: hostId,
       earnings: 0.0, // Used to be stored in document, usually handled by earnings collection
       averageRating: averageRating,
-      responseRate: 100.0, // Defaulting for now
-      acceptanceRate: 100.0, // Defaulting for now
-      totalBookings: totalBookings, // Showing reviews count as "bookings" stat temporarily
+      completionRate: calcCompletionRate,
+      acceptanceRate: calcAcceptanceRate,
+      totalBookings: totalBookingsCount,
       profileCompletion: profileCompletion,
       superHostBadgeStatus: superHostBadgeStatus,
       createdAt: DateTime.now(),
@@ -175,11 +207,11 @@ class HostFirestoreDatasource implements HostDatasource {
 
   @override
   Stream<HostStatsModel> watchHostStats(String hostId) {
-    return _firestore.collection('users').doc(hostId).snapshots().asyncMap((userDoc) async {
+    return _firestore.collection('bookings').where('hostId', isEqualTo: hostId).snapshots().asyncMap((bookingsSnapshot) async {
       int profileCompletion = 0;
       int superHostBadgeStatus = 0;
 
-      // Fetch host doc once per user update
+      // Fetch host doc once per booking update
       final hostDoc = await _firestore.collection(_hostsCollection).doc(hostId).get();
       if (hostDoc.exists) {
         final hostData = hostDoc.data()!;
@@ -188,22 +220,53 @@ class HostFirestoreDatasource implements HostDatasource {
       }
 
       double averageRating = 0.0;
-      int totalBookings = 0;
       
+      final userDoc = await _firestore.collection('users').doc(hostId).get();
       if (userDoc.exists) {
         final userData = userDoc.data()!;
         final statsMap = userData['stats'] as Map<String, dynamic>? ?? {};
         averageRating = (statsMap['averageRating'] as num?)?.toDouble() ?? 0.0;
-        totalBookings = (statsMap['totalReviews'] as num?)?.toInt() ?? 0;
       }
+
+      int totalBookingsCount = 0;
+      int totalRequests = 0;
+      int acceptedRequests = 0;
+      int totalConfirmedOrAbove = 0;
+      int cancelledByHost = 0;
+
+      for (var doc in bookingsSnapshot.docs) {
+        final data = doc.data();
+        final status = data['status'] as String? ?? '';
+        
+        if (status != 'pending' && status != 'expired' && status != 'cancelled' && status != 'mystery_declined') {
+           totalRequests++;
+           if (status == 'accepted' || status == 'confirmed' || status == 'completed' || status == 'ongoing') {
+               acceptedRequests++;
+           }
+        }
+
+        if (status == 'confirmed' || status == 'completed' || status == 'ongoing' || status == 'cancelled_by_host') {
+           totalConfirmedOrAbove++;
+           if (status == 'cancelled_by_host') {
+               cancelledByHost++;
+           }
+        }
+
+        if (status == 'completed' || status == 'confirmed' || status == 'accepted' || status == 'ongoing') {
+           totalBookingsCount++;
+        }
+      }
+
+      double calcAcceptanceRate = totalRequests > 0 ? (acceptedRequests / totalRequests) * 100.0 : 100.0;
+      double calcCompletionRate = totalConfirmedOrAbove > 0 ? ((totalConfirmedOrAbove - cancelledByHost) / totalConfirmedOrAbove) * 100.0 : 100.0;
 
       return HostStatsModel(
         hostId: hostId,
         earnings: 0.0,
         averageRating: averageRating,
-        responseRate: 100.0,
-        acceptanceRate: 100.0,
-        totalBookings: totalBookings,
+        completionRate: calcCompletionRate,
+        acceptanceRate: calcAcceptanceRate,
+        totalBookings: totalBookingsCount,
         profileCompletion: profileCompletion,
         superHostBadgeStatus: superHostBadgeStatus,
         createdAt: DateTime.now(),

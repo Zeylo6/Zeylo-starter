@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../../../core/config/app_config.dart';
 import '../models/booking_model.dart';
 
 /// Abstract data source for booking operations
@@ -161,6 +165,24 @@ class BookingRemoteDataSource implements BookingDataSource {
           'createdAt': FieldValue.serverTimestamp(),
           'bookingId': id,
         });
+      }
+
+      // If rejected, trigger backend refund
+      if (status == 'rejected') {
+        try {
+          final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+          await http.post(
+            Uri.parse('${AppConfig.baseUrl}/api/payments/refund'),
+            body: jsonEncode({'bookingId': id}),
+            headers: {
+              'Content-Type': 'application/json',
+              if (idToken != null) 'Authorization': 'Bearer $idToken',
+            },
+          );
+        } catch (e) {
+          print('Refund error: $e');
+          // Allow it to fail gracefully without blocking the notification
+        }
       }
     } catch (e) {
       throw Exception('Failed to update booking status: $e');

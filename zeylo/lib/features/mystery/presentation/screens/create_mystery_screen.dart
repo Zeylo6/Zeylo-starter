@@ -7,7 +7,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
-import '../../../booking/presentation/widgets/payment_card_input.dart';
 import '../../domain/entities/mystery_entity.dart';
 import '../providers/mystery_provider.dart';
 import '../widgets/how_it_works_section.dart';
@@ -31,11 +30,6 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
   final _dateController = TextEditingController();
   late TextEditingController _budgetMinController;
   late TextEditingController _budgetMaxController;
-
-  String _cardNumber = '';
-  String _expiry = '';
-  String _cvc = '';
-  String _cardholderName = '';
 
   @override
   void initState() {
@@ -226,18 +220,42 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
                 const SizedBox(height: AppSpacing.lg),
               ],
 
-              // Continue button
-              ZeyloButton(
-                label: 'Continue to Payment',
-                isDisabled: _locationController.text.isEmpty ||
-                    _dateController.text.isEmpty,
-                onPressed: (_locationController.text.isEmpty ||
-                        _dateController.text.isEmpty)
-                    ? null
-                    : () {
-                        FocusScope.of(context).unfocus();
-                        _showPaymentSheet(context, formState);
-                      },
+              // Continue button watches provider for loading state
+              Consumer(
+                builder: (context, ref, child) {
+                  final currentState = ref.watch(mysteryFormProvider(widget.userId));
+                  
+                  return ZeyloButton(
+                    label: currentState.isLoading ? 'Matching...' : 'Find My Mystery',
+                    isLoading: currentState.isLoading,
+                    isDisabled: _locationController.text.isEmpty ||
+                        _dateController.text.isEmpty || currentState.isLoading,
+                    onPressed: (_locationController.text.isEmpty ||
+                            _dateController.text.isEmpty || currentState.isLoading)
+                        ? null
+                        : () async {
+                            FocusScope.of(context).unfocus();
+                            
+                            await ref.read(mysteryFormProvider(widget.userId).notifier).submitForm();
+                            
+                            // Read updated state after submit
+                            final updated = ref.read(mysteryFormProvider(widget.userId));
+                            
+                            if (!mounted) return;
+                            
+                            if (updated.isSuccess) {
+                              _showSuccessDialog(context, updated);
+                            } else if (updated.error != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: ${updated.error}'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          },
+                  );
+                }
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -297,143 +315,6 @@ class _CreateMysteryScreenState extends ConsumerState<CreateMysteryScreen> {
       _dateController.text = dateStr;
       formNotifier.setDate(dateStr);
     }
-  }
-
-  void _showPaymentSheet(BuildContext context, MysteryFormState formState) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-      ),
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          final isCardValid = _cardNumber.replaceAll(' ', '').length >= 16 &&
-              _expiry.length >= 5 &&
-              _cvc.length >= 3 &&
-              _cardholderName.isNotEmpty;
-
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-              left: AppSpacing.lg,
-              right: AppSpacing.lg,
-              top: AppSpacing.xl,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Secure Payment',
-                        style: AppTypography.titleLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close,
-                            color: AppColors.textSecondary),
-                        onPressed: () => Navigator.pop(sheetContext),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Your card will be charged once a mystery experience is matched for you.',
-                    style: AppTypography.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  PaymentCardInput(
-                    cardNumber: _cardNumber,
-                    expiry: _expiry,
-                    cvc: _cvc,
-                    cardholderName: _cardholderName,
-                    onCardNumberChanged: (v) =>
-                        setSheetState(() => _cardNumber = v),
-                    onExpiryChanged: (v) =>
-                        setSheetState(() => _expiry = v),
-                    onCVCChanged: (v) => setSheetState(() => _cvc = v),
-                    onCardholderNameChanged: (v) =>
-                        setSheetState(() => _cardholderName = v),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Submit button — watches provider for loading state
-                  Consumer(
-                    builder: (consumerCtx, consumerRef, _) {
-                      final currentState = consumerRef
-                          .watch(mysteryFormProvider(widget.userId));
-
-                      return ZeyloButton(
-                        label: currentState.isLoading
-                            ? 'Matching your experience...'
-                            : 'Pay & Book Mystery',
-                        variant: ButtonVariant.filled,
-                        isLoading: currentState.isLoading,
-                        isDisabled:
-                            !isCardValid || currentState.isLoading,
-                        onPressed:
-                            (!isCardValid || currentState.isLoading)
-                                ? null
-                                : () async {
-                                    await consumerRef
-                                        .read(mysteryFormProvider(
-                                                widget.userId)
-                                            .notifier)
-                                        .submitForm();
-
-                                    // Read updated state after submit
-                                    final updated = consumerRef.read(
-                                        mysteryFormProvider(
-                                            widget.userId));
-
-                                    if (!mounted) return;
-
-                                    if (updated.isSuccess) {
-                                      // 1. Close payment sheet
-                                      Navigator.pop(sheetContext);
-
-                                      // 2. Show success dialog
-                                      // Use a small delay so sheet closes cleanly
-                                      await Future.delayed(
-                                          const Duration(
-                                              milliseconds: 300));
-
-                                      if (!mounted) return;
-                                      _showSuccessDialog(
-                                          context, updated);
-                                    } else if (updated.error != null) {
-                                      ScaffoldMessenger.of(sheetContext)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'Error: ${updated.error}'),
-                                          backgroundColor:
-                                              AppColors.error,
-                                        ),
-                                      );
-                                    }
-                                  },
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   void _showSuccessDialog(

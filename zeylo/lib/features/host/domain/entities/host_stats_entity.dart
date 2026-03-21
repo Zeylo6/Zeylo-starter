@@ -5,7 +5,7 @@ class HostStatsEntity extends Equatable {
   final String hostId;
   final double earnings;
   final double averageRating;
-  final double responseRate;
+  final double completionRate;
   final double acceptanceRate;
   final int totalBookings;
   final int profileCompletion;
@@ -17,7 +17,7 @@ class HostStatsEntity extends Equatable {
     required this.hostId,
     required this.earnings,
     required this.averageRating,
-    required this.responseRate,
+    required this.completionRate,
     required this.acceptanceRate,
     required this.totalBookings,
     required this.profileCompletion,
@@ -31,7 +31,7 @@ class HostStatsEntity extends Equatable {
         hostId,
         earnings,
         averageRating,
-        responseRate,
+        completionRate,
         acceptanceRate,
         totalBookings,
         profileCompletion,
@@ -44,7 +44,7 @@ class HostStatsEntity extends Equatable {
     String? hostId,
     double? earnings,
     double? averageRating,
-    double? responseRate,
+    double? completionRate,
     double? acceptanceRate,
     int? totalBookings,
     int? profileCompletion,
@@ -56,7 +56,7 @@ class HostStatsEntity extends Equatable {
       hostId: hostId ?? this.hostId,
       earnings: earnings ?? this.earnings,
       averageRating: averageRating ?? this.averageRating,
-      responseRate: responseRate ?? this.responseRate,
+      completionRate: completionRate ?? this.completionRate,
       acceptanceRate: acceptanceRate ?? this.acceptanceRate,
       totalBookings: totalBookings ?? this.totalBookings,
       profileCompletion: profileCompletion ?? this.profileCompletion,
