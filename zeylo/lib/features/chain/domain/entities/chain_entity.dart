@@ -3,40 +3,17 @@
 /// Represents a collection of connected experiences forming a mini trip.
 /// A chain allows users to book multiple experiences in a logical sequence.
 class ChainEntity {
-  /// Unique identifier for the chain
   final String id;
-
-  /// Name of the chain/mini trip
   final String name;
-
-  /// Description of the chain
   final String description;
-
-  /// User ID who created this chain
   final String createdBy;
-
-  /// Destination city for the chain
   final String destinationCity;
-
-  /// Date of the chain in yyyy-MM-dd format
   final String date;
-
-  /// Total time available for the chain
   final ChainDuration totalTime;
-
-  /// List of interests for this chain
   final List<String> interests;
-
-  /// Ordered list of experiences in the chain
   final List<ChainExperience> experiences;
-
-  /// Total price for all experiences in the chain
   final double totalPrice;
-
-  /// Status of the chain
   final ChainStatus status;
-
-  /// DateTime when the chain was created
   final DateTime createdAt;
 
   const ChainEntity({
@@ -54,7 +31,6 @@ class ChainEntity {
     required this.createdAt,
   });
 
-  /// Create a copy of this entity with some fields replaced
   ChainEntity copyWith({
     String? id,
     String? name,
@@ -86,32 +62,28 @@ class ChainEntity {
   }
 
   @override
-  String toString() => 'ChainEntity(id: $id, name: $name, destinationCity: $destinationCity, '
-      'totalTime: $totalTime, experiences: ${experiences.length}, totalPrice: $totalPrice)';
+  String toString() =>
+      'ChainEntity(id: $id, name: $name, destinationCity: $destinationCity, totalTime: $totalTime, experiences: ${experiences.length}, totalPrice: $totalPrice)';
 }
 
 /// Individual experience within a chain
 class ChainExperience {
-  /// Experience ID
   final String experienceId;
-
-  /// Experience title
   final String title;
-
-  /// Start time (HH:mm format)
   final String startTime;
-
-  /// End time (HH:mm format)
   final String endTime;
-
-  /// Duration in hours
   final double duration;
-
-  /// Price for this experience
   final double price;
-
-  /// Whether this is an overnight experience
   final bool isOvernight;
+
+  /// NEW: real experience image from Firestore
+  final String imageUrl;
+
+  /// NEW: category badge label
+  final String category;
+
+  /// NEW: host tracking 
+  final String hostId;
 
   const ChainExperience({
     required this.experienceId,
@@ -121,6 +93,9 @@ class ChainExperience {
     required this.duration,
     required this.price,
     required this.isOvernight,
+    this.imageUrl = '',
+    this.category = '',
+    this.hostId = '',
   });
 
   ChainExperience copyWith({
@@ -131,6 +106,9 @@ class ChainExperience {
     double? duration,
     double? price,
     bool? isOvernight,
+    String? imageUrl,
+    String? category,
+    String? hostId,
   }) {
     return ChainExperience(
       experienceId: experienceId ?? this.experienceId,
@@ -140,11 +118,13 @@ class ChainExperience {
       duration: duration ?? this.duration,
       price: price ?? this.price,
       isOvernight: isOvernight ?? this.isOvernight,
+      imageUrl: imageUrl ?? this.imageUrl,
+      category: category ?? this.category,
+      hostId: hostId ?? this.hostId,
     );
   }
 }
 
-/// Duration options for chains
 enum ChainDuration {
   halfDay('Half Day', '4-6 hours'),
   fullDay('Full Day', '8-10 hours'),
@@ -156,7 +136,6 @@ enum ChainDuration {
   const ChainDuration(this.label, this.timeRange);
 }
 
-/// Status of a chain
 enum ChainStatus {
   draft,
   active,
@@ -169,7 +148,6 @@ enum ChainStatus {
   bool get isCompleted => this == ChainStatus.completed;
 }
 
-/// Common interests for chain suggestions
 final chainInterests = [
   'Food Tours',
   'Photography',
