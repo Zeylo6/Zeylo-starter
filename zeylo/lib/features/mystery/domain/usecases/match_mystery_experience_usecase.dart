@@ -14,7 +14,20 @@ class MatchMysteryExperienceUseCase
   @override
   Future<Either<Failure, String?>> call(
       MatchMysteryExperienceParams params) async {
-    return await repository.matchMysteryExperience(params.mystery);
+    final result = await repository.matchAndBookMystery(
+      mysteryId: params.mystery.id,
+      userId: params.mystery.userId,
+      location: params.mystery.location,
+      date: params.mystery.date,
+      time: params.mystery.time.name,
+      budgetMin: params.mystery.budgetMin,
+      budgetMax: params.mystery.budgetMax,
+      experienceType: params.mystery.experienceType.name,
+    );
+    return result.fold(
+      (failure) => Left(failure),
+      (data) => Right(data.matched ? 'Matched' : 'No Match'),
+    );
   }
 }
 
