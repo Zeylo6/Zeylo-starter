@@ -9,7 +9,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/booking_entity.dart';
-import '../providers/booking_provider.dart';
 import '../widgets/payment_card_input.dart';
 import '../widgets/report_sheet.dart';
 import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
@@ -208,7 +207,8 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
           final past = allBookings.where((b) {
             return b.status == 'completed' ||
                 b.status == 'cancelled' ||
-                b.status == 'mystery_declined';
+                b.status == 'mystery_declined' ||
+                b.status == 'rejected';
           }).toList();
 
           return TabBarView(
@@ -352,10 +352,13 @@ class _BookingCard extends ConsumerWidget {
   }
 
   Widget _buildMysteryCard(BuildContext context, WidgetRef ref) {
-    if (booking.status == 'mystery_accepted') {
+    if (booking.status == 'mystery_accepted' || 
+        booking.status == 'pending' || 
+        booking.status == 'accepted' || 
+        booking.status == 'confirmed') {
       return _buildNormalCard(context, ref);
     }
-    if (booking.status == 'mystery_declined') {
+    if (booking.status == 'mystery_declined' || booking.status == 'rejected' || booking.status == 'cancelled') {
       return _buildDeclinedMysteryCard();
     }
 
@@ -1014,7 +1017,7 @@ class _BookingCard extends ConsumerWidget {
     try {
       // 1. Trigger Stripe Payment
       final user = FirebaseAuth.instance.currentUser;
-      await StripePaymentService.makePayment(
+      final paymentId = await StripePaymentService.makePayment(
         booking.totalPrice,
         booking.id, // using booking.id for payment intent bookingId
         user?.email ?? '',
@@ -1029,6 +1032,7 @@ class _BookingCard extends ConsumerWidget {
       batch.update(db.collection('bookings').doc(booking.id), {
         'status': 'pending', // Making it 'pending' brings it to the Host Dashboard
         'paymentStatus': 'paid',
+        'paymentId': paymentId,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 

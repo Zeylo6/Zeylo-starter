@@ -12,6 +12,7 @@ const createIntent = async (req, res) => {
     res.status(200).json({
       clientSecret: paymentIntent.client_secret,
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      paymentIntentId: paymentIntent.id,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

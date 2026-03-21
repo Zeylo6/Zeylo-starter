@@ -128,8 +128,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       DateTime bookingDate = DateTime.now();
 
       // 1. Initiate Stripe Payment
+      String? paymentId;
       if (mounted) {
-        await StripePaymentService.makePayment(
+        paymentId = await StripePaymentService.makePayment(
           widget.totalPrice,
           '', // No booking ID yet
           formState.email, // Pass email for receipt
@@ -152,6 +153,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         paymentStatus: 'paid', // Payment is already completed now
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        paymentId: paymentId,
         seekerName: _fullNameController.text.trim().isNotEmpty 
             ? _fullNameController.text.trim() 
             : (user.displayName.isNotEmpty ? user.displayName : 'Seeker'),
