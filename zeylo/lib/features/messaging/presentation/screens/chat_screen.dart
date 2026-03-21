@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -272,7 +272,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       setState(() => _isUploadingImage = true);
 
-      final imageUrl = await CloudinaryService.uploadImage(File(image.path));
+      final Uint8List imageBytes = await image.readAsBytes();
+      final imageUrl = await CloudinaryService.uploadImage(imageBytes, filename: image.name);
 
       if (imageUrl != null && mounted) {
         await ref.read(sendMessageProvider((

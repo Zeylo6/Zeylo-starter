@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -41,7 +41,8 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
   bool _isLoading = false;
   bool _isAIEnhancing = false;
   LatLng? _selectedLatLng;
-  File? _selectedImage;
+  XFile? _selectedXFile;
+  Uint8List? _selectedImageBytes;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -105,8 +106,10 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
       );
 
       if (image != null) {
+        final bytes = await image.readAsBytes();
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedXFile = image;
+          _selectedImageBytes = bytes;
         });
       }
     } catch (e) {
@@ -114,18 +117,23 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
     }
   }
 
-  /// Uploads to Cloudinary using Unsigned Preset
+  /// Uploads to Cloudinary using Unsigned Preset (cross-platform: web + mobile)
   Future<String?> _uploadToCloudinary() async {
-    if (_selectedImage == null) return null;
+    if (_selectedXFile == null || _selectedImageBytes == null) return null;
 
     const cloudName = 'deukwmcoi';
     const uploadPreset = 'Zeylo_images';
 
     try {
       final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+      final fileName = _selectedXFile!.name;
       final request = http.MultipartRequest('POST', url)
         ..fields['upload_preset'] = uploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', _selectedImage!.path));
+        ..files.add(http.MultipartFile.fromBytes(
+          'file',
+          _selectedImageBytes!,
+          filename: fileName,
+        ));
 
       final response = await request.send();
       final responseData = await response.stream.toBytes();
@@ -198,7 +206,7 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
 
       // Upload to Cloudinary first if an image is selected
       String? finalImageUrl;
-      if (_selectedImage != null) {
+      if (_selectedXFile != null) {
         finalImageUrl = await _uploadToCloudinary();
         if (finalImageUrl == null) {
           _showSnackbar("Image upload failed. Please try again.");
@@ -484,10 +492,10 @@ class _CreateExperienceScreenState extends ConsumerState<CreateExperienceScreen>
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: AppColors.primary.withOpacity(0.1)),
             ),
-            child: _selectedImage != null
+            child: _selectedImageBytes != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                    child: Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
                   )
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
