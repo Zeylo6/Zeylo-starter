@@ -116,12 +116,18 @@ class RouterRefreshListenable extends ChangeNotifier {
   }
 }
 
+/// Global navigator key used by NotificationService for deep-link
+/// navigation when the user taps a push notification while the app
+/// is in the background or terminated state.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 /// Provider for GoRouter configuration
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
   final refreshListenable = RouterRefreshListenable(ref);
 
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/',
     refreshListenable: refreshListenable,
     redirect: (context, state) {
@@ -662,6 +668,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+
+    // Phase 7: Keep FCM token in sync with auth state changes
+    ref.watch(fcmTokenSyncProvider);
 
     int getSelectedIndex() {
       if (location.startsWith('/home')) return 0;

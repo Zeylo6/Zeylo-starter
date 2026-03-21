@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'app.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'core/services/notification_service.dart';
+import 'routes/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +19,9 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
+
+  // Phase 6: Initialize NotificationService (permissions, channel, listeners)
+  await NotificationService.instance.initialize();
 
   // Set system UI overlay styles
   await SystemChrome.setPreferredOrientations([
@@ -43,4 +48,8 @@ void main() async {
       child: ZeyloApp(),
     ),
   );
+
+  // Phase 6: Set up deep-link navigation when user taps a notification
+  // Must be called AFTER runApp so GoRouter / Navigator are mounted.
+  await NotificationService.instance.setupInteractedMessage(navigatorKey);
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Zeylo primary brand color used for FCM notification accent -->
+    <color name="colorPrimary">#6C63FF</color>
+    <color name="colorPrimaryDark">#5A52D5</color>
+    <color name="colorAccent">#6C63FF</color>
+</resources>
