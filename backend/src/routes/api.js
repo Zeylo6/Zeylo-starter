@@ -5,6 +5,7 @@ const adminController = require('../controllers/adminController');
 const aiController = require('../controllers/aiController');
 const paymentController = require('../controllers/paymentController');
 const communityController = require('../controllers/communityController');
+const userController = require('../controllers/userController');
 const verifyToken = require('../middleware/auth');
 
 router.get('/health', (req, res) => res.status(200).send('OK'));
@@ -21,6 +22,10 @@ router.post('/admin/delete-experience', verifyToken, adminController.deleteExper
 router.post('/ai/enhance', verifyToken, aiController.enhanceText);
 router.post('/ai/chain/generate', verifyToken, aiController.generateChain);
 router.post('/ai/mystery/generate', verifyToken, aiController.generateSurprise);
+router.post('/ai/mystery/match-and-book', verifyToken, aiController.matchAndBookMystery);
+
+// User Profile & System Routes
+router.post('/users/fcm-token', verifyToken, userController.saveFCMToken);
 
 // Payment Routes
 router.post('/payments/create-intent', verifyToken, paymentController.createIntent);
