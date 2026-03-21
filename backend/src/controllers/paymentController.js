@@ -4,8 +4,10 @@ const { db } = require('../config/firebase');
 
 const createIntent = async (req, res) => {
   try {
-    const { amount, bookingId, email, type = 'booking' } = req.body;
-    const paymentIntent = await stripeService.createPaymentIntent(amount, 'usd', { bookingId, type }, email);
+    const { amount, bookingId, email, type = 'booking', mysteryId } = req.body;
+    const metadata = { bookingId, type };
+    if (mysteryId) metadata.mysteryId = mysteryId;
+    const paymentIntent = await stripeService.createPaymentIntent(amount, 'usd', metadata, email);
     
     res.status(200).json({
       clientSecret: paymentIntent.client_secret,
@@ -32,9 +34,20 @@ const handleWebhook = async (req, res) => {
     const type = paymentIntent.metadata.type || 'booking';
     
     if (type === 'mystery') {
-      // Update mystery status in Firestore
-      await db.collection('mysteries').doc(bookingId).update({
-        status: 'accepted',
+      const mysteryId = paymentIntent.metadata.mysteryId;
+      if (mysteryId) {
+        // Update mystery status in Firestore
+        await db.collection('mysteries').doc(mysteryId).update({
+          status: 'accepted',
+          paymentId: paymentIntent.id,
+          paidAt: new Date().toISOString(),
+        });
+      }
+      
+      // Update booking status in Firestore to pending for the host to accept
+      await db.collection('bookings').doc(bookingId).update({
+        status: 'pending',
+        paymentStatus: 'paid',
         paymentId: paymentIntent.id,
         paidAt: new Date().toISOString(),
       });

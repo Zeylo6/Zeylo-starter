@@ -13,6 +13,8 @@ import '../providers/booking_provider.dart';
 import '../widgets/payment_card_input.dart';
 import '../widgets/report_sheet.dart';
 import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
+import '../../../../core/services/stripe_payment_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATUS DEFINITIONS
@@ -1010,11 +1012,23 @@ class _BookingCard extends ConsumerWidget {
 
   Future<void> _acceptMystery(BuildContext context, WidgetRef ref) async {
     try {
+      // 1. Trigger Stripe Payment
+      final user = FirebaseAuth.instance.currentUser;
+      await StripePaymentService.makePayment(
+        booking.totalPrice,
+        booking.id, // using booking.id for payment intent bookingId
+        user?.email ?? '',
+        type: 'mystery',
+        mysteryId: booking.mysteryId,
+      );
+
+      // 2. Accept Mystery only after successful payment
       final db = FirebaseFirestore.instance;
       final batch = db.batch();
 
       batch.update(db.collection('bookings').doc(booking.id), {
-        'status': 'mystery_accepted',
+        'status': 'pending', // Making it 'pending' brings it to the Host Dashboard
+        'paymentStatus': 'paid',
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
@@ -1029,7 +1043,7 @@ class _BookingCard extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Mystery experience accepted! 🎉'),
+            content: Text('Mystery experience accepted & paid! 🎉'),
             backgroundColor: AppColors.success,
           ),
         );
