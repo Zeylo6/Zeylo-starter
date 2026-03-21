@@ -176,9 +176,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     } catch (e) {
       formNotifier.setLoading(false);
       if (mounted) {
+        // Show the friendly message for UnsupportedError (e.g. web platform)
+        final message = e is UnsupportedError
+            ? (e.message ?? 'This feature is not supported on this platform.')
+            : 'Payment failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(message),
             backgroundColor: AppColors.error,
           ),
         );
