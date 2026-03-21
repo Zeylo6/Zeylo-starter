@@ -66,6 +66,9 @@ class BookingEntity {
   /// Stripe Payment Intent ID
   final String? paymentId;
 
+  /// NEW: If this booking is part of a chained mini trip
+  final String? chainId;
+
   const BookingEntity({
     required this.id,
     required this.experienceId,
@@ -89,6 +92,7 @@ class BookingEntity {
     this.isMystery = false,
     this.mysteryId,
     this.paymentId,
+    this.chainId,
   });
 
   /// Create a copy of this booking entity with some fields replaced
@@ -115,6 +119,7 @@ class BookingEntity {
     bool? isMystery,
     String? mysteryId,
     String? paymentId,
+    String? chainId,
   }) {
     return BookingEntity(
       id: id ?? this.id,
@@ -139,6 +144,7 @@ class BookingEntity {
       isMystery: isMystery ?? this.isMystery,
       mysteryId: mysteryId ?? this.mysteryId,
       paymentId: paymentId ?? this.paymentId,
+      chainId: chainId ?? this.chainId,
     );
   }
 
@@ -153,6 +159,7 @@ class BookingEntity {
       'isRatedBySeeker: $isRatedBySeeker, '
       'isMystery: $isMystery, '
       'mysteryId: $mysteryId, '
-      'paymentId: $paymentId'
+      'paymentId: $paymentId, '
+      'chainId: $chainId'
       ')';
 }
