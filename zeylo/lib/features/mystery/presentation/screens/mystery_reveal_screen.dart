@@ -312,10 +312,17 @@ class _MysteryRevealScreenState extends ConsumerState<MysteryRevealScreen> {
                                 }
                               } catch (e) {
                                 if (mounted) {
+                                  final errStr = e.toString();
+                                  final isWebNotSupported = e is UnsupportedError ||
+                                      errStr.contains('WebUnsupportedError') ||
+                                      errStr.contains('not supported for Web');
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Payment failed: $e'),
+                                      content: Text(isWebNotSupported
+                                          ? 'Payments are only available on the Zeylo mobile app.\nDownload the app on Android or iOS.'
+                                          : 'Payment failed. Please try again.'),
                                       backgroundColor: AppColors.error,
+                                      duration: const Duration(seconds: 5),
                                     ),
                                   );
                                 }
