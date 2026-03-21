@@ -6,35 +6,59 @@ let genAI = null;
 const getModel = () => {
   if (!genAI) {
     if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is missing from environment variables.");
+      throw new Error('GEMINI_API_KEY is missing from environment variables.');
     }
     genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
-  // We use gemini-2.0-flash as it's confirmed available for this key and very fast
+
   return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 };
 
 /**
- * Enhances a given text string based on a specific context format.
- * @param {string} prompt - The raw user input
- * @param {string} context - The context type (e.g. 'mood', 'host_experience', 'business_review')
- * @returns {Promise<string>} The AI enhanced text
+ * Safely strips markdown fences if Gemini wraps JSON in ```json
+ */
+const stripMarkdownFence = (text) => {
+  if (!text) return '';
+  let cleaned = text.trim();
+
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.substring(7);
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.substring(0, cleaned.length - 3);
+    }
+    return cleaned.trim();
+  }
+
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.substring(3);
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.substring(0, cleaned.length - 3);
+    }
+    return cleaned.trim();
+  }
+
+  return cleaned;
+};
+
+/**
+ * Enhance text with context-aware prompting.
  */
 const enhanceText = async (prompt, context) => {
   const model = getModel();
 
-  let systemInstruction = "";
+  let systemInstruction = '';
+
   switch (context) {
     case 'mood':
-      systemInstruction = `You are an empathetic AI assistant on a social platform. 
-      The user has provided a short description of their current mood. 
-      Your job is to enhance it into a single, beautifully written paragraph (2-3 sentences max) that clearly articulates their feelings and what kind of experience or interaction they might be looking for today.
+      systemInstruction = `You are a premium emotional-intelligence writing assistant for a social/discovery app.
+      The user will describe how they feel, often in a rough or short way.
+      Rewrite their message into a polished, emotionally clear, naturally written paragraph (2-3 sentences max) that clearly articulates their feelings and what kind of experience or interaction they might be looking for today.
       Do not add commentary, just return the enhanced description directly. Keep it first-person.`;
       break;
     case 'host_experience':
       systemInstruction = `You are an expert marketing copywriter for an experience booking platform (like Airbnb Experiences).
       The host has provided a rough draft description of the experience they want to offer.
-      Your job is to rewrite it into a highly engaging, professional, and alluring marketing pitch. 
+      Your job is to rewrite it into a highly engaging, professional, and alluring marketing pitch.
       Make it 3-4 short paragraphs. Highlight the unique value. Do not add any conversational filler, just return the marketing copy.`;
       break;
     case 'business_review':
@@ -52,16 +76,98 @@ const enhanceText = async (prompt, context) => {
     const result = await model.generateContent(fullPrompt);
     return result.response.text().trim();
   } catch (error) {
-    console.error("Gemini enhanceText Error:", error.message);
+    console.error('Gemini enhanceText Error:', error.message);
     if (error.stack) console.error(error.stack);
     throw new Error(`Failed to enhance text with AI: ${error.message}`);
   }
 };
 
 /**
- * Generates an itinerary of 3 sequence experiences based on user criteria.
- * Forces the AI to return a strict JSON array.
- * @returns {Promise<Array>} Array of parsed JSON experience objects
+ * Generate a real experience chain from a list of candidate experiences.
+ * Gemini must ONLY select from the provided candidates.
+ *
+ * @param {Object} params
+ * @param {string} params.prompt
+ * @param {string} params.location
+ * @param {string} params.date
+ * @param {string} params.totalTime
+ * @param {string[]} params.interests
+ * @param {Array} params.candidates
+ * @returns {Promise<Array<{id:string,startTime:string,endTime:string}>>}
+ */
+const generateChainFromCandidates = async ({
+  prompt,
+  location,
+  date,
+  totalTime,
+  interests = [],
+  candidates = [],
+}) => {
+  const model = getModel();
+
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    throw new Error('No candidate experiences were provided to Gemini.');
+  }
+
+  const compactCandidates = candidates.map((item) => ({
+    id: item.id,
+    title: item.title || '',
+    category: item.category || '',
+    duration: item.duration ?? 0,
+    price: item.price ?? 0,
+    startTime: item.startTime || null,
+    endTime: item.endTime || null,
+    description: item.description || '',
+  }));
+
+  const systemInstruction = `You are a travel curator. Given a user's preference and a list of real available experiences, select 2–4 that best match and arrange them in a logical time sequence for the day.
+
+Rules:
+- Only select from the provided list — never invent new ones
+- Return ONLY a raw JSON array, no markdown, no backticks, no commentary
+- Use this exact schema per item:
+  { "id": "<exact id from the list>", "startTime": "HH:mm", "endTime": "HH:mm" }
+- Assign realistic startTime/endTime (24-hour HH:mm) with 30min travel gaps
+- First experience no earlier than 07:00
+- Last experience must end by 23:00
+- Match the user's mood, pace, and interests
+- If totalTime is "halfDay" pick exactly 2 experiences
+- If totalTime is "fullDay" pick 3 or 4 experiences
+- If totalTime is "weekend" pick exactly 4 experiences
+- Never repeat the same id twice
+- Use only ids that exist in the provided list`;
+
+  const fullPrompt = `${systemInstruction}
+
+User prompt: ${prompt}
+Location: ${location || 'Anywhere'}
+Date: ${date || 'Any day'}
+Total time: ${totalTime}
+Interests: ${(interests || []).join(', ') || 'None specified'}
+
+Available experiences:
+${JSON.stringify(compactCandidates)}`;
+
+  try {
+    const result = await model.generateContent(fullPrompt);
+    const rawText = result.response.text().trim();
+    const cleaned = stripMarkdownFence(rawText);
+    const parsed = JSON.parse(cleaned);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('AI did not return a JSON array.');
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error('Gemini generateChainFromCandidates Error:', error.message);
+    throw new Error(`Failed to generate itinerary chain from candidates: ${error.message}`);
+  }
+};
+
+/**
+ * Legacy chain generation kept for backward compatibility.
+ * Existing callers that still use the old flow will continue to work.
  */
 const generateChain = async (prompt, location, date) => {
   const model = getModel();
@@ -69,7 +175,7 @@ const generateChain = async (prompt, location, date) => {
   const systemInstruction = `You are a master travel and experience curator.
   The user wants an itinerary of exactly 3 sequential activities (morning, afternoon, evening or continuous) based on their prompt.
   You MUST return ONLY a valid JSON array of exactly 3 objects. NO markdown formatting, NO backticks, NO extra text.
-  
+
   JSON Object Schema:
   {
     "experienceId": "A unique dummy string like 'ai_exp_123'",
@@ -85,31 +191,22 @@ const generateChain = async (prompt, location, date) => {
 
   try {
     const result = await model.generateContent(fullPrompt);
-    let text = result.response.text().trim();
-
-    // Sometimes Gemini wraps in markdown json blocks despite instructions, so we clean it
-    if (text.startsWith('```json')) {
-      text = text.substring(7, text.length - 3).trim();
-    } else if (text.startsWith('```')) {
-      text = text.substring(3, text.length - 3).trim();
-    }
+    const text = stripMarkdownFence(result.response.text().trim());
 
     const parsedArray = JSON.parse(text);
     if (!Array.isArray(parsedArray) || parsedArray.length !== 3) {
-      throw new Error("AI did not return exactly 3 array items.");
+      throw new Error('AI did not return exactly 3 array items.');
     }
 
     return parsedArray;
   } catch (error) {
-    console.error("Gemini generateChain Error:", error.message);
+    console.error('Gemini generateChain Error:', error.message);
     throw new Error(`Failed to generate itinerary chain: ${error.message}`);
   }
 };
 
 /**
  * Generates a mystery surprise itinerary based on preferences.
- * Forces the AI to return a strict JSON object.
- * @returns {Promise<Object>} Parsed JSON surprise object
  */
 const generateSurprise = async (preferences) => {
   const model = getModel();
@@ -117,7 +214,7 @@ const generateSurprise = async (preferences) => {
   const systemInstruction = `You are a boutique mystery experience curator.
     The user has provided a set of preferences. Generate a highly unique, slightly secretive "Mystery Surprise" experience for them.
     You MUST return ONLY a valid JSON object. NO markdown formatting, NO backticks, NO extra text.
-    
+
     JSON Object Schema:
     {
       "title": "A cryptic but alluring title (e.g. 'The Midnight Sonata')",
@@ -131,18 +228,10 @@ const generateSurprise = async (preferences) => {
 
   try {
     const result = await model.generateContent(fullPrompt);
-    let text = result.response.text().trim();
-
-    if (text.startsWith('```json')) {
-      text = text.substring(7, text.length - 3).trim();
-    } else if (text.startsWith('```')) {
-      text = text.substring(3, text.length - 3).trim();
-    }
-
-    const parsedData = JSON.parse(text);
-    return parsedData;
+    const text = stripMarkdownFence(result.response.text().trim());
+    return JSON.parse(text);
   } catch (error) {
-    console.error("Gemini generateSurprise Error:", error.message);
+    console.error('Gemini generateSurprise Error:', error.message);
     throw new Error(`Failed to generate mystery surprise: ${error.message}`);
   }
 };
@@ -150,10 +239,6 @@ const generateSurprise = async (preferences) => {
 /**
  * Matches user preferences to the best candidate experience using AI ranking,
  * then generates mystery teaser content.
- * 
- * @param {Object} preferences - User's preferences (location, date, time, budget, type)
- * @param {Array} candidates - Array of candidate experience objects {id, title, category, price, description}
- * @returns {Promise<Object>} { matchedExperienceId, title, teaserDescription, category, vibe, preparationNotes }
  */
 const matchAndGenerateMystery = async (preferences, candidates) => {
   const model = getModel();
@@ -187,26 +272,17 @@ ${JSON.stringify(candidates, null, 2)}`;
 
   try {
     const result = await model.generateContent(fullPrompt);
-    let text = result.response.text().trim();
-
-    if (text.startsWith('```json')) {
-      text = text.substring(7, text.length - 3).trim();
-    } else if (text.startsWith('```')) {
-      text = text.substring(3, text.length - 3).trim();
-    }
-
+    const text = stripMarkdownFence(result.response.text().trim());
     const parsedData = JSON.parse(text);
 
-    // Validate that the matched ID actually exists in candidates
-    const validIds = candidates.map(c => c.id);
+    const validIds = candidates.map((c) => c.id);
     if (!validIds.includes(parsedData.matchedExperienceId)) {
-      // Fallback: pick first candidate
       parsedData.matchedExperienceId = candidates[0].id;
     }
 
     return parsedData;
   } catch (error) {
-    console.error("Gemini matchAndGenerateMystery Error:", error.message);
+    console.error('Gemini matchAndGenerateMystery Error:', error.message);
     throw new Error(`Failed to match and generate mystery: ${error.message}`);
   }
 };
@@ -214,6 +290,7 @@ ${JSON.stringify(candidates, null, 2)}`;
 module.exports = {
   enhanceText,
   generateChain,
+  generateChainFromCandidates,
   generateSurprise,
-  matchAndGenerateMystery
+  matchAndGenerateMystery,
 };

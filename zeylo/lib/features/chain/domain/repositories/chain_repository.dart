@@ -56,6 +56,11 @@ abstract class ChainRepository {
   Future<Either<Failure, String>> enhancePrompt(String prompt);
 
   /// Generate chain experiences based on advanced prompt
-  Future<Either<Failure, List<ChainExperience>>> generateChainExperiences(
-      String prompt, String location, String date);
+  Future<Either<Failure, List<ChainExperience>>> generateChainExperiences({
+    required String prompt,
+    required String location,
+    required String date,
+    required String totalTime,
+    required List<String> interests,
+  });
 }

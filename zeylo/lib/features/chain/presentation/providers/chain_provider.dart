@@ -9,49 +9,44 @@ import '../../domain/repositories/chain_repository.dart';
 import '../../domain/usecases/create_chain_usecase.dart';
 import '../../domain/usecases/enhance_chain_prompt_usecase.dart';
 import '../../domain/usecases/generate_chain_experiences_usecase.dart';
+import '../../../../features/booking/domain/usecases/create_booking_usecase.dart';
+import '../../../../features/booking/presentation/providers/booking_provider.dart';
+import '../../../../features/booking/domain/entities/booking_entity.dart';
 
-/// Firebase Firestore provider
 final firebaseFirestoreProvider = Provider((ref) {
   return FirebaseFirestore.instance;
 });
 
-/// AI Service provider
 final aiServiceProvider = Provider<AIService>((ref) {
   return ApiAiService();
 });
 
-/// Chain data source provider
 final chainDataSourceProvider = Provider((ref) {
   final firestore = ref.watch(firebaseFirestoreProvider);
   final aiService = ref.watch(aiServiceProvider);
   return ChainDataSourceImpl(firestore: firestore, aiService: aiService);
 });
 
-/// Chain repository provider
 final chainRepositoryProvider = Provider<ChainRepository>((ref) {
   final dataSource = ref.watch(chainDataSourceProvider);
   return ChainRepositoryImpl(dataSource: dataSource);
 });
 
-/// Create chain use case provider
 final createChainUseCaseProvider = Provider((ref) {
   final repository = ref.watch(chainRepositoryProvider);
   return CreateChainUseCase(repository: repository);
 });
 
-/// Enhance prompt use case provider
 final enhanceChainPromptUseCaseProvider = Provider((ref) {
   final repository = ref.watch(chainRepositoryProvider);
   return EnhanceChainPromptUseCase(repository: repository);
 });
 
-/// Generate chain experiences use case provider
 final generateChainExperiencesUseCaseProvider = Provider((ref) {
   final repository = ref.watch(chainRepositoryProvider);
   return GenerateChainExperiencesUseCase(repository: repository);
 });
 
-/// State for chain form
 class ChainFormState {
   final String name;
   final String description;
@@ -109,22 +104,23 @@ class ChainFormState {
       isEnhancing: isEnhancing ?? this.isEnhancing,
       isGenerating: isGenerating ?? this.isGenerating,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error,
     );
   }
 }
 
-/// Chain form state notifier
 class ChainFormNotifier extends StateNotifier<ChainFormState> {
   final CreateChainUseCase createChainUseCase;
   final EnhanceChainPromptUseCase enhanceChainPromptUseCase;
   final GenerateChainExperiencesUseCase generateChainExperiencesUseCase;
+  final CreateBookingUseCase createBookingUseCase;
   final String userId;
 
   ChainFormNotifier({
     required this.createChainUseCase,
     required this.enhanceChainPromptUseCase,
     required this.generateChainExperiencesUseCase,
+    required this.createBookingUseCase,
     required this.userId,
   }) : super(const ChainFormState());
 
@@ -186,47 +182,68 @@ class ChainFormNotifier extends StateNotifier<ChainFormState> {
   Future<void> enhancePrompt() async {
     if (state.prompt.isEmpty) return;
 
-    state = state.copyWith(isEnhancing: true, error: null);
+    state = state.copyWith(
+      isEnhancing: true,
+      error: null,
+    );
 
     final result = await enhanceChainPromptUseCase(state.prompt);
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(isEnhancing: false, error: failure.message),
-      (enhanced) =>
-          state = state.copyWith(isEnhancing: false, prompt: enhanced),
+      (failure) => state = state.copyWith(
+        isEnhancing: false,
+        error: failure.message,
+      ),
+      (enhanced) => state = state.copyWith(
+        isEnhancing: false,
+        prompt: enhanced,
+        error: null,
+      ),
     );
   }
 
   Future<void> generateExperiences() async {
     if (state.prompt.isEmpty) return;
+
     if (state.destinationCity.isEmpty) {
       state = state.copyWith(error: 'Please enter a destination first');
       return;
     }
 
-    state = state.copyWith(isGenerating: true, error: null);
+    state = state.copyWith(
+      isGenerating: true,
+      error: null,
+    );
 
     final params = GenerateChainExperiencesParams(
       prompt: state.prompt,
       location: state.destinationCity,
       date: state.date,
+      totalTime: state.totalTime.name,
+      interests: state.selectedInterests,
     );
 
     final result = await generateChainExperiencesUseCase(params);
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(isGenerating: false, error: failure.message),
-      (experiences) =>
-          state = state.copyWith(isGenerating: false, experiences: experiences),
+      (failure) => state = state.copyWith(
+        isGenerating: false,
+        error: failure.message,
+      ),
+      (experiences) => state = state.copyWith(
+        isGenerating: false,
+        experiences: experiences,
+        error: null,
+      ),
     );
   }
 
   Future<void> submitForm() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+    );
 
-    // Validate form
     if (state.name.isEmpty) {
       state = state.copyWith(
         isLoading: false,
@@ -279,8 +296,48 @@ class ChainFormNotifier extends StateNotifier<ChainFormState> {
           error: failure.message,
         );
       },
-      (chain) {
-        state = state.copyWith(isLoading: false);
+      (chain) async {
+        // Create bookings for each experience in the chain
+        try {
+          DateTime experienceDate = DateTime.now();
+          if (state.date.isNotEmpty) {
+            final parts = state.date.split('/');
+            if (parts.length == 3) {
+              experienceDate = DateTime(int.parse(parts[2]), int.parse(parts[0]), int.parse(parts[1]));
+            }
+          }
+
+          for (final exp in state.experiences) {
+            if (exp.hostId.isEmpty) continue;
+
+            final booking = BookingEntity(
+              id: '', // Will be generated by Firestore
+              experienceId: exp.experienceId,
+              experienceTitle: exp.title,
+              experienceCoverImage: exp.imageUrl,
+              userId: userId,
+              hostId: exp.hostId,
+              date: experienceDate,
+              startTime: exp.startTime,
+              guests: 1, // Default to 1 for chain bookings
+              totalPrice: exp.price,
+              status: 'pending',
+              paymentStatus: 'pending',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+              chainId: chain.id,
+            );
+
+            await createBookingUseCase.call(booking);
+          }
+        } catch (e) {
+          print('Error generating chain bookings: $e');
+        }
+
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+        );
       },
     );
   }
@@ -290,23 +347,24 @@ class ChainFormNotifier extends StateNotifier<ChainFormState> {
   }
 }
 
-/// Chain form state provider
 final chainFormProvider =
     StateNotifierProvider.family<ChainFormNotifier, ChainFormState, String>(
   (ref, userId) {
     final createUseCase = ref.watch(createChainUseCaseProvider);
     final enhanceUseCase = ref.watch(enhanceChainPromptUseCaseProvider);
     final generateUseCase = ref.watch(generateChainExperiencesUseCaseProvider);
+    final createBookingUseCase = ref.watch(createBookingUseCaseProvider);
+
     return ChainFormNotifier(
       createChainUseCase: createUseCase,
       enhanceChainPromptUseCase: enhanceUseCase,
       generateChainExperiencesUseCase: generateUseCase,
+      createBookingUseCase: createBookingUseCase,
       userId: userId,
     );
   },
 );
 
-/// Chains list provider
 final chainsProvider = FutureProvider.family(
   (ref, String userId) async {
     final repository = ref.watch(chainRepositoryProvider);
@@ -318,85 +376,39 @@ final chainsProvider = FutureProvider.family(
   },
 );
 
-/// Single chain provider
-final chainDetailProvider = FutureProvider.family(
-  (ref, String chainId) async {
-    final repository = ref.watch(chainRepositoryProvider);
-    final result = await repository.getChainById(chainId);
-    return result.fold(
-      (failure) => null,
-      (chain) => chain,
-    );
-  },
-);
-
-/// Suggested chains provider
-final suggestedChainsProvider = FutureProvider.family(
-  (ref, SuggestedChainsParams params) async {
-    final repository = ref.watch(chainRepositoryProvider);
-    final result = await repository.getSuggestedChains(
-      params.destinationCity,
-      params.interests,
-    );
-    return result.fold(
-      (failure) => <ChainEntity>[],
-      (chains) => chains,
-    );
-  },
-);
-
-class SuggestedChainsParams {
-  final String destinationCity;
-  final List<String> interests;
-
-  const SuggestedChainsParams({
-    required this.destinationCity,
-    required this.interests,
-  });
-}
-
-/// Edit chain state
 class EditChainState {
   final bool isLoading;
   final String? error;
 
-  const EditChainState({
-    this.isLoading = false,
-    this.error,
-  });
+  const EditChainState({this.isLoading = false, this.error});
 
-  EditChainState copyWith({
-    bool? isLoading,
-    String? error,
-  }) {
+  EditChainState copyWith({bool? isLoading, String? error}) {
     return EditChainState(
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: error,
     );
   }
 }
 
-/// Edit chain notifier
 class EditChainNotifier extends StateNotifier<EditChainState> {
   final ChainRepository repository;
 
   EditChainNotifier({required this.repository}) : super(const EditChainState());
 
+  void setLoading(bool isLoading) {
+    state = state.copyWith(isLoading: isLoading, error: null);
+  }
+
   Future<bool> updateChain(ChainEntity chain) async {
     state = state.copyWith(isLoading: true, error: null);
-
     final result = await repository.updateChain(chain);
-
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
         return false;
       },
       (_) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoading: false, error: null);
         return true;
       },
     );
@@ -404,32 +416,21 @@ class EditChainNotifier extends StateNotifier<EditChainState> {
 
   Future<bool> publishChain(String chainId) async {
     state = state.copyWith(isLoading: true, error: null);
-
     final result = await repository.publishChain(chainId);
-
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
         return false;
       },
       (_) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoading: false, error: null);
         return true;
       },
     );
   }
-
-  void setLoading(bool loading) {
-    state = state.copyWith(isLoading: loading);
-  }
 }
 
-/// Edit chain provider
-final editChainProvider =
-    StateNotifierProvider<EditChainNotifier, EditChainState>((ref) {
+final editChainProvider = StateNotifierProvider<EditChainNotifier, EditChainState>((ref) {
   final repository = ref.watch(chainRepositoryProvider);
   return EditChainNotifier(repository: repository);
 });

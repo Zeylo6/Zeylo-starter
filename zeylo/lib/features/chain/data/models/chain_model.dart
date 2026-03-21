@@ -21,7 +21,6 @@ class ChainModel extends ChainEntity {
     required super.createdAt,
   });
 
-  /// Create a model from a Firestore document
   factory ChainModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
@@ -44,7 +43,6 @@ class ChainModel extends ChainEntity {
     );
   }
 
-  /// Create a model from JSON
   factory ChainModel.fromJson(Map<String, dynamic> json) {
     return ChainModel(
       id: json['id'] ?? '',
@@ -64,7 +62,6 @@ class ChainModel extends ChainEntity {
     );
   }
 
-  /// Convert model to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
@@ -83,6 +80,9 @@ class ChainModel extends ChainEntity {
                 'duration': e.duration,
                 'price': e.price,
                 'isOvernight': e.isOvernight,
+                'imageUrl': e.imageUrl,
+                'category': e.category,
+                'hostId': e.hostId,
               })
           .toList(),
       'totalPrice': totalPrice,
@@ -91,7 +91,6 @@ class ChainModel extends ChainEntity {
     };
   }
 
-  /// Convert model to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -111,6 +110,9 @@ class ChainModel extends ChainEntity {
                 'duration': e.duration,
                 'price': e.price,
                 'isOvernight': e.isOvernight,
+                'imageUrl': e.imageUrl,
+                'category': e.category,
+                'hostId': e.hostId,
               })
           .toList(),
       'totalPrice': totalPrice,
@@ -119,7 +121,6 @@ class ChainModel extends ChainEntity {
     };
   }
 
-  /// Convert to entity
   ChainEntity toEntity() {
     return ChainEntity(
       id: id,
@@ -137,7 +138,6 @@ class ChainModel extends ChainEntity {
     );
   }
 
-  /// Create a copy of this model with some fields replaced
   @override
   ChainModel copyWith({
     String? id,
@@ -170,7 +170,6 @@ class ChainModel extends ChainEntity {
   }
 }
 
-/// Parse chain duration from string
 ChainDuration _parseChainDuration(String value) {
   return ChainDuration.values.firstWhere(
     (e) => e.name == value,
@@ -178,7 +177,6 @@ ChainDuration _parseChainDuration(String value) {
   );
 }
 
-/// Parse chain status from string
 ChainStatus _parseChainStatus(String value) {
   return ChainStatus.values.firstWhere(
     (e) => e.name == value,
@@ -186,10 +184,9 @@ ChainStatus _parseChainStatus(String value) {
   );
 }
 
-/// Parse experiences from list
 List<ChainExperience> _parseExperiences(List<dynamic> experiences) {
   return experiences.map((e) {
-    final exp = e as Map<String, dynamic>;
+    final exp = Map<String, dynamic>.from(e as Map);
     return ChainExperience(
       experienceId: exp['experienceId'] ?? '',
       title: exp['title'] ?? '',
@@ -198,6 +195,9 @@ List<ChainExperience> _parseExperiences(List<dynamic> experiences) {
       duration: (exp['duration'] ?? 0).toDouble(),
       price: (exp['price'] ?? 0).toDouble(),
       isOvernight: exp['isOvernight'] ?? false,
+      imageUrl: exp['imageUrl'] ?? '',
+      category: exp['category'] ?? '',
+      hostId: exp['hostId'] ?? '',
     );
   }).toList();
 }

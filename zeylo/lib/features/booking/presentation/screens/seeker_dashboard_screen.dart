@@ -191,6 +191,12 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
           // ── UPCOMING: booked but not yet started ──────────────────────────
           // Includes: pending, accepted, confirmed, mystery_pending, mystery_revealed, mystery_accepted
           final upcoming = allBookings.where((b) {
+            if (b.chainId != null) {
+              final chainBookings = allBookings.where((cb) => cb.chainId == b.chainId).toList();
+              final allAccepted = chainBookings.every((cb) => cb.status == 'accepted' || cb.status == 'confirmed');
+              if (!allAccepted) return false;
+            }
+
             return b.status == 'pending' ||
                 b.status == 'accepted' ||
                 b.status == 'confirmed' ||

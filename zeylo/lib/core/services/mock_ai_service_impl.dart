@@ -1,12 +1,10 @@
-import '../../../features/chain/domain/entities/chain_entity.dart';
+import '../../features/chain/domain/entities/chain_entity.dart';
 import 'ai_service.dart';
 
 /// A mock implementation of the AIService for local testing
-/// Returns predefined responses instead of calling real AI APIs
 class MockAIServiceImpl implements AIService {
   @override
   Future<String> enhancePrompt(String prompt) async {
-    // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
 
     final lowerPrompt = prompt.toLowerCase();
@@ -30,121 +28,75 @@ class MockAIServiceImpl implements AIService {
   }
 
   @override
-  Future<List<ChainExperience>> generateChainExperiences(
-      String prompt, String location, String date) async {
-    // Simulate network delay
+  Future<List<ChainExperience>> generateChainExperiences({
+    required String prompt,
+    required String location,
+    required String date,
+    required String totalTime,
+    required List<String> interests,
+  }) async {
     await Future.delayed(const Duration(seconds: 2));
 
-    final lowerPrompt = prompt.toLowerCase();
-
-    if (lowerPrompt.contains('relax')) {
-      return [
-        ChainExperience(
-          experienceId: _generateId(),
-          title: 'Morning Yoga by the Beach',
-          startTime: '07:00',
-          endTime: '08:30',
-          duration: 1.5,
-          price: 25.0,
-          isOvernight: false,
-        ),
-        ChainExperience(
-          experienceId: _generateId(),
-          title: 'Pottery Workshop',
-          startTime: '11:00',
-          endTime: '13:00',
-          duration: 2.0,
-          price: 45.0,
-          isOvernight: false,
-        ),
-        ChainExperience(
-          experienceId: _generateId(),
-          title: 'Sunset Meditation',
-          startTime: '17:30',
-          endTime: '18:30',
-          duration: 1.0,
-          price: 15.0,
-          isOvernight: false,
-        ),
-      ];
-    } else if (lowerPrompt.contains('energetic')) {
-      return [
-        ChainExperience(
-          experienceId: _generateId(),
-          title: 'Mountain Bike Trail Match',
-          startTime: '08:00',
-          endTime: '11:00',
-          duration: 3.0,
-          price: 55.0,
-          isOvernight: false,
-        ),
-        ChainExperience(
-          experienceId: _generateId(),
-          title: 'Street Art Walking Tour',
-          startTime: '14:00',
-          endTime: '16:00',
-          duration: 2.0,
-          price: 20.0,
-          isOvernight: false,
-        ),
-        ChainExperience(
-          experienceId: _generateId(),
-          title: 'Live Music Bar Crawl',
-          startTime: '20:00',
-          endTime: '23:30',
-          duration: 3.5,
-          price: 40.0,
-          isOvernight: false,
-        ),
-      ];
-    }
-
-    // Default response
     return [
       ChainExperience(
-        experienceId: _generateId(),
-        title: 'Morning Coffee Tasting',
-        startTime: '09:00',
-        endTime: '10:30',
-        duration: 1.5,
-        price: 30.0,
-        isOvernight: false,
-      ),
-      ChainExperience(
-        experienceId: _generateId(),
-        title: 'Local Art Museum Pass',
-        startTime: '11:30',
-        endTime: '14:00',
-        duration: 2.5,
-        price: 25.0,
-        isOvernight: false,
-      ),
-      ChainExperience(
-        experienceId: _generateId(),
-        title: 'Sunset Harbor Cruise',
-        startTime: '17:00',
-        endTime: '19:00',
+        experienceId: 'mock-exp-1',
+        title: 'Morning Nature Walk',
+        startTime: '08:00',
+        endTime: '10:00',
         duration: 2.0,
-        price: 65.0,
+        price: 2500,
         isOvernight: false,
+        imageUrl: '',
+        category: 'Nature',
+      ),
+      ChainExperience(
+        experienceId: 'mock-exp-2',
+        title: 'Local Lunch Experience',
+        startTime: '10:30',
+        endTime: '12:00',
+        duration: 1.5,
+        price: 4000,
+        isOvernight: false,
+        imageUrl: '',
+        category: 'Food Tours',
+      ),
+      ChainExperience(
+        experienceId: 'mock-exp-3',
+        title: 'Cultural Village Visit',
+        startTime: '13:00',
+        endTime: '15:00',
+        duration: 2.0,
+        price: 3500,
+        isOvernight: false,
+        imageUrl: '',
+        category: 'Walking Tours',
       ),
     ];
   }
 
   @override
-  Future<Map<String, dynamic>> generateSurprise(Map<String, dynamic> preferences) async {
+  Future<Map<String, dynamic>> generateSurprise(
+    Map<String, dynamic> preferences,
+  ) async {
     await Future.delayed(const Duration(seconds: 1));
     return {
-      "title": "A Mocked Surprise",
-      "teaserDescription": "A test teaser",
-      "category": "Adventure",
-      "vibe": "Chill",
-      "preparationNotes": "None required"
+      'title': 'A Mocked Surprise',
+      'teaserDescription': 'A test teaser',
+      'category': 'Adventure',
+      'vibe': 'Chill',
+      'preparationNotes': 'None required',
     };
   }
 
-  String _generateId() {
-    return DateTime.now().millisecondsSinceEpoch.toString() +
-        (DateTime.now().microsecond).toString();
+  @override
+  Future<Map<String, dynamic>> matchAndBookMystery(Map<String, dynamic> payload) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return {
+      'matched': true,
+      'bookingId': 'mock-booking-id',
+      'teaserDescription': 'A mocked teaser description',
+      'vibe': 'Exciting Mock',
+      'preparationNotes': 'Mock preparation notes',
+    };
   }
 }

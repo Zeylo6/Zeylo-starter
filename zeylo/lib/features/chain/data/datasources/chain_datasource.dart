@@ -3,49 +3,39 @@ import '../../../../core/services/ai_service.dart';
 import '../models/chain_model.dart';
 import '../../domain/entities/chain_entity.dart';
 
-/// Abstract data source for chain operations
-///
-/// Defines the contract for chain data operations
 abstract class ChainDataSource {
-  /// Create a new chain
   Future<ChainModel> createChain(ChainModel chain);
-
-  /// Get all chains for a user
   Future<List<ChainModel>> getChainsByUserId(String userId);
-
-  /// Get a single chain by ID
   Future<ChainModel> getChainById(String chainId);
-
-  /// Update a chain
   Future<ChainModel> updateChain(ChainModel chain);
-
-  /// Delete a chain
   Future<void> deleteChain(String chainId);
 
-  /// Get suggested chains
   Future<List<ChainModel>> getSuggestedChains(
     String destinationCity,
     List<String> interests,
   );
 
-  /// Enhance a prompt using AI
   Future<String> enhancePrompt(String prompt);
 
-  /// Generate chain experiences based on a prompt
-  Future<List<ChainExperience>> generateChainExperiences(
-      String prompt, String location, String date);
+  Future<List<ChainExperience>> generateChainExperiences({
+    required String prompt,
+    required String location,
+    required String date,
+    required String totalTime,
+    required List<String> interests,
+  });
 }
 
-/// Firebase implementation of chain data source
 class ChainDataSourceImpl implements ChainDataSource {
-  /// Firestore instance
   final FirebaseFirestore firestore;
   final AIService aiService;
 
-  /// Collection path for chains
   static const String _chainCollection = 'chains';
 
-  ChainDataSourceImpl({required this.firestore, required this.aiService});
+  ChainDataSourceImpl({
+    required this.firestore,
+    required this.aiService,
+  });
 
   @override
   Future<ChainModel> createChain(ChainModel chain) async {
@@ -121,7 +111,7 @@ class ChainDataSourceImpl implements ChainDataSource {
     List<String> interests,
   ) async {
     try {
-      var query = firestore
+      final query = firestore
           .collection(_chainCollection)
           .where('destinationCity', isEqualTo: destinationCity)
           .where('status', isEqualTo: 'active');
@@ -132,11 +122,11 @@ class ChainDataSourceImpl implements ChainDataSource {
       return querySnapshot.docs
           .map((doc) => ChainModel.fromFirestore(doc))
           .where((chain) {
-        // Filter by interests match
         final chainInterests = chain.interests.map((i) => i.toLowerCase());
         final searchInterests = interests.map((i) => i.toLowerCase());
-        return chainInterests
-            .any((interest) => searchInterests.contains(interest));
+        return chainInterests.any(
+          (interest) => searchInterests.contains(interest),
+        );
       }).toList();
     } on FirebaseException catch (e) {
       throw Exception('Failed to get suggested chains: ${e.message}');
@@ -153,10 +143,21 @@ class ChainDataSourceImpl implements ChainDataSource {
   }
 
   @override
-  Future<List<ChainExperience>> generateChainExperiences(
-      String prompt, String location, String date) async {
+  Future<List<ChainExperience>> generateChainExperiences({
+    required String prompt,
+    required String location,
+    required String date,
+    required String totalTime,
+    required List<String> interests,
+  }) async {
     try {
-      return await aiService.generateChainExperiences(prompt, location, date);
+      return await aiService.generateChainExperiences(
+        prompt: prompt,
+        location: location,
+        date: date,
+        totalTime: totalTime,
+        interests: interests,
+      );
     } catch (e) {
       throw Exception('Failed to generate chain experiences: $e');
     }

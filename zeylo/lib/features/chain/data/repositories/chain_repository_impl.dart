@@ -5,11 +5,7 @@ import '../../domain/repositories/chain_repository.dart';
 import '../datasources/chain_datasource.dart';
 import '../models/chain_model.dart';
 
-/// Implementation of ChainRepository
-///
-/// Handles error conversion and delegates to data source
 class ChainRepositoryImpl implements ChainRepository {
-  /// Data source for chain operations
   final ChainDataSource dataSource;
 
   ChainRepositoryImpl({required this.dataSource});
@@ -151,11 +147,21 @@ class ChainRepositoryImpl implements ChainRepository {
   }
 
   @override
-  Future<Either<Failure, List<ChainExperience>>> generateChainExperiences(
-      String prompt, String location, String date) async {
+  Future<Either<Failure, List<ChainExperience>>> generateChainExperiences({
+    required String prompt,
+    required String location,
+    required String date,
+    required String totalTime,
+    required List<String> interests,
+  }) async {
     try {
-      final result =
-          await dataSource.generateChainExperiences(prompt, location, date);
+      final result = await dataSource.generateChainExperiences(
+        prompt: prompt,
+        location: location,
+        date: date,
+        totalTime: totalTime,
+        interests: interests,
+      );
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));

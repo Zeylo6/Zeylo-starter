@@ -8,20 +8,12 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../domain/entities/chain_entity.dart';
 import '../providers/chain_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/interest_chip_list.dart';
 import '../widgets/time_selector.dart';
 
 /// Create chain (mini trip) screen
-///
-/// Based on Figma "chain"
-/// Allows users to create a new chain with:
-/// - Destination city selection
-/// - Date selection
-/// - Total time available preference
-/// - Interest selection
-/// - Suggested chain preview
 class CreateChainScreen extends ConsumerStatefulWidget {
-  /// User ID creating the chain
   final String userId;
 
   const CreateChainScreen({
@@ -54,6 +46,40 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
     super.dispose();
   }
 
+  List<String> _getWordSuggestions(String text) {
+    if (text.isEmpty) return [];
+    final words = text.toLowerCase().split(' ');
+    final lastWord = words.last;
+    if (lastWord.isEmpty) return [];
+    
+    final Map<String, List<String>> dict = {
+      'relaxing': ['morning', 'day', 'evening', 'spa', 'beach', 'getaway'],
+      'energetic': ['afternoon', 'morning', 'hike', 'adventure', 'day'],
+      'cultural': ['evening', 'tour', 'experience', 'village', 'heritage'],
+      'romantic': ['dinner', 'evening', 'getaway', 'sunset', 'date'],
+      'scenic': ['views', 'drive', 'hike', 'sunset', 'morning'],
+      'chill': ['vibes', 'evening', 'afternoon', 'cafe', 'lounge'],
+      'exciting': ['adventure', 'nightlife', 'safari', 'trip'],
+      'thrilling': ['experience', 'activity', 'ride', 'sport'],
+      'peaceful': ['morning', 'retreat', 'walk', 'sunset'],
+      'local': ['food', 'tour', 'culture', 'market', 'experience'],
+      'adventurous': ['day', 'hike', 'trip', 'sport'],
+      'food': ['tour', 'tasting', 'market', 'class', 'crawl'],
+    };
+
+    if (dict.containsKey(lastWord)) {
+      return dict[lastWord]!;
+    }
+
+    for (var key in dict.keys) {
+      if (key.startsWith(lastWord) && key != lastWord) {
+        return [key];
+      }
+    }
+    return [];
+  }
+
+  @override
   Widget build(BuildContext context) {
     ref.listen(chainFormProvider(widget.userId), (previous, next) {
       if (previous?.prompt != next.prompt &&
@@ -81,7 +107,6 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Chain link icon
               Center(
                 child: Container(
                   width: 80,
@@ -99,7 +124,6 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Title
               Center(
                 child: Text(
                   'Create Your Mini Trip Today!',
@@ -111,7 +135,6 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Subtitle
               Center(
                 child: Text(
                   'Connect multiple experiences for the perfect day using our AI.',
@@ -123,58 +146,96 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // AI Prompt field
               ZeyloTextField(
                 label: 'Describe your perfect day',
                 hint:
                     'E.g., I want a relaxing morning, energetic afternoon, and cultural evening.',
                 controller: _promptController,
                 maxLines: 3,
-                prefixWidget: const Icon(Icons.auto_awesome,
-                    color: AppColors.primary, size: 20),
+                prefixWidget: const Icon(
+                  Icons.auto_awesome,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
                 suffixWidget: IconButton(
                   icon: formState.isEnhancing
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.primary))
-                      : const Icon(Icons.auto_fix_high,
-                          color: AppColors.primary),
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.auto_fix_high,
+                          color: AppColors.primary,
+                        ),
                   tooltip: 'Enhance Prompt',
                   onPressed: formState.isEnhancing
                       ? null
                       : () => formNotifier.enhancePrompt(),
                 ),
-                onChanged: (value) => formNotifier.setPrompt(value),
+                onChanged: (value) {
+                  formNotifier.setPrompt(value);
+                  setState(() {}); // refresh suggestions
+                },
               ),
+              if (_getWordSuggestions(_promptController.text).isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
+                  child: Wrap(
+                    spacing: AppSpacing.sm,
+                    children: _getWordSuggestions(_promptController.text)
+                        .map((word) => ActionChip(
+                              label: Text(word, style: AppTypography.labelSmall),
+                              backgroundColor: AppColors.primary.withOpacity(0.1),
+                              onPressed: () {
+                                final currentText = _promptController.text;
+                                final words = currentText.split(' ');
+                                words.removeLast();
+                                words.add(word);
+                                final newText = '${words.join(' ')} ';
+                                _promptController.text = newText;
+                                _promptController.selection = TextSelection.fromPosition(
+                                    TextPosition(offset: newText.length));
+                                formNotifier.setPrompt(newText);
+                                setState(() {});
+                              },
+                            ))
+                        .toList(),
+                  ),
+                ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Destination City field
               ZeyloTextField(
                 label: 'Destination City',
                 hint: 'Where do you want to explore?',
                 controller: _destinationController,
-                prefixWidget: const Icon(Icons.location_on_outlined,
-                    color: AppColors.textSecondary, size: 20),
+                prefixWidget: const Icon(
+                  Icons.location_on_outlined,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 onChanged: (value) => formNotifier.setDestinationCity(value),
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Date field
               ZeyloTextField(
                 label: 'Date',
                 hint: 'mm/dd/yyyy',
                 controller: _dateController,
-                prefixWidget: const Icon(Icons.calendar_today_outlined,
-                    color: AppColors.textSecondary, size: 20),
+                prefixWidget: const Icon(
+                  Icons.calendar_today_outlined,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 onChanged: (value) => formNotifier.setDate(value),
                 readOnly: true,
                 onTap: () => _selectDate(context, formNotifier),
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Time selector
               TimeSelector(
                 selectedDuration: formState.totalTime,
                 onDurationSelected: (duration) =>
@@ -182,7 +243,6 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Interest chip list
               InterestChipList(
                 selectedInterests: formState.selectedInterests,
                 onInterestToggled: (interest) =>
@@ -190,7 +250,6 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Buttons
               if (formState.experiences.isEmpty) ...[
                 ZeyloButton(
                   label: formState.isGenerating
@@ -209,13 +268,51 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
                           formNotifier.generateExperiences();
                         },
                 ),
+                const SizedBox(height: AppSpacing.md),
+                ZeyloButton(
+                  label: 'Select Experiences Manually',
+                  variant: ButtonVariant.outlined,
+                  isDisabled: formState.destinationCity.isEmpty,
+                  onPressed: () {
+                    FocusScope.of(context).unfocus();
+                    formNotifier.setName('${_destinationController.text} Trip');
+                    _showManualSelectionSheet(context, formNotifier, formState);
+                  },
+                ),
                 const SizedBox(height: AppSpacing.xl),
               ] else ...[
                 _buildDynamicChainSection(formState.experiences),
+                const SizedBox(height: AppSpacing.md),
+                
+                // NEW: Give the user an option to keep adding or clear the chain!
+                Row(
+                  children: [
+                    Expanded(
+                      child: ZeyloButton(
+                        label: '+ Add Experience',
+                        variant: ButtonVariant.outlined,
+                        onPressed: () => _showManualSelectionSheet(context, formNotifier, formState),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: ZeyloButton(
+                        label: 'Clear All',
+                        backgroundColor: AppColors.error,
+                        onPressed: () {
+                          // Let's pop all experiences by clearing the state array
+                          // Actually formNotifier doesn't have a clear methods. We can remove one by one.
+                          for (int i = formState.experiences.length - 1; i >= 0; i--) {
+                            formNotifier.removeExperience(i);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.xl),
               ],
 
-              // Error message
               if (formState.error != null)
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
@@ -234,7 +331,6 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
               if (formState.error != null)
                 const SizedBox(height: AppSpacing.lg),
 
-              // Create button
               ZeyloButton(
                 label: formState.isLoading ? 'Creating...' : 'Create',
                 isLoading: formState.isLoading,
@@ -243,7 +339,11 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
                     ? null
                     : () async {
                         await formNotifier.submitForm();
-                        if (formState.error == null && mounted) {
+
+                        final latestState =
+                            ref.read(chainFormProvider(widget.userId));
+
+                        if (latestState.error == null && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Chain created successfully!'),
@@ -286,14 +386,13 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
           ...experiences.asMap().entries.map((entry) {
             final index = entry.key;
             final exp = entry.value;
+
             return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
               child: _buildSuggestedExperience(
-                index + 1,
-                exp.title,
-                '${exp.startTime} - ${exp.endTime}',
-                '${exp.duration}h',
-                'Rs. ${exp.price.toStringAsFixed(0)}',
+                position: index + 1,
+                experience: exp,
+                isLast: index == experiences.length - 1,
               ),
             );
           }),
@@ -302,75 +401,152 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
     );
   }
 
-  Widget _buildSuggestedExperience(
-    int position,
-    String title,
-    String timeRange,
-    String duration,
-    String price,
-  ) {
+  Widget _buildSuggestedExperience({
+    required int position,
+    required ChainExperience experience,
+    required bool isLast,
+  }) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              '$position',
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textInverse,
-                fontWeight: FontWeight.w600,
+        Column(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '$position',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textInverse,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 90,
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                color: AppColors.primary.withOpacity(0.35),
+              ),
+          ],
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Stack(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      child: experience.imageUrl.isNotEmpty
+                          ? Image.network(
+                              experience.imageUrl,
+                              width: 88,
+                              height: 88,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _buildImageFallback(),
+                            )
+                          : _buildImageFallback(),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (experience.category.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.12),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.full),
+                              ),
+                              child: Text(
+                                experience.category,
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          if (experience.category.isNotEmpty)
+                            const SizedBox(height: 8),
+                          Text(
+                            experience.title,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${experience.startTime} - ${experience.endTime}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${experience.duration.toStringAsFixed(1)}h • Rs. ${experience.price.toStringAsFixed(0)}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                timeRange,
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                
+                // NEW: Allow user to actually remove an individual experience!
+                Positioned(
+                  top: -8,
+                  right: -8,
+                  child: IconButton(
+                    icon: const Icon(Icons.cancel, color: AppColors.error),
+                    onPressed: () {
+                      final formNotifier = ref.read(chainFormProvider(widget.userId).notifier);
+                      formNotifier.removeExperience(position - 1);
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              duration,
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              price,
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ],
+    );
+  }
+
+  Widget _buildImageFallback() {
+    return Container(
+      width: 88,
+      height: 88,
+      color: AppColors.primary.withOpacity(0.08),
+      child: const Icon(
+        Icons.image_outlined,
+        color: AppColors.primary,
+        size: 28,
+      ),
     );
   }
 
@@ -392,5 +568,147 @@ class _CreateChainScreenState extends ConsumerState<CreateChainScreen> {
       _dateController.text = dateStr;
       formNotifier.setDate(dateStr);
     }
+  }
+
+  Future<void> _showManualSelectionSheet(
+    BuildContext context,
+    ChainFormNotifier formNotifier,
+    ChainFormState state,
+  ) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.8,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          builder: (ctx, scrollController) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Select Experiences',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: FutureBuilder(
+                    future: FirebaseFirestore.instance
+                        .collection('experiences')
+                        .where('isActive', isEqualTo: true)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+                      
+                      final allDocs = snapshot.data?.docs ?? [];
+                      final targetCity = state.destinationCity.trim().toLowerCase();
+                      
+                      final docs = allDocs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final docCity = (data['city'] ?? '').toString().trim().toLowerCase();
+                        return docCity == targetCity || docCity.contains(targetCity) || targetCity.contains(docCity);
+                      }).toList();
+
+                      if (docs.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'No options available to you in ${state.destinationCity}.',
+                            style: AppTypography.bodyMedium,
+                          ),
+                        );
+                      }
+                      
+                      return ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        itemCount: docs.length,
+                        itemBuilder: (context, index) {
+                          final data = docs[index].data() as Map<String, dynamic>;
+                          final id = docs[index].id;
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: ListTile(
+                              leading: ClipRRect(
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                child: data['imageUrl'] != null && data['imageUrl'].toString().isNotEmpty
+                                    ? Image.network(data['imageUrl'], width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image))
+                                    : Container(width: 50, height: 50, color: AppColors.primary.withOpacity(0.1), child: const Icon(Icons.image)),
+                              ),
+                              title: Text(data['title'] ?? 'Experience', style: AppTypography.labelLarge),
+                              subtitle: Text('Rs. ${data['price'] ?? 0}', style: AppTypography.labelSmall),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.add_circle, color: AppColors.primary),
+                                onPressed: () {
+                                  int maxAllowed = 4; // default for fullDay
+                                  if (state.totalTime == ChainDuration.halfDay) maxAllowed = 2;
+                                  if (state.totalTime == ChainDuration.weekend) maxAllowed = 8;
+
+                                  if (state.experiences.length >= maxAllowed) {
+                                    Navigator.pop(ctx);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('You can only select up to $maxAllowed experiences for a ${state.totalTime.label}.'),
+                                        backgroundColor: AppColors.warning,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  final exp = ChainExperience(
+                                    experienceId: id,
+                                    title: data['title'] ?? '',
+                                    startTime: data['startTime'] ?? '09:00',
+                                    endTime: data['endTime'] ?? '11:00',
+                                    duration: (data['duration'] ?? 2).toDouble(),
+                                    price: (data['price'] ?? 0).toDouble(),
+                                    isOvernight: data['isOvernight'] ?? false,
+                                    imageUrl: data['imageUrl'] ?? '',
+                                    category: data['category'] ?? '',
+                                    hostId: data['hostId'] ?? '',
+                                  );
+                                  formNotifier.addExperience(exp);
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Experience Added!')),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }
