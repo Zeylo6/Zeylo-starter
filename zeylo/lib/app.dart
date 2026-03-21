@@ -4,6 +4,18 @@ import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
 
 /// Root widget for the Zeylo application
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('Welcome')));
+}
+
+// =============================================================================
+// Main App Widget
+// =============================================================================
+
 class ZeyloApp extends ConsumerWidget {
   const ZeyloApp({super.key});
 

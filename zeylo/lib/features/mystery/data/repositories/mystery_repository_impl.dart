@@ -5,35 +5,20 @@ import '../../domain/repositories/mystery_repository.dart';
 import '../datasources/mystery_datasource.dart';
 import '../models/mystery_model.dart';
 
-/// Implementation of MysteryRepository
-///
-/// Handles error conversion and delegates to data source
 class MysteryRepositoryImpl implements MysteryRepository {
-  /// Data source for mystery operations
   final MysteryDataSource dataSource;
 
   MysteryRepositoryImpl({required this.dataSource});
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // CRUD
+  // ─────────────────────────────────────────────────────────────────────────
+
   @override
   Future<Either<Failure, MysteryEntity>> createMystery(
-    MysteryEntity mystery,
-  ) async {
+      MysteryEntity mystery) async {
     try {
-      final model = MysteryModel(
-        id: mystery.id,
-        userId: mystery.userId,
-        location: mystery.location,
-        date: mystery.date,
-        time: mystery.time,
-        budgetMin: mystery.budgetMin,
-        budgetMax: mystery.budgetMax,
-        experienceType: mystery.experienceType,
-        status: mystery.status,
-        matchedExperienceId: mystery.matchedExperienceId,
-        revealedAt: mystery.revealedAt,
-        createdAt: mystery.createdAt,
-      );
-
+      final model = _toModel(mystery);
       final result = await dataSource.createMystery(model);
       return Right(result.toEntity());
     } catch (e) {
@@ -43,12 +28,10 @@ class MysteryRepositoryImpl implements MysteryRepository {
 
   @override
   Future<Either<Failure, List<MysteryEntity>>> getMysteries(
-    String userId,
-  ) async {
+      String userId) async {
     try {
       final models = await dataSource.getMysteries(userId);
-      final entities = models.map((model) => model.toEntity()).toList();
-      return Right(entities);
+      return Right(models.map((m) => m.toEntity()).toList());
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
@@ -56,8 +39,7 @@ class MysteryRepositoryImpl implements MysteryRepository {
 
   @override
   Future<Either<Failure, MysteryEntity>> getMysteryById(
-    String mysteryId,
-  ) async {
+      String mysteryId) async {
     try {
       final model = await dataSource.getMysteryById(mysteryId);
       return Right(model.toEntity());
@@ -68,9 +50,7 @@ class MysteryRepositoryImpl implements MysteryRepository {
 
   @override
   Future<Either<Failure, MysteryEntity>> revealMystery(
-    String mysteryId,
-    String matchedExperienceId,
-  ) async {
+      String mysteryId, String matchedExperienceId) async {
     try {
       final model = await dataSource.getMysteryById(mysteryId);
       final updated = model.copyWith(
@@ -87,8 +67,7 @@ class MysteryRepositoryImpl implements MysteryRepository {
 
   @override
   Future<Either<Failure, MysteryEntity>> acceptMystery(
-    String mysteryId,
-  ) async {
+      String mysteryId) async {
     try {
       final model = await dataSource.getMysteryById(mysteryId);
       final updated = model.copyWith(status: MysteryStatus.accepted);
@@ -101,8 +80,7 @@ class MysteryRepositoryImpl implements MysteryRepository {
 
   @override
   Future<Either<Failure, MysteryEntity>> declineMystery(
-    String mysteryId,
-  ) async {
+      String mysteryId) async {
     try {
       final model = await dataSource.getMysteryById(mysteryId);
       final updated = model.copyWith(status: MysteryStatus.declined);
@@ -115,9 +93,7 @@ class MysteryRepositoryImpl implements MysteryRepository {
 
   @override
   Future<Either<Failure, MysteryEntity>> updateMysteryStatus(
-    String mysteryId,
-    MysteryStatus status,
-  ) async {
+      String mysteryId, MysteryStatus status) async {
     try {
       final model = await dataSource.getMysteryById(mysteryId);
       final updated = model.copyWith(status: status);
@@ -138,29 +114,68 @@ class MysteryRepositoryImpl implements MysteryRepository {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // AI MATCHING via Cloud Function
+  // ─────────────────────────────────────────────────────────────────────────
+
   @override
-  Future<Either<Failure, String?>> matchMysteryExperience(
-    MysteryEntity mystery,
-  ) async {
+  Future<Either<Failure, MysteryMatchData>> matchAndBookMystery({
+    required String mysteryId,
+    required String userId,
+    required String location,
+    required String date,
+    required String time,
+    required double budgetMin,
+    required double budgetMax,
+    required String experienceType,
+  }) async {
     try {
-      final model = MysteryModel(
-        id: mystery.id,
-        userId: mystery.userId,
-        location: mystery.location,
-        date: mystery.date,
-        time: mystery.time,
-        budgetMin: mystery.budgetMin,
-        budgetMax: mystery.budgetMax,
-        experienceType: mystery.experienceType,
-        status: mystery.status,
-        matchedExperienceId: mystery.matchedExperienceId,
-        revealedAt: mystery.revealedAt,
-        createdAt: mystery.createdAt,
+      final result = await dataSource.matchAndBookMystery(
+        mysteryId: mysteryId,
+        userId: userId,
+        location: location,
+        date: date,
+        time: time,
+        budgetMin: budgetMin,
+        budgetMax: budgetMax,
+        experienceType: experienceType,
       );
-      final result = await dataSource.matchMysteryExperience(model);
-      return Right(result);
+
+      return Right(MysteryMatchData(
+        matched: result.matched,
+        bookingId: result.bookingId,
+        teaserDescription: result.teaserDescription,
+        vibe: result.vibe,
+        preparationNotes: result.preparationNotes,
+        reason: result.reason,
+        message: result.message,
+      ));
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Helper
+  // ─────────────────────────────────────────────────────────────────────────
+
+  MysteryModel _toModel(MysteryEntity mystery) {
+    return MysteryModel(
+      id: mystery.id,
+      userId: mystery.userId,
+      location: mystery.location,
+      date: mystery.date,
+      time: mystery.time,
+      budgetMin: mystery.budgetMin,
+      budgetMax: mystery.budgetMax,
+      experienceType: mystery.experienceType,
+      status: mystery.status,
+      matchedExperienceId: mystery.matchedExperienceId,
+      teaserDescription: mystery.teaserDescription,
+      vibe: mystery.vibe,
+      preparationNotes: mystery.preparationNotes,
+      revealedAt: mystery.revealedAt,
+      createdAt: mystery.createdAt,
+    );
   }
 }

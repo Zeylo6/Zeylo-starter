@@ -144,7 +144,7 @@ class NotificationsScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: isRead
                                 ? AppColors.border.withOpacity(0.3)
-                                : AppColors.primary.withOpacity(0.1),
+                                : _getColorForType(data['type']).withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
                           child: CircleAvatar(
@@ -153,7 +153,7 @@ class NotificationsScreen extends ConsumerWidget {
                               _getIconForType(data['type']),
                               color: isRead
                                   ? AppColors.textSecondary
-                                  : AppColors.primary,
+                                  : _getColorForType(data['type']),
                             ),
                           ),
                         ),
@@ -214,11 +214,35 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   IconData _getIconForType(String? type) {
-    if (type == 'new_booking') return Icons.bookmark_added;
-    if (type == 'booking_cancellation') return Icons.cancel_presentation;
-    if (type == 'booking_accepted') return Icons.check_circle_outline;
-    if (type == 'review_report') return Icons.report_problem_rounded;
-    return Icons.notifications;
+    switch (type) {
+      case 'new_booking':           return Icons.bookmark_added;
+      case 'booking_accepted':      return Icons.check_circle_outline;
+      case 'booking_rejected':      return Icons.cancel_outlined;
+      case 'booking_completed':     return Icons.star_outline_rounded;
+      case 'booking_ongoing':       return Icons.play_circle_outline;
+      case 'booking_cancellation':
+      case 'booking_cancelled':     return Icons.cancel_presentation;
+      case 'payment_received':      return Icons.payments_outlined;
+      case 'mystery_booking':
+      case 'mystery_booked':        return Icons.card_giftcard;
+      case 'mystery_revealed':      return Icons.lock_open_rounded;
+      case 'mystery_booking_accepted':
+      case 'mystery_accepted':      return Icons.card_giftcard;
+      case 'mystery_booking_declined':
+      case 'mystery_declined':      return Icons.block_outlined;
+      case 'mystery_auto_declined': return Icons.timer_off_outlined;
+      case 'review_report':         return Icons.report_problem_rounded;
+      default:                      return Icons.notifications_outlined;
+    }
+  }
+
+  Color _getColorForType(String? type) {
+    if (type == null) return AppColors.primary;
+    if (type.startsWith('mystery')) return const Color(0xFF7C3AED);
+    if (type.contains('accepted') || type.contains('completed')) return const Color(0xFF059669);
+    if (type.contains('declined') || type.contains('rejected') || type.contains('cancelled')) return const Color(0xFFEF4444);
+    if (type.contains('payment')) return const Color(0xFF0EA5E9);
+    return AppColors.primary;
   }
 
   Future<void> _showReviewManagementSheet(

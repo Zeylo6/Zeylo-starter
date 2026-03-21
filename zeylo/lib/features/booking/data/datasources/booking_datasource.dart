@@ -111,18 +111,44 @@ class BookingRemoteDataSource implements BookingDataSource {
       String message = '';
       String type = 'booking_update';
 
+      final isMystery = booking.isMystery;
+
       if (status == 'accepted' || status == 'confirmed') {
-        title = 'Booking Accepted!';
-        message = 'Your booking for "${booking.experienceTitle}" has been accepted by the host.';
-        type = 'booking_accepted';
+        if (isMystery) {
+          title = 'Mystery Experience Accepted! 🎁';
+          message = 'Your host has accepted your mystery experience booking. Details will be revealed 48 hours before!';
+          type = 'mystery_booking_accepted';
+        } else {
+          title = 'Booking Accepted! ✅';
+          message = 'Your booking for "${booking.experienceTitle}" has been accepted by the host.';
+          type = 'booking_accepted';
+        }
       } else if (status == 'rejected') {
-        title = 'Booking Declined';
-        message = 'Sorry, your booking for "${booking.experienceTitle}" was declined.';
-        type = 'booking_rejected';
+        if (isMystery) {
+          title = 'Mystery Booking Declined';
+          message = 'Sorry, your mystery experience booking was declined by the host.';
+          type = 'mystery_booking_declined';
+        } else {
+          title = 'Booking Declined';
+          message = 'Sorry, your booking for "${booking.experienceTitle}" was declined.';
+          type = 'booking_rejected';
+        }
       } else if (status == 'completed') {
-        title = 'Experience Completed';
+        title = 'Experience Completed ⭐';
         message = 'We hope you enjoyed "${booking.experienceTitle}"! Please leave a review.';
         type = 'booking_completed';
+      } else if (status == 'mystery_revealed') {
+        title = 'Mystery Revealed! 🎁';
+        message = 'Your mystery experience is revealed! Check your bookings to accept or decline.';
+        type = 'mystery_revealed';
+      } else if (status == 'mystery_accepted') {
+        title = 'Mystery Experience Confirmed! 🎉';
+        message = 'You accepted your mystery experience. Get ready for your adventure!';
+        type = 'mystery_accepted';
+      } else if (status == 'mystery_declined') {
+        title = 'Mystery Experience Declined';
+        message = 'You declined the mystery experience booking.';
+        type = 'mystery_declined';
       }
 
       if (title.isNotEmpty) {

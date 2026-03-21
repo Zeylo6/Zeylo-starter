@@ -143,8 +143,8 @@ const deleteExperience = async (req, res) => {
 
     // 3. Fetch all upcoming/active Bookings related to this experience
     const bookingsSnapshot = await db.collection('bookings')
-        .where('experienceId', '==', experienceId)
-        .get();
+      .where('experienceId', '==', experienceId)
+      .get();
 
     const uniqueSeekerIds = new Set();
 

@@ -14,5 +14,9 @@ abstract class AIService {
       String prompt, String location, String date);
 
   /// Generate a mystery surprise itinerary
+  /// Generate a mystery surprise itinerary
   Future<Map<String, dynamic>> generateSurprise(Map<String, dynamic> preferences);
+
+  /// Matches preferences to a real experience and creates a booking via Backend
+  Future<Map<String, dynamic>> matchAndBookMystery(Map<String, dynamic> payload);
 }

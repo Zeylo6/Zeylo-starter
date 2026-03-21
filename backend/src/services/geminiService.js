@@ -147,8 +147,73 @@ const generateSurprise = async (preferences) => {
   }
 };
 
+/**
+ * Matches user preferences to the best candidate experience using AI ranking,
+ * then generates mystery teaser content.
+ * 
+ * @param {Object} preferences - User's preferences (location, date, time, budget, type)
+ * @param {Array} candidates - Array of candidate experience objects {id, title, category, price, description}
+ * @returns {Promise<Object>} { matchedExperienceId, title, teaserDescription, category, vibe, preparationNotes }
+ */
+const matchAndGenerateMystery = async (preferences, candidates) => {
+  const model = getModel();
+
+  const systemInstruction = `You are an intelligent experience matching and mystery curator AI.
+
+Given a user's preferences and a list of candidate experiences, you must:
+1. RANK the candidates by how well they match the user's preferences (location, budget, type, vibe)
+2. SELECT the single best match
+3. Generate a mystery teaser for the selected experience WITHOUT revealing its exact name or details
+
+You MUST return ONLY a valid JSON object. NO markdown formatting, NO backticks, NO extra text.
+
+JSON Object Schema:
+{
+  "matchedExperienceId": "The exact 'id' string of the best matching candidate",
+  "title": "A cryptic but alluring mystery title (DO NOT use the actual experience title)",
+  "teaserDescription": "A 2-3 sentence teaser that builds excitement without spoiling the actual activity",
+  "category": "The experience category",
+  "vibe": "1-2 words describing the vibe (e.g., 'Serene & Zen', 'High Energy')",
+  "preparationNotes": "What should they wear or bring? Keep it vague but helpful based on the actual experience."
+}`;
+
+  const fullPrompt = `${systemInstruction}
+
+User Preferences:
+${JSON.stringify(preferences, null, 2)}
+
+Candidate Experiences:
+${JSON.stringify(candidates, null, 2)}`;
+
+  try {
+    const result = await model.generateContent(fullPrompt);
+    let text = result.response.text().trim();
+
+    if (text.startsWith('```json')) {
+      text = text.substring(7, text.length - 3).trim();
+    } else if (text.startsWith('```')) {
+      text = text.substring(3, text.length - 3).trim();
+    }
+
+    const parsedData = JSON.parse(text);
+
+    // Validate that the matched ID actually exists in candidates
+    const validIds = candidates.map(c => c.id);
+    if (!validIds.includes(parsedData.matchedExperienceId)) {
+      // Fallback: pick first candidate
+      parsedData.matchedExperienceId = candidates[0].id;
+    }
+
+    return parsedData;
+  } catch (error) {
+    console.error("Gemini matchAndGenerateMystery Error:", error.message);
+    throw new Error(`Failed to match and generate mystery: ${error.message}`);
+  }
+};
+
 module.exports = {
   enhanceText,
   generateChain,
-  generateSurprise
+  generateSurprise,
+  matchAndGenerateMystery
 };

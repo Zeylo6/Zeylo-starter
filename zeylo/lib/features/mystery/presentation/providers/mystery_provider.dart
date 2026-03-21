@@ -41,16 +41,24 @@ class MysteryFormState {
   final MysteryExperienceType experienceType;
   final bool isLoading;
   final String? error;
+  final bool isSuccess;
+  final String? teaserDescription;
+  final String? vibe;
+  final String? preparationNotes;
 
   const MysteryFormState({
     this.location = '',
     this.date = '',
     this.time = MysteryTimeOfDay.morning,
     this.budgetMin = 0.0,
-    this.budgetMax = 100.0,
+    this.budgetMax = 50000.0,
     this.experienceType = MysteryExperienceType.surpriseMe,
     this.isLoading = false,
     this.error,
+    this.isSuccess = false,
+    this.teaserDescription,
+    this.vibe,
+    this.preparationNotes,
   });
 
   MysteryFormState copyWith({
@@ -62,6 +70,10 @@ class MysteryFormState {
     MysteryExperienceType? experienceType,
     bool? isLoading,
     String? error,
+    bool? isSuccess,
+    String? teaserDescription,
+    String? vibe,
+    String? preparationNotes,
   }) {
     return MysteryFormState(
       location: location ?? this.location,
@@ -71,7 +83,12 @@ class MysteryFormState {
       budgetMax: budgetMax ?? this.budgetMax,
       experienceType: experienceType ?? this.experienceType,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      // Allow explicitly setting error to null
+      error: isLoading == true ? null : (error ?? this.error),
+      isSuccess: isSuccess ?? this.isSuccess,
+      teaserDescription: teaserDescription ?? this.teaserDescription,
+      vibe: vibe ?? this.vibe,
+      preparationNotes: preparationNotes ?? this.preparationNotes,
     );
   }
 }
@@ -86,55 +103,53 @@ class MysteryFormNotifier extends StateNotifier<MysteryFormState> {
     required this.userId,
   }) : super(const MysteryFormState());
 
-  void setLocation(String location) {
-    state = state.copyWith(location: location);
-  }
+  void setLocation(String location) =>
+      state = state.copyWith(location: location);
 
-  void setDate(String date) {
-    state = state.copyWith(date: date);
-  }
+  void setDate(String date) => state = state.copyWith(date: date);
 
-  void setTime(MysteryTimeOfDay time) {
-    state = state.copyWith(time: time);
-  }
+  void setTime(MysteryTimeOfDay time) => state = state.copyWith(time: time);
 
-  void setBudgetMin(double budgetMin) {
-    state = state.copyWith(budgetMin: budgetMin);
-  }
+  void setBudgetMin(double budgetMin) =>
+      state = state.copyWith(budgetMin: budgetMin);
 
-  void setBudgetMax(double budgetMax) {
-    state = state.copyWith(budgetMax: budgetMax);
-  }
+  void setBudgetMax(double budgetMax) =>
+      state = state.copyWith(budgetMax: budgetMax);
 
-  void setExperienceType(MysteryExperienceType experienceType) {
-    state = state.copyWith(experienceType: experienceType);
-  }
+  void setExperienceType(MysteryExperienceType experienceType) =>
+      state = state.copyWith(experienceType: experienceType);
+
+  void clearError() => state = state.copyWith(error: null);
 
   Future<void> submitForm() async {
-    state = state.copyWith(isLoading: true, error: null);
+    // Clear previous error and set loading
+    state = MysteryFormState(
+      location: state.location,
+      date: state.date,
+      time: state.time,
+      budgetMin: state.budgetMin,
+      budgetMax: state.budgetMax,
+      experienceType: state.experienceType,
+      isLoading: true,
+      error: null,
+      isSuccess: false,
+    );
 
-    // Validate form
-    if (state.location.isEmpty) {
+    // Validate
+    if (state.location.trim().isEmpty) {
       state = state.copyWith(
-        isLoading: false,
-        error: 'Please select a location',
-      );
+          isLoading: false, error: 'Please enter a location');
       return;
     }
-
     if (state.date.isEmpty) {
       state = state.copyWith(
-        isLoading: false,
-        error: 'Please select a date',
-      );
+          isLoading: false, error: 'Please select a date');
       return;
     }
-
     if (state.budgetMin >= state.budgetMax) {
       state = state.copyWith(
-        isLoading: false,
-        error: 'Minimum budget must be less than maximum',
-      );
+          isLoading: false,
+          error: 'Minimum budget must be less than maximum');
       return;
     }
 
@@ -154,17 +169,21 @@ class MysteryFormNotifier extends StateNotifier<MysteryFormState> {
       (failure) {
         state = state.copyWith(
           isLoading: false,
+          isSuccess: false,
           error: failure.message,
         );
       },
       (mystery) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(
+          isLoading: false,
+          isSuccess: true,
+          error: null,
+          teaserDescription: mystery.teaserDescription,
+          vibe: mystery.vibe,
+          preparationNotes: mystery.preparationNotes,
+        );
       },
     );
-  }
-
-  void clearError() {
-    state = state.copyWith(error: null);
   }
 }
 
@@ -209,15 +228,9 @@ class RevealMysteryState {
   final bool isLoading;
   final String? error;
 
-  const RevealMysteryState({
-    this.isLoading = false,
-    this.error,
-  });
+  const RevealMysteryState({this.isLoading = false, this.error});
 
-  RevealMysteryState copyWith({
-    bool? isLoading,
-    String? error,
-  }) {
+  RevealMysteryState copyWith({bool? isLoading, String? error}) {
     return RevealMysteryState(
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
@@ -234,15 +247,10 @@ class RevealMysteryNotifier extends StateNotifier<RevealMysteryState> {
 
   Future<bool> acceptMystery(String mysteryId) async {
     state = state.copyWith(isLoading: true, error: null);
-
     final result = await repository.acceptMystery(mysteryId);
-
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
         return false;
       },
       (_) {
@@ -254,15 +262,10 @@ class RevealMysteryNotifier extends StateNotifier<RevealMysteryState> {
 
   Future<bool> declineMystery(String mysteryId) async {
     state = state.copyWith(isLoading: true, error: null);
-
     final result = await repository.declineMystery(mysteryId);
-
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          error: failure.message,
-        );
+        state = state.copyWith(isLoading: false, error: failure.message);
         return false;
       },
       (_) {
