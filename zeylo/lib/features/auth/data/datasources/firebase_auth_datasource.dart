@@ -26,7 +26,15 @@ class FirebaseAuthDataSource {
     GoogleSignIn? googleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? fb_auth.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = kIsWeb ? null : (googleSignIn ?? GoogleSignIn());
+        _googleSignIn = kIsWeb
+            ? null
+            : (googleSignIn ??
+                GoogleSignIn(
+                  // Web client ID from google-services.json (client_type: 3)
+                  // Required for Firebase Auth token exchange on Android release builds
+                  serverClientId:
+                      '808246523710-t5fkep8blkat42qupksn0juu0kdffan0.apps.googleusercontent.com',
+                ));
 
   /// Stream of authentication state changes
   Stream<fb_auth.User?> get authStateChanges {

@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "808246523710-14t6j9kqacali2qdtsdg8ch34f7hjs68.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zeylo.zeylo",
+            "certificate_hash": "e5cbb6d2ccad917e5b19c9e0bbf15df786833e34"
+          }
+        },
+        {
           "client_id": "808246523710-t5fkep8blkat42qupksn0juu0kdffan0.apps.googleusercontent.com",
           "client_type": 3
         }
