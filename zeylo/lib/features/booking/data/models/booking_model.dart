@@ -26,6 +26,7 @@ class BookingModel extends BookingEntity {
     super.isMystery = false,
     super.mysteryId,
     super.paymentId,
+    super.chainId,
   });
 
   /// Create a BookingModel from JSON
@@ -53,6 +54,7 @@ class BookingModel extends BookingEntity {
       isMystery: json['isMystery'] as bool? ?? false,
       mysteryId: json['mysteryId'] as String?,
       paymentId: json['paymentId'] as String?,
+      chainId: json['chainId'] as String?,
     );
   }
 
@@ -84,6 +86,7 @@ class BookingModel extends BookingEntity {
       isMystery: data['isMystery'] as bool? ?? false,
       mysteryId: data['mysteryId'] as String?,
       paymentId: data['paymentId'] as String?,
+      chainId: data['chainId'] as String?,
     );
   }
 
@@ -112,6 +115,7 @@ class BookingModel extends BookingEntity {
       'isMystery': isMystery,
       'mysteryId': mysteryId,
       'paymentId': paymentId,
+      'chainId': chainId,
     };
   }
 
@@ -139,6 +143,7 @@ class BookingModel extends BookingEntity {
       'isMystery': isMystery,
       'mysteryId': mysteryId,
       if (paymentId != null) 'paymentId': paymentId,
+      if (chainId != null) 'chainId': chainId,
     };
   }
 
@@ -166,6 +171,7 @@ class BookingModel extends BookingEntity {
     bool? isMystery,
     String? mysteryId,
     String? paymentId,
+    String? chainId,
   }) {
     return BookingModel(
       id: id ?? this.id,
@@ -190,6 +196,7 @@ class BookingModel extends BookingEntity {
       isMystery: isMystery ?? this.isMystery,
       mysteryId: mysteryId ?? this.mysteryId,
       paymentId: paymentId ?? this.paymentId,
+      chainId: chainId ?? this.chainId,
     );
   }
 
