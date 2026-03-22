@@ -62,7 +62,7 @@ const generateChain = async (req, res) => {
         .filter((item) => item.isNotEmpty !== false && item.length > 0)
       : [];
 
-    const snapshot = await db
+    let snapshot = await db
       .collection('experiences')
       .where('city', '==', normalizedLocation)
       .where('status', '==', 'active')
@@ -70,8 +70,17 @@ const generateChain = async (req, res) => {
       .get();
 
     if (snapshot.empty) {
+      console.log(`[Dev Fallback] No experiences found for city: ${normalizedLocation}. Falling back to all active experiences.`);
+      snapshot = await db
+        .collection('experiences')
+        .where('status', '==', 'active')
+        .limit(30)
+        .get();
+    }
+
+    if (snapshot.empty) {
       return res.status(400).json({
-        error: 'No experiences available in this location yet',
+        error: 'No experiences available in the system yet. Please add some experiences to the database.',
       });
     }
 
