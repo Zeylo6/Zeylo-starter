@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/booking_entity.dart';
+import '../../data/models/booking_model.dart';
 import '../widgets/payment_card_input.dart';
 import '../widgets/report_sheet.dart';
 import '../../../../features/review/presentation/widgets/rate_and_review_sheet.dart';
@@ -156,33 +157,7 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
           final docs = snapshot.data?.docs ?? [];
           final allBookings = docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            return BookingEntity(
-              id: doc.id,
-              experienceId: data['experienceId'] as String? ?? '',
-              experienceTitle: data['experienceTitle'] as String? ?? '',
-              experienceCoverImage:
-                  data['experienceCoverImage'] as String? ?? '',
-              userId: data['userId'] as String? ?? '',
-              hostId: data['hostId'] as String? ?? '',
-              date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              startTime: data['startTime'] as String? ?? '09:00 AM',
-              guests: data['guests'] as int? ?? 1,
-              totalPrice: (data['totalPrice'] as num?)?.toDouble() ?? 0.0,
-              status: data['status'] as String? ?? 'pending',
-              paymentStatus: data['paymentStatus'] as String? ?? 'pending',
-              createdAt:
-                  (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              updatedAt:
-                  (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              isRatedByHost: data['isRatedByHost'] as bool? ?? false,
-              isRatedBySeeker: data['isRatedBySeeker'] as bool? ?? false,
-              seekerName: data['seekerName'] as String?,
-              seekerPhotoUrl: data['seekerPhotoUrl'] as String?,
-              isEarningsCollected: data['isEarningsCollected'] as bool? ?? false,
-              isMystery: data['isMystery'] == true ||
-                  data['isMystery'] == 'true',
-              mysteryId: data['mysteryId'] as String?,
-            );
+            return BookingModel.fromFirestore(data, doc.id);
           }).toList();
 
           // Sort newest first

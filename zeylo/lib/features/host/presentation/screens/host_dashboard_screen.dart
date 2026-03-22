@@ -12,6 +12,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
+import '../../../../core/utils/date_utils.dart' as zeylo_date;
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
 import '../providers/host_provider.dart';
@@ -182,7 +183,7 @@ class HostDashboardScreen extends ConsumerWidget {
 
                       if (createdAt != null) {
                         final age =
-                            DateTime.now().difference(createdAt.toDate());
+                            DateTime.now().difference(zeylo_date.DateUtils.toDateTime(createdAt));
                         if (age.inHours >= 48) {
                           // Auto-expire
                           FirebaseFirestore.instance
@@ -305,9 +306,7 @@ class HostDashboardScreen extends ConsumerWidget {
                     return Column(
                       children: confirmedBookings.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final date = data['date'] is Timestamp
-                            ? (data['date'] as Timestamp).toDate()
-                            : DateTime.now();
+                        final date = zeylo_date.DateUtils.toDateTime(data['date']);
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 16),
@@ -821,11 +820,10 @@ class HostDashboardScreen extends ConsumerWidget {
 
                     // Sort by updatedAt descending
                     docs.sort((a, b) {
-                      final aTime = (a.data()
-                          as Map<String, dynamic>)['updatedAt'] as Timestamp?;
-                      final bTime = (b.data()
-                          as Map<String, dynamic>)['updatedAt'] as Timestamp?;
-                      if (aTime == null || bTime == null) return 0;
+                      final aData = a.data() as Map<String, dynamic>;
+                      final bData = b.data() as Map<String, dynamic>;
+                      final aTime = zeylo_date.DateUtils.toDateTime(aData['updatedAt']);
+                      final bTime = zeylo_date.DateUtils.toDateTime(bData['updatedAt']);
                       return bTime.compareTo(aTime);
                     });
 
@@ -856,9 +854,7 @@ class HostDashboardScreen extends ConsumerWidget {
                     return Column(
                       children: limitedDocs.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final date = data['date'] is Timestamp
-                            ? (data['date'] as Timestamp).toDate()
-                            : DateTime.now();
+                        final date = zeylo_date.DateUtils.toDateTime(data['date']);
                         final bool isRatedByHost = data['isRatedByHost'] == true;
 
                         return Container(
