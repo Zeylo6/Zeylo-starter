@@ -65,7 +65,7 @@ const generateChain = async (req, res) => {
     let snapshot = await db
       .collection('experiences')
       .where('city', '==', normalizedLocation)
-      .where('status', '==', 'active')
+      .where('isActive', '==', true)
       .limit(30)
       .get();
 
@@ -73,7 +73,7 @@ const generateChain = async (req, res) => {
       console.log(`[Dev Fallback] No experiences found for city: ${normalizedLocation}. Falling back to all active experiences.`);
       snapshot = await db
         .collection('experiences')
-        .where('status', '==', 'active')
+        .where('isActive', '==', true)
         .limit(30)
         .get();
     }
