@@ -27,4 +27,5 @@ if (require.main === module) {
 }
 
 // ── Serverless export (Netlify) ───────────────────────────────────────────────
+module.exports = app;
 module.exports.handler = serverless(app);
