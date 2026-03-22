@@ -1,6 +1,7 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const stripeService = require('../services/stripeService');
 const { db } = require('../config/firebase');
+const notificationService = require('../services/notificationService');
 
 const createIntent = async (req, res) => {
   try {

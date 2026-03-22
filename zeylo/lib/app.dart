@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
+import 'features/notifications/presentation/providers/notifications_provider.dart';
 
 /// Root widget for the Zeylo application
 class WelcomeScreen extends StatelessWidget {
@@ -21,6 +22,9 @@ class ZeyloApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Sync FCM Token to Firestore when user logs in/out
+    ref.watch(fcmTokenSyncProvider);
+
     final goRouter = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
