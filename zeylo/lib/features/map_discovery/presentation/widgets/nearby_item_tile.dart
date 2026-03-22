@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -5,15 +6,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/map_provider.dart';
 
-/// Widget displaying a single nearby item in the list
+/// Glassmorphism nearby item tile
 class NearbyItemTile extends StatelessWidget {
-  /// The nearby item
   final NearbyItem item;
-
-  /// Callback when card is tapped
   final VoidCallback? onTap;
-
-  /// Callback when action button is tapped
   final VoidCallback? onActionTap;
 
   const NearbyItemTile({
@@ -27,88 +23,123 @@ class NearbyItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(
-            color: AppColors.border,
-            width: 1,
-          ),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon
-            _buildIcon(),
-            const SizedBox(width: AppSpacing.lg),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.title,
-                    style: AppTypography.titleMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    item.subtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildDetails(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.55),
+                  Colors.white.withOpacity(0.3),
                 ],
               ),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.65),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.md),
-            // Action button
-            if (item.actionLabel != null)
-              _buildActionButton(),
-          ],
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildIcon(),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        item.subtitle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildDetails(),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                if (item.actionLabel != null) _buildActionButton(),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildIcon() {
-    Color iconColor = AppColors.primary;
-
+    Color iconColor;
     switch (item.type) {
       case NearbyItemType.event:
-        iconColor = AppColors.primary; // Purple
+        iconColor = AppColors.primary;
         break;
       case NearbyItemType.people:
-        iconColor = const Color(0xFF22C55E); // Green
+        iconColor = const Color(0xFF22C55E);
         break;
       case NearbyItemType.business:
-        iconColor = const Color(0xFF3B82F6); // Blue
+        iconColor = const Color(0xFF3B82F6);
         break;
     }
 
     final iconData = _getIconForType(item.type);
 
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Icon(
-          iconData,
-          color: iconColor,
-          size: 24,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                iconColor.withOpacity(0.18),
+                iconColor.withOpacity(0.08),
+              ],
+            ),
+            border: Border.all(
+              color: iconColor.withOpacity(0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(iconData, color: iconColor, size: 22),
+          ),
         ),
       ),
     );
@@ -117,11 +148,11 @@ class NearbyItemTile extends StatelessWidget {
   IconData _getIconForType(NearbyItemType type) {
     switch (type) {
       case NearbyItemType.event:
-        return Icons.event;
+        return Icons.event_rounded;
       case NearbyItemType.people:
-        return Icons.people;
+        return Icons.people_rounded;
       case NearbyItemType.business:
-        return Icons.location_on;
+        return Icons.location_on_rounded;
     }
   }
 
@@ -154,33 +185,54 @@ class NearbyItemTile extends StatelessWidget {
   Widget _buildActionButton() {
     final isFilled = item.type == NearbyItemType.event;
 
-    return SizedBox(
-      height: 36,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: GestureDetector(
           onTap: onActionTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
           child: Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: isFilled ? AppColors.primary : Colors.transparent,
+              gradient: isFilled
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary.withOpacity(0.8),
+                        AppColors.gradientEnd.withOpacity(0.65),
+                      ],
+                    )
+                  : LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.55),
+                        Colors.white.withOpacity(0.3),
+                      ],
+                    ),
               border: Border.all(
-                color: AppColors.primary,
-                width: 1.5,
+                color: isFilled
+                    ? Colors.white.withOpacity(0.3)
+                    : AppColors.primary.withOpacity(0.3),
+                width: 1,
               ),
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                if (isFilled)
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+              ],
             ),
-            child: Center(
-              child: Text(
-                item.actionLabel ?? 'Join',
-                style: AppTypography.labelSmall.copyWith(
-                  color: isFilled ? AppColors.textInverse : AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+            child: Text(
+              item.actionLabel ?? 'Join',
+              style: AppTypography.labelSmall.copyWith(
+                color: isFilled ? Colors.white : AppColors.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

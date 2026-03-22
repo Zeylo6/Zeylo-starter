@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -5,15 +6,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/map_provider.dart';
 
-/// Widget displaying filter chips for map types
+/// Glassmorphism filter chips for map types
 class MapFilterTabs extends StatelessWidget {
-  /// Available filter types
   final List<MapFilterType> filters;
-
-  /// Currently active filter
   final MapFilterType activeFilter;
-
-  /// Callback when filter is selected
   final Function(MapFilterType) onFilterChanged;
 
   const MapFilterTabs({
@@ -37,7 +33,7 @@ class MapFilterTabs extends StatelessWidget {
             for (final filter in filters)
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.sm),
-                child: _FilterChip(
+                child: _GlassFilterChip(
                   label: filter.displayText,
                   isActive: activeFilter == filter,
                   onTap: () => onFilterChanged(filter),
@@ -50,18 +46,13 @@ class MapFilterTabs extends StatelessWidget {
   }
 }
 
-/// Individual filter chip widget
-class _FilterChip extends StatelessWidget {
-  /// Label text
+/// Glassmorphism filter chip
+class _GlassFilterChip extends StatelessWidget {
   final String label;
-
-  /// Whether this chip is active
   final bool isActive;
-
-  /// Callback when tapped
   final VoidCallback onTap;
 
-  const _FilterChip({
+  const _GlassFilterChip({
     required this.label,
     required this.isActive,
     required this.onTap,
@@ -71,24 +62,65 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : Colors.transparent,
-          border: Border.all(
-            color: isActive ? AppColors.primary : AppColors.border,
-            width: 1.5,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: isActive ? 14 : 8,
+            sigmaY: isActive ? 14 : 8,
           ),
-          borderRadius: BorderRadius.circular(AppRadius.full),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelMedium.copyWith(
-            color: isActive ? AppColors.textInverse : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm + 2,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isActive
+                    ? [
+                        AppColors.primary.withOpacity(0.8),
+                        AppColors.gradientEnd.withOpacity(0.65),
+                      ]
+                    : [
+                        Colors.white.withOpacity(0.55),
+                        Colors.white.withOpacity(0.3),
+                      ],
+              ),
+              border: Border.all(
+                color: isActive
+                    ? Colors.white.withOpacity(0.3)
+                    : Colors.white.withOpacity(0.65),
+                width: 1.2,
+              ),
+              borderRadius: BorderRadius.circular(AppRadius.full),
+              boxShadow: [
+                if (isActive)
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                else
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+              ],
+            ),
+            child: Text(
+              label,
+              style: AppTypography.labelMedium.copyWith(
+                color:
+                    isActive ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+            ),
           ),
         ),
       ),
