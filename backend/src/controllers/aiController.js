@@ -1,4 +1,5 @@
 const geminiService = require('../services/geminiService');
+const openRouterService = require('../services/openRouterService');
 const { db } = require('../config/firebase');
 const notificationService = require('../services/notificationService');
 
@@ -14,7 +15,15 @@ const enhanceText = async (req, res) => {
       return res.status(400).json({ error: 'Missing full text prompt to enhance.' });
     }
 
-    const enhancedText = await geminiService.enhanceText(text, context || 'general');
+    let enhancedText;
+    try {
+      // Try OpenRouter first as requested
+      enhancedText = await openRouterService.enhanceText(text, context || 'general');
+    } catch (orError) {
+      console.error('OpenRouter Enhancement Failed, falling back to Gemini:', orError.message);
+      // Fallback to Gemini
+      enhancedText = await geminiService.enhanceText(text, context || 'general');
+    }
 
     return res.status(200).json({
       success: true,
