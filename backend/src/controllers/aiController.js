@@ -112,10 +112,14 @@ const generateChain = async (req, res) => {
     }
 
     let validSelected = [];
+    let aiErrorToLog = null;
+
     try {
-      let selected;
+      let selectedContent = null;
+      
+      // 1. Try OpenRouter
       try {
-        selected = await openRouterService.generateChainFromCandidates({
+        selectedContent = await openRouterService.generateChainFromCandidates({
           prompt,
           location: normalizedLocation,
           date,
@@ -125,7 +129,8 @@ const generateChain = async (req, res) => {
         });
       } catch (orError) {
         console.error('OpenRouter Chain Generation Failed, falling back to Gemini:', orError.message);
-        selected = await geminiService.generateChainFromCandidates({
+        // 2. Fallback to Gemini
+        selectedContent = await geminiService.generateChainFromCandidates({
           prompt,
           location: normalizedLocation,
           date,
@@ -135,9 +140,10 @@ const generateChain = async (req, res) => {
         });
       }
 
+      // 3. Process AI Output
       const candidateMap = new Map(candidates.map((item) => [item.id, item]));
-      validSelected = Array.isArray(selected)
-        ? selected.filter(
+      validSelected = Array.isArray(selectedContent)
+        ? selectedContent.filter(
           (item) =>
             item &&
             typeof item.id === 'string' &&
@@ -151,17 +157,20 @@ const generateChain = async (req, res) => {
         throw new Error('AI returned too few valid experiences');
       }
     } catch (aiError) {
-      console.error('Gemini failed or quota exceeded:', aiError.message);
+      aiErrorToLog = aiError.message;
+      console.error('AI Services Failed or Quota Exceeded, using manual fallback:', aiError.message);
+      
+      // 4. MANUAL FALLBACK: Shuffle and pick based on time
       const manualCount = totalTime === 'halfDay' ? 2 : (totalTime === 'weekend' ? 4 : 3);
-      const shuffled = candidates.sort(() => 0.5 - Math.random());
-      const selectedCandidates = shuffled.slice(0, Math.min(manualCount, candidates.length));
+      const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, Math.min(manualCount, candidates.length));
       
       let currentHour = 9; 
-      validSelected = selectedCandidates.map(c => {
+      validSelected = selected.map(c => {
         const start = `${String(currentHour).padStart(2, '0')}:00`;
-        const endHour = currentHour + Math.ceil(c.duration || 2);
+        const endHour = Math.min(23, currentHour + Math.ceil(c.duration || 2));
         const end = `${String(endHour).padStart(2, '0')}:00`;
-        currentHour = endHour + 1; 
+        currentHour = Math.min(23, endHour + 1); 
         return {
           id: c.id,
           startTime: start,
@@ -170,9 +179,10 @@ const generateChain = async (req, res) => {
       });
     }
 
-    if (validSelected.length < 2) {
+    if (validSelected.length < 1) {
       return res.status(400).json({
-        error: 'No options available to you in this area.',
+        error: 'No valid options available to generate a chain of experiences.',
+        details: aiErrorToLog
       });
     }
 
