@@ -6,10 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/auth_provider.dart';
 
-/// Splash screen shown on app startup
-///
-/// Displays a branded splash animation and checks auth state
-/// to navigate to appropriate screen (home, onboarding, or welcome)
+/// Splash screen with gradient branding
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,41 +14,42 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late PageController _pageController;
+  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
     _showSplash();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   void _showSplash() async {
-    // Show splash1 for 1 second
     await Future.delayed(const Duration(seconds: 1));
-
     if (!mounted) return;
 
-    // Animate to splash2
     await _pageController.animateToPage(
       1,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
 
-    // Wait for 1 second on splash2
     await Future.delayed(const Duration(seconds: 1));
-
     if (!mounted) return;
 
-    // Check auth state and navigate
     _navigateBasedOnAuthState();
   }
 
@@ -60,11 +58,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     authState.whenData((user) {
       if (user != null) {
-        // User is logged in, go to home
         context.go('/home');
       } else {
-        // User is not logged in, check if first launch
-        // For now, go to onboarding
         context.go('/onboarding');
       }
     });
@@ -77,30 +72,86 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         children: [
-          // Splash 1: Purple background with white "Z" logo
+          // Splash 1: Gradient background with glowing Z
           Container(
-            color: AppColors.primary,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF8B5CF6),
+                  Color(0xFF7C3AED),
+                  Color(0xFFD946EF),
+                ],
+              ),
+            ),
             child: Center(
-              child: Text(
-                'Z',
-                style: AppTypography.displayLarge.copyWith(
-                  fontSize: 80,
-                  color: AppColors.textInverse,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  final scale = 1.0 + _pulseController.value * 0.05;
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.15),
+                            blurRadius: 40,
+                            spreadRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Z',
+                          style: AppTypography.displayLarge.copyWith(
+                            fontSize: 64,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          // Splash 2: White background with purple "ZEYLO" text
+          // Splash 2: Glass-themed with gradient text
           Container(
-            color: AppColors.background,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF3EEFF),
+                  Color(0xFFF9F7FF),
+                  Color(0xFFEDE9FE),
+                ],
+              ),
+            ),
             child: Center(
-              child: Text(
-                'ZEYLO',
-                style: AppTypography.displayLarge.copyWith(
-                  fontSize: 48,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+              child: ShaderMask(
+                shaderCallback: (bounds) =>
+                    AppColors.primaryGradient.createShader(bounds),
+                child: Text(
+                  'ZEYLO',
+                  style: AppTypography.displayLarge.copyWith(
+                    fontSize: 48,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 4,
+                  ),
                 ),
               ),
             ),

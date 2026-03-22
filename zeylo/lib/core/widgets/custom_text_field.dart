@@ -164,16 +164,42 @@ class _ZeyloTextFieldState extends State<ZeyloTextField> {
   Widget _buildTextField() {
     return Container(
       decoration: BoxDecoration(
-        color: widget.enabled ? AppColors.surfaceContainerHigh : AppColors.surfaceContainerLow,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: widget.enabled
+              ? [
+                  Colors.white.withOpacity(0.6),
+                  Colors.white.withOpacity(0.35),
+                ]
+              : [
+                  AppColors.surfaceContainerLow,
+                  AppColors.surfaceContainerLow,
+                ],
+        ),
         borderRadius: BorderRadius.circular(widget.borderRadius),
         border: Border.all(
           color: widget.errorText != null
               ? AppColors.error
               : _focusNode.hasFocus
-                  ? AppColors.primary
-                  : AppColors.border,
-          width: 1.5,
+                  ? AppColors.primary.withOpacity(0.5)
+                  : Colors.white.withOpacity(0.65),
+          width: _focusNode.hasFocus ? 1.8 : 1.2,
         ),
+        boxShadow: [
+          if (_focusNode.hasFocus)
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            )
+          else
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+        ],
       ),
       child: TextField(
         controller: widget.controller,

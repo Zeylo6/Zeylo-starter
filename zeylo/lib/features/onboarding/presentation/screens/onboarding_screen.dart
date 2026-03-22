@@ -97,19 +97,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   _pages.length,
-                  (index) => Container(
-                    width: 10,
-                    height: 10,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _currentPage == index
-                          ? AppColors.primary
-                          : AppColors.primaryLight.withOpacity(0.3),
-                    ),
-                  ),
+                  (index) {
+                    final isActive = _currentPage == index;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      width: isActive ? 28 : 10,
+                      height: 10,
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        gradient: isActive
+                            ? AppColors.primaryGradient
+                            : null,
+                        color: isActive
+                            ? null
+                            : AppColors.primaryLight.withOpacity(0.3),
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.primary.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : [],
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

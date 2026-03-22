@@ -1,56 +1,24 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-/// ZeyloButton widget with filled and outlined variants
+/// ZeyloButton with glassmorphism aesthetic
 ///
-/// Supports:
-/// - Filled variant (purple background, white text)
-/// - Outlined variant (purple border, purple text)
-/// - Loading state with circular progress indicator
-/// - Disabled state (50% opacity)
-/// - Full-width by default
-/// - Optional leading icon
-///
-/// Example:
-/// ```dart
-/// ZeyloButton(
-///   onPressed: () => print('Button pressed'),
-///   label: 'Continue',
-///   variant: ButtonVariant.filled,
-/// )
-/// ```
+/// Filled variant: purple gradient with glow shadow
+/// Outlined variant: glass background with translucent border
 class ZeyloButton extends StatelessWidget {
-  /// The callback triggered when the button is pressed
   final VoidCallback? onPressed;
-
-  /// The button label text
   final String label;
-
-  /// The button variant (filled or outlined)
   final ButtonVariant variant;
-
-  /// Whether the button is in loading state
   final bool isLoading;
-
-  /// Whether the button is disabled
   final bool isDisabled;
-
-  /// Optional leading icon widget
   final Widget? icon;
-
-  /// The button width. Defaults to full width (double.infinity)
   final double? width;
-
-  /// The button height. Defaults to 52
   final double height;
-
-  /// Border radius for the button. Defaults to 16 (pill-like)
   final double borderRadius;
-
-  /// Custom background color for filled variant
   final Color? backgroundColor;
 
   const ZeyloButton({
@@ -94,10 +62,38 @@ class ZeyloButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: Container(
           decoration: BoxDecoration(
-            color: isEnabled
-                ? (backgroundColor ?? AppColors.primary)
-                : (backgroundColor ?? AppColors.primary).withOpacity(0.5),
+            gradient: isEnabled
+                ? (backgroundColor != null
+                    ? LinearGradient(colors: [backgroundColor!, backgroundColor!])
+                    : LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.primary,
+                          AppColors.gradientEnd.withOpacity(0.85),
+                        ],
+                      ))
+                : LinearGradient(
+                    colors: [
+                      (backgroundColor ?? AppColors.primary).withOpacity(0.4),
+                      (backgroundColor ?? AppColors.primary).withOpacity(0.3),
+                    ],
+                  ),
             borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: Colors.white.withOpacity(isEnabled ? 0.2 : 0.1),
+              width: 1,
+            ),
+            boxShadow: isEnabled
+                ? [
+                    BoxShadow(
+                      color: (backgroundColor ?? AppColors.primary)
+                          .withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : [],
           ),
           child: Center(
             child: isLoading
@@ -105,8 +101,8 @@ class ZeyloButton extends StatelessWidget {
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.textInverse),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.textInverse),
                       strokeWidth: 2.5,
                     ),
                   )
@@ -118,33 +114,47 @@ class ZeyloButton extends StatelessWidget {
   }
 
   Widget _buildOutlinedButton(bool isEnabled, VoidCallback? onPressed) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isEnabled
-                  ? AppColors.primary
-                  : AppColors.primary.withOpacity(0.5),
-              width: 1.5,
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
             borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          child: Center(
-            child: isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.primary),
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : _buildContent(),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(isEnabled ? 0.5 : 0.3),
+                    Colors.white.withOpacity(isEnabled ? 0.25 : 0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(borderRadius),
+                border: Border.all(
+                  color: isEnabled
+                      ? AppColors.primary.withOpacity(0.3)
+                      : AppColors.primary.withOpacity(0.15),
+                  width: 1.2,
+                ),
+              ),
+              child: Center(
+                child: isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.primary),
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : _buildContent(),
+              ),
+            ),
           ),
         ),
       ),
@@ -165,7 +175,10 @@ class ZeyloButton extends StatelessWidget {
         ],
         Text(
           label,
-          style: AppTypography.labelLarge.copyWith(color: textColor),
+          style: AppTypography.labelLarge.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ],
     );
