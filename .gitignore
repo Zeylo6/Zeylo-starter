@@ -1,0 +1,50 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+hs_err_pid*.log
+
+# IDEs and Editors
+.vscode/
+.cursor/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# --- Backend (Node.js) ---
+backend/node_modules/
+backend/.env
+backend/server.err.log
+backend/server.out.log
+backend/service-account.json
+backend/*-adminsdk-*.json
+backend/reports_output.json
+backend/*_dump.txt
+backend/actions_dump.txt
+backend/reports_dump.txt
+backend/users_dump.txt
+
+# --- Flutter (zeylo) ---
+zeylo/.dart_tool/
+zeylo/.flutter-plugins-dependencies
+zeylo/.pub-cache/
+zeylo/.pub/
+zeylo/build/
+zeylo/coverage/
+zeylo/app.*.symbols
+zeylo/app.*.map.json
+zeylo/.env
+zeylo/.env.local
+zeylo/android/app/debug
+zeylo/android/app/profile
+zeylo/android/app/release
+zeylo/*.txt
+zeylo/analyze_*.txt
+zeylo/build*.txt
+zeylo/dart_analyze.txt
+zeylo/errors2.txt
+zeylo/linterrors*.txt
+zeylo/run_log.txt
+zeylo/sha_output.txt
+zeylo/temp_analyze.txt
