@@ -1,5 +1,5 @@
 [build]
-  functions = "netlify/functions"
+  functions = "functions"
 
 # Redirect all /api requests to the main express app function
 [[redirects]]
