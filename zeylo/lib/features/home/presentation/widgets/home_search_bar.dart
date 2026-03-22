@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -6,15 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/home_provider.dart';
 
-/// Search bar widget for the home screen
-///
-/// Features:
-/// - Rounded text field
-/// - Search icon on the left
-/// - Clear button when text is entered
-/// - Updates search query in the provider
+/// Glassmorphism search bar widget for the home screen
 class HomeSearchBar extends ConsumerStatefulWidget {
-  /// Callback when search is triggered
   final VoidCallback? onSearchTap;
 
   const HomeSearchBar({
@@ -63,66 +57,90 @@ class _HomeSearchBarState extends ConsumerState<HomeSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: TextField(
-        controller: _controller,
-        textInputAction: TextInputAction.search,
-        onSubmitted: (_) => _performSearch(),
-        style: AppTypography.bodyMedium,
-        decoration: InputDecoration(
-          hintText: 'Search events...',
-          hintStyle: AppTypography.bodyMediumSecondary,
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.md,
-              right: AppSpacing.sm,
-            ),
-            child: Icon(
-              Icons.search,
-              color: AppColors.textSecondary,
-              size: 20,
-            ),
-          ),
-          suffixIcon: _showClear
-              ? GestureDetector(
-                  onTap: _clearSearch,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      right: AppSpacing.md,
-                      left: AppSpacing.sm,
-                    ),
-                    child: Icon(
-                      Icons.close,
-                      color: AppColors.textSecondary,
-                      size: 18,
-                    ),
-                  ),
-                )
-              : null,
-          filled: true,
-          fillColor: AppColors.surface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.xl),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.55),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.6),
               width: 1.5,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            borderSide: const BorderSide(
-              color: AppColors.border,
-              width: 1,
+          child: TextField(
+            controller: _controller,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _performSearch(),
+            style: AppTypography.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'Search experiences...',
+              hintStyle: AppTypography.bodyMediumSecondary.copyWith(
+                color: AppColors.textHint,
+              ),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.lg,
+                  right: AppSpacing.sm,
+                ),
+                child: Icon(
+                  Icons.search_rounded,
+                  color: AppColors.primary.withOpacity(0.7),
+                  size: 22,
+                ),
+              ),
+              suffixIcon: _showClear
+                  ? GestureDetector(
+                      onTap: _clearSearch,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          right: AppSpacing.lg,
+                          left: AppSpacing.sm,
+                        ),
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColors.textHint.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: AppColors.textSecondary,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.transparent,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.lg,
+              ),
             ),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.md,
           ),
         ),
       ),

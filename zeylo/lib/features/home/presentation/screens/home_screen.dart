@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,13 +19,6 @@ import '../../../../core/widgets/role_capsule.dart';
 import '../../../messaging/presentation/providers/messaging_provider.dart';
 
 /// Home screen of the Zeylo application
-///
-/// Displays:
-/// - Top bar with logo and action icons
-/// - Search bar
-/// - Category chips (scrollable)
-/// - Featured experiences in a vertical list
-/// - Pull-to-refresh support
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -55,6 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         color: AppColors.primary,
@@ -62,15 +57,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // Top bar with logo and actions
+            // Glassmorphism top bar
             SliverAppBar(
-              backgroundColor: AppColors.background.withOpacity(0.9),
+              backgroundColor: Colors.transparent,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               floating: true,
               snap: true,
               pinned: false,
               toolbarHeight: 64,
+              flexibleSpace: ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.background.withOpacity(0.7),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.white.withOpacity(0.4),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               title: const _TopBar(),
               centerTitle: false,
             ),
@@ -83,10 +94,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.md),
                     // Search bar
                     const HomeSearchBar(),
-                    const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xxl),
                     // Category chips
                     const _CategorySection(),
                     const SizedBox(height: AppSpacing.xxl),
@@ -105,12 +116,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSpeedDial(BuildContext context, bool isHost) {
-    // Items that slide up when the FAB is expanded
     final items = [
       if (isHost)
         _SpeedDialItem(
           heroTag: 'create_experience',
-          icon: Icons.add,
+          icon: Icons.add_rounded,
           label: 'Create Experience',
           color: AppColors.success,
           onTap: () {
@@ -120,7 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       _SpeedDialItem(
         heroTag: 'create_chain',
-        icon: Icons.link,
+        icon: Icons.link_rounded,
         label: 'Create Chain',
         color: AppColors.secondary,
         onTap: () {
@@ -130,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       _SpeedDialItem(
         heroTag: 'surprise_me',
-        icon: Icons.card_giftcard,
+        icon: Icons.card_giftcard_rounded,
         label: 'Surprise Me',
         color: AppColors.primary,
         onTap: () {
@@ -144,11 +154,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Slide-up action buttons
         ...items.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
-          // Stagger the animation: items closer to bottom appear first
           return AnimatedSlide(
             duration: Duration(milliseconds: 150 + index * 60),
             curve: Curves.easeOutBack,
@@ -158,16 +166,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               opacity: _fabExpanded ? 1.0 : 0.0,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: FloatingActionButton.extended(
-                  heroTag: item.heroTag,
-                  onPressed: _fabExpanded ? item.onTap : null,
-                  backgroundColor: item.color,
-                  icon: Icon(item.icon, color: Colors.white),
-                  label: Text(
-                    item.label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: item.color.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.25),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: item.color.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: FloatingActionButton.extended(
+                        heroTag: item.heroTag,
+                        onPressed: _fabExpanded ? item.onTap : null,
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        highlightElevation: 0,
+                        icon: Icon(item.icon, color: Colors.white),
+                        label: Text(
+                          item.label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -176,18 +210,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         }),
         const SizedBox(height: AppSpacing.xs),
-        // Main toggle FAB
-        FloatingActionButton(
-          heroTag: 'main_fab_toggle',
-          onPressed: () => setState(() => _fabExpanded = !_fabExpanded),
-          backgroundColor: _fabExpanded ? AppColors.error : AppColors.primary,
-          child: AnimatedRotation(
-            turns: _fabExpanded ? 0.125 : 0,
-            duration: const Duration(milliseconds: 250),
-            child: Icon(
-              _fabExpanded ? Icons.close : Icons.add,
-              color: Colors.white,
-              size: 28,
+        // Main toggle FAB with glow
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: (_fabExpanded ? AppColors.error : AppColors.primary)
+                    .withOpacity(0.35),
+                blurRadius: 16,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            heroTag: 'main_fab_toggle',
+            onPressed: () => setState(() => _fabExpanded = !_fabExpanded),
+            backgroundColor:
+                _fabExpanded ? AppColors.error : AppColors.primary,
+            elevation: 0,
+            child: AnimatedRotation(
+              turns: _fabExpanded ? 0.125 : 0,
+              duration: const Duration(milliseconds: 250),
+              child: Icon(
+                _fabExpanded ? Icons.close_rounded : Icons.add_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
           ),
         ),
@@ -206,10 +256,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 48,
-                          color: AppColors.textSecondary,
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primary.withOpacity(0.08),
+                          ),
+                          child: Icon(
+                            Icons.search_off_rounded,
+                            size: 36,
+                            color: AppColors.primary.withOpacity(0.5),
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(
@@ -252,10 +310,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             'Rs. ${experience.price.toStringAsFixed(0)}',
                         description: experience.shortDescription,
                         rating: experience.averageRating,
-                        isFavorite: ref.watch(isFavoritedProvider(experience.id)),
+                        isFavorite:
+                            ref.watch(isFavoritedProvider(experience.id)),
                         onTap: () => _navigateToDetail(experience.id),
-                        onFavoriteTap: () => _toggleFavorite(experience.id),
-                        onMessageTap: () => _messageHost(experience.hostId, experience.hostName),
+                        onFavoriteTap: () =>
+                            _toggleFavorite(experience.id),
+                        onMessageTap: () => _messageHost(
+                            experience.hostId, experience.hostName),
                       ),
                     );
                   },
@@ -287,7 +348,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.error_outline,
+                      Icons.error_outline_rounded,
                       size: 48,
                       color: AppColors.error,
                     ),
@@ -316,17 +377,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _navigateToDetail(String experienceId) {
-    // Navigate to experience detail screen
     context.push('/experience/$experienceId');
   }
 
   void _toggleFavorite(String experienceId) {
     final isFavorited = ref.read(isFavoritedProvider(experienceId));
     ref.read(favoritesProvider.notifier).toggleFavorite(experienceId);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isFavorited ? 'Removed from favorites' : 'Added to favorites'),
+        content: Text(
+            isFavorited ? 'Removed from favorites' : 'Added to favorites'),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -348,7 +409,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    // Show loading status
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Starting conversation...'),
@@ -377,7 +437,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-/// Top bar widget with logo and action icons
+/// Glassmorphism top bar with logo and action icons
 class _TopBar extends ConsumerWidget {
   const _TopBar({super.key});
 
@@ -389,13 +449,20 @@ class _TopBar extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Logo
+        // Logo with glow effect
         Container(
-          width: 40,
-          height: 40,
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
             borderRadius: BorderRadius.circular(AppRadius.md),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: const Center(
             child: Text(
@@ -414,18 +481,39 @@ class _TopBar extends ConsumerWidget {
           children: [
             RoleCapsule(role: role),
             const SizedBox(width: AppSpacing.sm),
-            IconButton(
-              icon: const Icon(Icons.send_outlined),
-              onPressed: () {
-                final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
-                if (currentUser != null) {
-                  context.push('/messages', extra: {
-                    'userId': currentUser.uid,
-                    'userName': 'Messages',
-                  });
-                }
-              },
-              color: AppColors.textPrimary,
+            // Glassy icon button
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.full),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.45),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send_rounded, size: 20),
+                    onPressed: () {
+                      final currentUser =
+                          fb_auth.FirebaseAuth.instance.currentUser;
+                      if (currentUser != null) {
+                        context.push('/messages', extra: {
+                          'userId': currentUser.uid,
+                          'userName': 'Messages',
+                        });
+                      }
+                    },
+                    color: AppColors.textPrimary,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

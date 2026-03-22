@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -16,16 +17,14 @@ const _categoryIcons = <String, IconData>{
   'nightlife': Icons.local_bar,
   'outdoor': Icons.hiking,
   'adventure': Icons.paragliding,
-  'all': Icons.apps,
+  'all': Icons.apps_rounded,
 };
 
 IconData _iconFor(String name) {
   return _categoryIcons[name.toLowerCase()] ?? Icons.category_outlined;
 }
 
-/// Horizontal scrollable list of category chips
-///
-/// Displays all available categories with icons and allows selection
+/// Horizontal scrollable list of glassmorphism category chips
 class CategoryChipList extends ConsumerWidget {
   const CategoryChipList({super.key});
 
@@ -90,7 +89,7 @@ class CategoryChipList extends ConsumerWidget {
   }
 }
 
-/// Individual category chip widget
+/// Glassmorphism category chip widget
 class _CategoryChip extends ConsumerWidget {
   final String category;
   final VoidCallback onTap;
@@ -107,73 +106,108 @@ class _CategoryChip extends ConsumerWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
         width: 85,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
-          ),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isSelected
-                ? [
-                    AppColors.primary.withOpacity(0.18),
-                    AppColors.primaryLight.withOpacity(0.10),
-                  ]
-                : [
-                    AppColors.primary.withOpacity(0.08),
-                    AppColors.primaryLight.withOpacity(0.04),
-                  ],
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(AppRadius.xl),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: isSelected
                       ? [
                           AppColors.primary.withOpacity(0.25),
-                          AppColors.primaryLight.withOpacity(0.15),
+                          AppColors.gradientEnd.withOpacity(0.15),
                         ]
                       : [
-                          AppColors.primary.withOpacity(0.12),
-                          AppColors.primaryLight.withOpacity(0.06),
+                          Colors.white.withOpacity(0.55),
+                          Colors.white.withOpacity(0.35),
                         ],
                 ),
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: isSelected ? AppColors.primaryDark : AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                category,
-                style: AppTypography.labelSmall.copyWith(
+                border: Border.all(
                   color: isSelected
-                      ? AppColors.primaryDark
-                      : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ? AppColors.primary.withOpacity(0.5)
+                      : Colors.white.withOpacity(0.6),
+                  width: isSelected ? 1.8 : 1.2,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+                boxShadow: [
+                  if (isSelected)
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    )
+                  else
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isSelected
+                            ? [
+                                AppColors.primary.withOpacity(0.3),
+                                AppColors.gradientEnd.withOpacity(0.2),
+                              ]
+                            : [
+                                AppColors.primary.withOpacity(0.1),
+                                AppColors.primaryLight.withOpacity(0.08),
+                              ],
+                      ),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary.withOpacity(0.3)
+                            : Colors.white.withOpacity(0.5),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: isSelected
+                          ? AppColors.primaryDark
+                          : AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      category,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: isSelected
+                            ? AppColors.primaryDark
+                            : AppColors.textPrimary,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
