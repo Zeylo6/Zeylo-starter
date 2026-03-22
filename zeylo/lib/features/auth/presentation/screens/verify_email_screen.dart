@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,16 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
 
-/// Email verification screen
-///
-/// Shows a "check your email" message after signup/login.
-/// Automatically sends a verification email on load if needed.
-/// Periodically checks if the user has clicked the Firebase verification link.
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
 
@@ -41,13 +38,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     super.dispose();
   }
 
-  /// Send a verification email when this screen first loads
   Future<void> _sendInitialEmail() async {
     try {
       await ref.read(authNotifierProvider.notifier).sendVerificationEmail();
-    } catch (_) {
-      // Ignore errors (e.g. too many requests if email was recently sent)
-    }
+    } catch (_) {}
   }
 
   void _startAutoCheck() {
@@ -60,9 +54,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
           _autoCheckTimer?.cancel();
           context.go('/verify-success');
         }
-      } catch (_) {
-        // Silently ignore periodic check errors
-      }
+      } catch (_) {}
     });
   }
 
@@ -78,8 +70,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                  'Email not yet verified. Please check your inbox and click the link.'),
+              content: Text('Email not yet verified. Please check your inbox and click the link.'),
               backgroundColor: AppColors.error,
             ),
           );
@@ -88,10 +79,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -105,19 +93,13 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       await ref.read(authNotifierProvider.notifier).resendVerificationEmail();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification email sent! Check your inbox.'),
-            backgroundColor: AppColors.success,
-          ),
+          const SnackBar(content: Text('Verification email sent! Check your inbox.'), backgroundColor: AppColors.success),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -128,9 +110,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   Future<void> _signOut() async {
     _autoCheckTimer?.cancel();
     await ref.read(authNotifierProvider.notifier).signOut();
-    if (mounted) {
-      context.go('/login');
-    }
+    if (mounted) context.go('/login');
   }
 
   @override
@@ -138,116 +118,93 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final email = FirebaseAuth.instance.currentUser?.email ?? '';
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        actions: [
-          // Sign out button so user can escape this screen
-          TextButton(
-            onPressed: _signOut,
-            child: Text(
-              'Sign Out',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFF3EEFF), Color(0xFFF9F7FF), Color(0xFFEDE9FE), Color(0xFFF5F3FF)],
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        ),
+        child: Stack(
           children: [
-            const SizedBox(height: AppSpacing.xxxl),
-            // Email icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.mail_outline_rounded,
-                size: 40,
-                color: AppColors.primary,
-              ),
+            Positioned(
+              top: -40, right: -30,
+              child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0.0)]))),
             ),
-            const SizedBox(height: AppSpacing.xxl),
-            // Title
-            Text(
-              'Verify Your Email',
-              style: AppTypography.headlineLarge.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Subtitle
-            Text(
-              "We've sent a verification link to",
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              email,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            // Instruction
-            Text(
-              'Click the link in your email to verify your account. This page will update automatically.',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xxxl),
-            // Manual check button
-            ZeyloButton(
-              onPressed: _isChecking ? null : _manualCheck,
-              label: "I've Verified My Email",
-              isLoading: _isChecking,
-              variant: ButtonVariant.filled,
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            // Resend link
-            GestureDetector(
-              onTap: _isResending ? null : _resendEmail,
-              child: _isResending
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        text: "Didn't receive the email? ",
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: 'Resend',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ],
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _signOut,
+                        child: Text('Sign Out', style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.xl),
+                    // Glass mail icon
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.15), AppColors.gradientEnd.withOpacity(0.08)]),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1.5),
+                        boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 20, spreadRadius: 2)],
+                      ),
+                      child: const Icon(Icons.mail_outline_rounded, size: 40, color: AppColors.primary),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text('Verify Your Email', style: AppTypography.headlineLarge.copyWith(fontWeight: FontWeight.w800), textAlign: TextAlign.center),
+                    const SizedBox(height: AppSpacing.md),
+                    Text("We've sent a verification link to", style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
+                    const SizedBox(height: AppSpacing.sm),
+                    // Glass email badge
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.1), AppColors.gradientEnd.withOpacity(0.05)]),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+                          ),
+                          child: Text(email, style: AppTypography.bodyMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text('Click the link in your email to verify your account. This page will update automatically.',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary), textAlign: TextAlign.center),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    ZeyloButton(onPressed: _isChecking ? null : _manualCheck, label: "I've Verified My Email", isLoading: _isChecking, variant: ButtonVariant.filled),
+                    const SizedBox(height: AppSpacing.xxl),
+                    GestureDetector(
+                      onTap: _isResending ? null : _resendEmail,
+                      child: _isResending
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                text: "Didn't receive the email? ",
+                                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                children: [
+                                  TextSpan(text: 'Resend', style: AppTypography.bodyMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600, decoration: TextDecoration.underline)),
+                                ],
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
