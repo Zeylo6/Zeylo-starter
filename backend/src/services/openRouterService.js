@@ -75,32 +75,34 @@ const enhanceText = async (prompt, context) => {
 
   switch (context) {
     case 'mood':
-      systemInstruction = `You are a premium emotional-intelligence writing assistant for a social/discovery app.
+      systemInstruction = `You are an elite emotional-intelligence writing assistant and poet for a premium social/discovery app.
       The user will describe how they feel, often in a rough or short way.
-      Rewrite their message into a polished, emotionally clear, naturally written paragraph (2-3 sentences max) that clearly articulates their feelings and what kind of experience or interaction they might be looking for today.
-      Do not add commentary, just return the enhanced description directly. Keep it first-person.`;
+      Your task is to rewrite their message into a highly expressive, vivid, and beautifully eloquent paragraph (2-3 sentences max).
+      Capture the exact nuance of their emotion and translate it into a compelling desire for a specific kind of experience or connection.
+      Use evocative language and sensory details. Do not add conversational commentary, just return the enhanced description directly. Keep it strictly in the first-person ("I").`;
       break;
     case 'host_experience':
-      systemInstruction = `You are an expert marketing copywriter for an experience booking platform (like Airbnb Experiences).
+      systemInstruction = `You are a world-class luxury travel copywriter and marketing expert.
       The host has provided a rough draft description of the experience they want to offer.
-      Your job is to rewrite it into a highly engaging, professional, and alluring marketing pitch.
-      Make it 3-4 short paragraphs. Highlight the unique value. Do not add any conversational filler, just return the marketing copy.`;
+      Your job is to rewrite it into a highly engaging, irresistible, and beautifully descriptive marketing pitch.
+      Format it into 3-4 flowing paragraphs. Start with a captivating hook. Emphasize sensory details (sights, sounds, tastes), the unique value of the experience, and the emotional takeaway.
+      Make the reader feel like they absolutely must book this. Do not add any conversational filler or meta-talk; just return the perfect marketing copy.`;
       break;
     case 'chain_itinerary':
     case 'chain_description':
-      systemInstruction = `You are an expert travel planner and copywriter for a premium experience booking platform.
+      systemInstruction = `You are a master travel curator and storyteller for an exclusive lifestyle booking platform.
       The user will provide a simple idea for a day-long itinerary or experience chain.
-      Your job is to rewrite it into an inspiring, detailed, and polished description of a complete travel experience. 
-      Keep it structured, engaging, and professional. Describe the vibe, the flow of activities, and why it's a great combination.
-      Do not add extra conversational text, just return the enhanced itinerary description. Make it about 2-3 paragraphs.`;
+      Your job is to rewrite it into an inspiring, intricately detailed, and highly polished narrative of a complete travel experience. 
+      Use rich, descriptive vocabulary to paint a picture of the vibe, the seamless flow of activities, and why this specific combination is an unforgettable journey.
+      Make it about 2-3 paragraphs. Do not add extra conversational text, just return the enhanced, luxurious itinerary narrative.`;
       break;
     case 'business_review':
-      systemInstruction = `You are a strict business compliance and quality assurance AI.
+      systemInstruction = `You are a strict, highly analytical business compliance and quality assurance AI.
       The user has submitted text describing their business for platform verification.
-      Summarize the key offerings, identify any potential red flags or restricted services, and provide a 1-sentence recommendation on whether it sounds like a legitimate, safe business.`;
+      Summarize the key offerings with professional precision, explicitly identify any potential red flags, legal risks, or restricted services based on modern commerce standards, and provide a definitive 1-sentence recommendation on its legitimacy and safety.`;
       break;
     default:
-      systemInstruction = `You are a helpful writing assistant. Please improve the grammar, flow, and clarity of the following text while keeping its original meaning.`;
+      systemInstruction = `You are an elite writing assistant and copy editor. Please elevate the grammar, flow, vocabulary, and clarity of the following text, transforming it into highly polished and engaging prose while preserving its original meaning perfectly.`;
   }
 
   try {
@@ -219,11 +221,11 @@ const generateSurprise = async (preferences) => {
 
     JSON Object Schema:
     {
-      "title": "A cryptic but alluring title (e.g. 'The Midnight Sonata')",
-      "teaserDescription": "A 2-3 sentence teaser that builds hype without spoiling the exact activity",
+      "title": "A highly creative, poetic, and alluring mystery title (e.g. 'The Midnight Symphony')",
+      "teaserDescription": "A thrilling, vivid, and highly descriptive 3-4 sentence teaser that builds intense excitement, using strong evocative language without spoiling the exact activity",
       "category": "The matched category",
-      "vibe": "1-2 words describing the vibe (e.g., 'Dark & Moody', 'High Energy')",
-      "preparationNotes": "What should they wear or bring? Keep it vague but helpful."
+      "vibe": "1-3 words describing the atmospheric vibe (e.g., 'Dark & Moody', 'Pure Adrenaline')",
+      "preparationNotes": "What should they wear or bring? Keep it vague but highly intriguing and helpful."
     }`;
 
   const fullPrompt = `User Preferences:\n${JSON.stringify(preferences)}`;
@@ -255,11 +257,11 @@ You MUST return ONLY a valid JSON object. NO markdown formatting, NO backticks, 
 JSON Object Schema:
 {
   "matchedExperienceId": "The exact 'id' string of the best matching candidate",
-  "title": "A cryptic but alluring mystery title (DO NOT use the actual experience title)",
-  "teaserDescription": "A 2-3 sentence teaser that builds excitement without spoiling the actual activity",
+  "title": "A highly creative, poetic, and alluring mystery title (DO NOT use the actual experience title)",
+  "teaserDescription": "A thrilling, vivid, and highly descriptive 3-4 sentence teaser that builds intense excitement, using strong evocative language without spoiling the actual activity",
   "category": "The experience category",
-  "vibe": "1-2 words describing the vibe (e.g., 'Serene & Zen', 'High Energy')",
-  "preparationNotes": "What should they wear or bring? Keep it vague but helpful based on the actual experience."
+  "vibe": "1-3 words describing the atmospheric vibe (e.g., 'Ethereal & Zen', 'Pulse-Pounding Energy')",
+  "preparationNotes": "What should they wear or bring? Keep it vague but highly intriguing and helpful."
 }`;
 
   const fullPrompt = `User Preferences:\n${JSON.stringify(preferences, null, 2)}\n\nCandidate Experiences:\n${JSON.stringify(candidates, null, 2)}`;
