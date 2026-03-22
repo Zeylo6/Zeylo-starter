@@ -105,6 +105,8 @@ const enhanceText = async (prompt, context) => {
       systemInstruction = `You are an elite writing assistant and copy editor. Please elevate the grammar, flow, vocabulary, and clarity of the following text, transforming it into highly polished and engaging prose while preserving its original meaning perfectly.`;
   }
 
+  systemInstruction += `\n\nCRITICAL RULE: Return ONLY the final enhanced text. Do NOT include any conversational filler, intro sentences (like "Here is the improved version:"), explanations, or alternative options. Do NOT use markdown formatting (like bolding or headers) unless it was explicitly present in the original text. Your entire response MUST consist solely of the final rewritten text and absolutely nothing else.`;
+
   try {
     return await callOpenRouter(systemInstruction, prompt);
   } catch (error) {
