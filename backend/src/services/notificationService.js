@@ -26,7 +26,20 @@ const sendPushNotification = async (userId, { title, body, data }) => {
       return;
     }
 
-    // 2. Construct the FCM message
+    // 2. Create an in-app activity record in Firestore first
+    // This ensures the notification appears in the app's 'Notifications' tab even if push fails.
+    await db.collection('activities').add({
+      userId: userId,
+      type: data?.type || 'system',
+      title: title || 'Zeylo',
+      message: body || '',
+      relatedId: data?.bookingId || data?.postId || '',
+      bookingId: data?.bookingId || '',
+      isRead: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // 3. Construct the FCM message
     const message = {
       notification: {
         title: title || 'Zeylo',
