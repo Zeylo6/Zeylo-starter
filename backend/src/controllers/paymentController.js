@@ -52,6 +52,18 @@ const handleWebhook = async (req, res) => {
         paymentId: paymentIntent.id,
         paidAt: new Date().toISOString(),
       });
+
+      // Notify host of new mystery booking
+      const bookingDoc = await db.collection('bookings').doc(bookingId).get();
+      if (bookingDoc.exists) {
+        const hostId = bookingDoc.data().hostId;
+        await notificationService.notifyHostOfBooking(hostId, {
+          title: 'New Mystery Booking! 🎁',
+          body: 'A seeker has been matched to your experience. Check it out!',
+          bookingId,
+          type: 'mystery_booking',
+        });
+      }
     } else {
       // Update booking status in Firestore
       await db.collection('bookings').doc(bookingId).update({
@@ -59,6 +71,18 @@ const handleWebhook = async (req, res) => {
         paymentId: paymentIntent.id,
         paidAt: new Date().toISOString(),
       });
+
+      // Notify host of confirmed booking
+      const bookingDoc = await db.collection('bookings').doc(bookingId).get();
+      if (bookingDoc.exists) {
+        const data = bookingDoc.data();
+        await notificationService.notifyHostOfBooking(data.hostId, {
+          title: 'Booking Confirmed! ✅',
+          body: `Booking for "${data.experienceTitle}" has been confirmed and paid.`,
+          bookingId,
+          type: 'payment_received',
+        });
+      }
     }
   }
 
@@ -91,6 +115,14 @@ const refundBooking = async (req, res) => {
       paymentStatus: 'refunded',
       refundId: refund.id,
       updatedAt: new Date().toISOString(),
+    });
+    
+    // Notify seeker of refund/rejection
+    await notificationService.notifySeekerOfBookingUpdate(bookingData.userId, {
+      title: 'Booking Rejected ❌',
+      body: `Your booking for "${bookingData.experienceTitle}" was rejected and a refund has been processed.`,
+      bookingId,
+      type: 'booking_rejected',
     });
     
     res.status(200).json({ success: true, refund });

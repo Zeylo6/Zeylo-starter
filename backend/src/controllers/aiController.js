@@ -1,5 +1,6 @@
 const geminiService = require('../services/geminiService');
 const { db } = require('../config/firebase');
+const notificationService = require('../services/notificationService');
 
 /**
  * POST /api/ai/enhance
@@ -379,6 +380,14 @@ const matchAndBookMystery = async (req, res) => {
       isRead: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       bookingId: bookingRef.id,
+    });
+
+    // Notify host of new mystery booking
+    await notificationService.notifyHostOfBooking(selected.hostId, {
+      title: 'New Mystery Match! 🎁',
+      body: `You've been matched for a mystery experience!`,
+      bookingId: bookingRef.id,
+      type: 'mystery_booking',
     });
 
     await db.collection('activities').add({
