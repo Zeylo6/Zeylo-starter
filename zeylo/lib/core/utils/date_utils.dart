@@ -156,4 +156,20 @@ class DateUtils {
       return null;
     }
   }
+
+  /// Safely converts dynamic values (Timestamp, String, DateTime) to DateTime
+  static DateTime toDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      return DateTime.tryParse(value) ?? DateTime.now();
+    }
+    // Handle Firestore Timestamp (avoiding direct dependency if possible, but it's already in the project)
+    try {
+      // ignore: avoid_dynamic_calls
+      return value.toDate();
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
 }

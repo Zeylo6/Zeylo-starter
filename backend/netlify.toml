@@ -1,14 +1,11 @@
 [build]
-  functions = "netlify/functions"
+  command = "npm install"
+  functions = "functions"
+  publish = "."
 
-# Redirect /api/ai/enhance  → the enhance function
+# Redirect all requests to the main express app function
 [[redirects]]
-  from   = "/api/ai/enhance"
-  to     = "/.netlify/functions/ai-enhance"
+  from   = "/*"
+  to     = "/.netlify/functions/api/:splat"
   status = 200
-
-# Redirect /api/ai/chain/generate  → the chain generation function
-[[redirects]]
-  from   = "/api/ai/chain/generate"
-  to     = "/.netlify/functions/ai-chain-generate"
-  status = 200
+  force  = true

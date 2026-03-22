@@ -1,5 +1,7 @@
 const geminiService = require('../services/geminiService');
+const openRouterService = require('../services/openRouterService');
 const { db } = require('../config/firebase');
+const notificationService = require('../services/notificationService');
 
 /**
  * POST /api/ai/enhance
@@ -13,7 +15,15 @@ const enhanceText = async (req, res) => {
       return res.status(400).json({ error: 'Missing full text prompt to enhance.' });
     }
 
-    const enhancedText = await geminiService.enhanceText(text, context || 'general');
+    let enhancedText;
+    try {
+      // Try OpenRouter first as requested
+      enhancedText = await openRouterService.enhanceText(text, context || 'general');
+    } catch (orError) {
+      console.error('OpenRouter Enhancement Failed, falling back to Gemini:', orError.message);
+      // Fallback to Gemini
+      enhancedText = await geminiService.enhanceText(text, context || 'general');
+    }
 
     return res.status(200).json({
       success: true,
@@ -52,16 +62,25 @@ const generateChain = async (req, res) => {
         .filter((item) => item.isNotEmpty !== false && item.length > 0)
       : [];
 
-    const snapshot = await db
+    let snapshot = await db
       .collection('experiences')
       .where('city', '==', normalizedLocation)
-      .where('status', '==', 'active')
+      .where('isActive', '==', true)
       .limit(30)
       .get();
 
     if (snapshot.empty) {
+      console.log(`[Dev Fallback] No experiences found for city: ${normalizedLocation}. Falling back to all active experiences.`);
+      snapshot = await db
+        .collection('experiences')
+        .where('isActive', '==', true)
+        .limit(30)
+        .get();
+    }
+
+    if (snapshot.empty) {
       return res.status(400).json({
-        error: 'No experiences available in this location yet',
+        error: 'No experiences available in the system yet. Please add some experiences to the database.',
       });
     }
 
@@ -93,19 +112,38 @@ const generateChain = async (req, res) => {
     }
 
     let validSelected = [];
-    try {
-      const selected = await geminiService.generateChainFromCandidates({
-        prompt,
-        location: normalizedLocation,
-        date,
-        totalTime,
-        interests: safeInterests,
-        candidates,
-      });
+    let aiErrorToLog = null;
 
+    try {
+      let selectedContent = null;
+      
+      // 1. Try OpenRouter
+      try {
+        selectedContent = await openRouterService.generateChainFromCandidates({
+          prompt,
+          location: normalizedLocation,
+          date,
+          totalTime,
+          interests: safeInterests,
+          candidates,
+        });
+      } catch (orError) {
+        console.error('OpenRouter Chain Generation Failed, falling back to Gemini:', orError.message);
+        // 2. Fallback to Gemini
+        selectedContent = await geminiService.generateChainFromCandidates({
+          prompt,
+          location: normalizedLocation,
+          date,
+          totalTime,
+          interests: safeInterests,
+          candidates,
+        });
+      }
+
+      // 3. Process AI Output
       const candidateMap = new Map(candidates.map((item) => [item.id, item]));
-      validSelected = Array.isArray(selected)
-        ? selected.filter(
+      validSelected = Array.isArray(selectedContent)
+        ? selectedContent.filter(
           (item) =>
             item &&
             typeof item.id === 'string' &&
@@ -119,17 +157,20 @@ const generateChain = async (req, res) => {
         throw new Error('AI returned too few valid experiences');
       }
     } catch (aiError) {
-      console.error('Gemini failed or quota exceeded:', aiError.message);
+      aiErrorToLog = aiError.message;
+      console.error('AI Services Failed or Quota Exceeded, using manual fallback:', aiError.message);
+      
+      // 4. MANUAL FALLBACK: Shuffle and pick based on time
       const manualCount = totalTime === 'halfDay' ? 2 : (totalTime === 'weekend' ? 4 : 3);
-      const shuffled = candidates.sort(() => 0.5 - Math.random());
-      const selectedCandidates = shuffled.slice(0, Math.min(manualCount, candidates.length));
+      const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, Math.min(manualCount, candidates.length));
       
       let currentHour = 9; 
-      validSelected = selectedCandidates.map(c => {
+      validSelected = selected.map(c => {
         const start = `${String(currentHour).padStart(2, '0')}:00`;
-        const endHour = currentHour + Math.ceil(c.duration || 2);
+        const endHour = Math.min(23, currentHour + Math.ceil(c.duration || 2));
         const end = `${String(endHour).padStart(2, '0')}:00`;
-        currentHour = endHour + 1; 
+        currentHour = Math.min(23, endHour + 1); 
         return {
           id: c.id,
           startTime: start,
@@ -138,9 +179,10 @@ const generateChain = async (req, res) => {
       });
     }
 
-    if (validSelected.length < 2) {
+    if (validSelected.length < 1) {
       return res.status(400).json({
-        error: 'No options available to you in this area.',
+        error: 'No valid options available to generate a chain of experiences.',
+        details: aiErrorToLog
       });
     }
 
@@ -238,7 +280,13 @@ const generateSurprise = async (req, res) => {
       });
     }
 
-    const matchResult = await geminiService.matchAndGenerateMystery(preferences, candidates);
+    let matchResult;
+    try {
+      matchResult = await openRouterService.matchAndGenerateMystery(preferences, candidates);
+    } catch (orError) {
+      console.error('OpenRouter Mystery Generation Failed, falling back to Gemini:', orError.message);
+      matchResult = await geminiService.matchAndGenerateMystery(preferences, candidates);
+    }
 
     return res.status(200).json({
       success: true,
@@ -314,7 +362,14 @@ const matchAndBookMystery = async (req, res) => {
     let aiTeaser = null;
     try {
       const preferences = { mood: experienceType, time: time };
-      const matchResult = await geminiService.matchAndGenerateMystery(preferences, [selected]);
+      let matchResult;
+      try {
+        matchResult = await openRouterService.matchAndGenerateMystery(preferences, [selected]);
+      } catch (orError) {
+        console.error('OpenRouter Teaser Failed, falling back to Gemini:', orError.message);
+        matchResult = await geminiService.matchAndGenerateMystery(preferences, [selected]);
+      }
+      
       aiTeaser = {
         teaserDescription: matchResult.teaserDescription,
         vibe: matchResult.vibe,
@@ -379,6 +434,14 @@ const matchAndBookMystery = async (req, res) => {
       isRead: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       bookingId: bookingRef.id,
+    });
+
+    // Notify host of new mystery booking
+    await notificationService.notifyHostOfBooking(selected.hostId, {
+      title: 'New Mystery Match! 🎁',
+      body: `You've been matched for a mystery experience!`,
+      bookingId: bookingRef.id,
+      type: 'mystery_booking',
     });
 
     await db.collection('activities').add({

@@ -1,4 +1,5 @@
 import '../../domain/entities/booking_entity.dart';
+import '../../../../core/utils/date_utils.dart' as zeylo_date;
 
 /// Booking model for API/Firestore operations
 /// Extends BookingEntity with JSON serialization capabilities
@@ -70,14 +71,14 @@ class BookingModel extends BookingEntity {
       experienceCoverImage: data['experienceCoverImage'] as String,
       userId: data['userId'] as String,
       hostId: data['hostId'] as String,
-      date: (data['date'] as dynamic)?.toDate() ?? DateTime.now(),
+      date: zeylo_date.DateUtils.toDateTime(data['date']),
       startTime: data['startTime'] as String,
       guests: data['guests'] as int,
       totalPrice: (data['totalPrice'] as num).toDouble(),
       status: data['status'] as String? ?? 'pending',
       paymentStatus: data['paymentStatus'] as String? ?? 'pending',
-      createdAt: (data['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as dynamic)?.toDate() ?? DateTime.now(),
+      createdAt: zeylo_date.DateUtils.toDateTime(data['createdAt']),
+      updatedAt: zeylo_date.DateUtils.toDateTime(data['updatedAt']),
       isRatedByHost: data['isRatedByHost'] as bool? ?? false,
       isRatedBySeeker: data['isRatedBySeeker'] as bool? ?? false,
       seekerName: (data['seekerName'] ?? data['seeker_name']) as String?,
@@ -202,11 +203,6 @@ class BookingModel extends BookingEntity {
 
   /// Parse DateTime from various formats
   static DateTime _parseDateTime(dynamic dateValue) {
-    if (dateValue is DateTime) {
-      return dateValue;
-    } else if (dateValue is String) {
-      return DateTime.parse(dateValue);
-    }
-    return DateTime.now();
+    return zeylo_date.DateUtils.toDateTime(dateValue);
   }
 }

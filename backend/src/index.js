@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const serverless = require('serverless-http');
 
-const aiRoutes = require('./routes/ai');
+const apiRoutes = require('./routes/api');
 // import your other existing routes here, e.g.:
 // const authRoutes = require('./routes/auth');
 // const bookingRoutes = require('./routes/booking');
@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/ai', aiRoutes);
+app.use('/api', apiRoutes);
 // app.use('/api/auth', authRoutes);
 // app.use('/api/bookings', bookingRoutes);
 
@@ -27,4 +27,5 @@ if (require.main === module) {
 }
 
 // ── Serverless export (Netlify) ───────────────────────────────────────────────
+module.exports = app;
 module.exports.handler = serverless(app);
