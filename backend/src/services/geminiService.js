@@ -61,6 +61,14 @@ const enhanceText = async (prompt, context) => {
       Your job is to rewrite it into a highly engaging, professional, and alluring marketing pitch.
       Make it 3-4 short paragraphs. Highlight the unique value. Do not add any conversational filler, just return the marketing copy.`;
       break;
+    case 'chain_itinerary':
+    case 'chain_description':
+      systemInstruction = `You are an expert travel planner and copywriter for a premium experience booking platform.
+      The user will provide a simple idea for a day-long itinerary or experience chain.
+      Your job is to rewrite it into an inspiring, detailed, and polished description of a complete travel experience. 
+      Keep it structured, engaging, and professional. Describe the vibe, the flow of activities, and why it's a great combination.
+      Do not add extra conversational text, just return the enhanced itinerary description. Make it about 2-3 paragraphs.`;
+      break;
     case 'business_review':
       systemInstruction = `You are a strict business compliance and quality assurance AI.
       The user has submitted text describing their business for platform verification.
