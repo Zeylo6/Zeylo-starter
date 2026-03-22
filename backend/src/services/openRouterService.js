@@ -33,13 +33,44 @@ const stripMarkdownFence = (text) => {
 };
 
 /**
- * Enhance text with context-aware prompting via OpenRouter.
+ * Generic helper to call OpenRouter API
  */
-const enhanceText = async (prompt, context) => {
+const callOpenRouter = async (systemInstruction, userContent) => {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OPENROUTER_API_KEY is missing from environment variables.');
   }
 
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "http://localhost:3000",
+      "X-Title": "Zeylo AI",
+    },
+    body: JSON.stringify({
+      "model": OPENROUTER_MODEL,
+      "messages": [
+        { "role": "system", "content": systemInstruction },
+        { "role": "user", "content": userContent }
+      ],
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('OpenRouter API Error:', data);
+    throw new Error(data.error?.message || `OpenRouter API failed with status ${response.status}`);
+  }
+
+  return data.choices[0].message.content.trim();
+};
+
+/**
+ * Enhance text with context-aware prompting via OpenRouter.
+ */
+const enhanceText = async (prompt, context) => {
   let systemInstruction = '';
 
   switch (context) {
@@ -73,38 +104,188 @@ const enhanceText = async (prompt, context) => {
   }
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000", // Optional, for OpenRouter rankings
-        "X-Title": "Zeylo AI", // Optional, for OpenRouter rankings
-      },
-      body: JSON.stringify({
-        "model": OPENROUTER_MODEL,
-        "messages": [
-          { "role": "system", "content": systemInstruction },
-          { "role": "user", "content": prompt }
-        ],
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('OpenRouter API Error:', data);
-      throw new Error(data.error?.message || `OpenRouter API failed with status ${response.status}`);
-    }
-
-    return data.choices[0].message.content.trim();
+    return await callOpenRouter(systemInstruction, prompt);
   } catch (error) {
     console.error('OpenRouter enhanceText Error:', error.message);
     throw new Error(`Failed to enhance text with OpenRouter: ${error.message}`);
   }
 };
 
+/**
+ * Generate a real experience chain from a list of candidate experiences.
+ */
+const generateChainFromCandidates = async ({
+  prompt,
+  location,
+  date,
+  totalTime,
+  interests = [],
+  candidates = [],
+}) => {
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    throw new Error('No candidate experiences were provided to AI.');
+  }
+
+  const compactCandidates = candidates.map((item) => ({
+    id: item.id,
+    title: item.title || '',
+    category: item.category || '',
+    duration: item.duration ?? 0,
+    price: item.price ?? 0,
+    startTime: item.startTime || null,
+    endTime: item.endTime || null,
+    description: item.description || '',
+  }));
+
+  const systemInstruction = `You are a travel curator. Given a user's preference and a list of real available experiences, select 2–4 that best match and arrange them in a logical time sequence for the day.
+
+Rules:
+- Only select from the provided list — never invent new ones
+- Return ONLY a raw JSON array, no markdown, no backticks, no commentary
+- Use this exact schema per item:
+  { "id": "<exact id from the list>", "startTime": "HH:mm", "endTime": "HH:mm" }
+- Assign realistic startTime/endTime (24-hour HH:mm) with 30min travel gaps
+- First experience no earlier than 07:00
+- Last experience must end by 23:00
+- Match the user's mood, pace, and interests
+- If totalTime is "halfDay" pick exactly 2 experiences
+- If totalTime is "fullDay" pick 3 or 4 experiences
+- If totalTime is "weekend" pick exactly 4 experiences
+- Never repeat the same id twice
+- Use only ids that exist in the provided list`;
+
+  const fullPrompt = `User prompt: ${prompt}\nLocation: ${location || 'Anywhere'}\nDate: ${date || 'Any day'}\nTotal time: ${totalTime}\nInterests: ${(interests || []).join(', ') || 'None specified'}\n\nAvailable experiences:\n${JSON.stringify(compactCandidates)}`;
+
+  try {
+    const rawText = await callOpenRouter(systemInstruction, fullPrompt);
+    const cleaned = stripMarkdownFence(rawText);
+    const parsed = JSON.parse(cleaned);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('AI did not return a JSON array.');
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error('OpenRouter generateChainFromCandidates Error:', error.message);
+    throw new Error(`Failed to generate itinerary chain from candidates: ${error.message}`);
+  }
+};
+
+/**
+ * Legacy chain generation kept for backward compatibility.
+ */
+const generateChain = async (prompt, location, date) => {
+  const systemInstruction = `You are a master travel and experience curator.
+  The user wants an itinerary of exactly 3 sequential activities (morning, afternoon, evening or continuous) based on their prompt.
+  You MUST return ONLY a valid JSON array of exactly 3 objects. NO markdown formatting, NO backticks, NO extra text.
+
+  JSON Object Schema:
+  {
+    "experienceId": "A unique dummy string like 'ai_exp_123'",
+    "title": "Short catchy activity title",
+    "startTime": "e.g., '10:00'",
+    "endTime": "e.g., '12:00'",
+    "duration": Numeric float representing hours (e.g., 2.0),
+    "price": Numeric float representing USD cost (e.g., 25.50),
+    "isOvernight": Boolean (true/false)
+  }`;
+
+  const fullPrompt = `Criteria:\nPrompt: ${prompt}\nLocation: ${location || 'Anywhere'}\nDate: ${date || 'Any day'}`;
+
+  try {
+    const rawText = await callOpenRouter(systemInstruction, fullPrompt);
+    const text = stripMarkdownFence(rawText);
+
+    const parsedArray = JSON.parse(text);
+    if (!Array.isArray(parsedArray) || parsedArray.length !== 3) {
+      throw new Error('AI did not return exactly 3 array items.');
+    }
+
+    return parsedArray;
+  } catch (error) {
+    console.error('OpenRouter generateChain Error:', error.message);
+    throw new Error(`Failed to generate itinerary chain: ${error.message}`);
+  }
+};
+
+/**
+ * Generates a mystery surprise itinerary based on preferences.
+ */
+const generateSurprise = async (preferences) => {
+  const systemInstruction = `You are a boutique mystery experience curator.
+    The user has provided a set of preferences. Generate a highly unique, slightly secretive "Mystery Surprise" experience for them.
+    You MUST return ONLY a valid JSON object. NO markdown formatting, NO backticks, NO extra text.
+
+    JSON Object Schema:
+    {
+      "title": "A cryptic but alluring title (e.g. 'The Midnight Sonata')",
+      "teaserDescription": "A 2-3 sentence teaser that builds hype without spoiling the exact activity",
+      "category": "The matched category",
+      "vibe": "1-2 words describing the vibe (e.g., 'Dark & Moody', 'High Energy')",
+      "preparationNotes": "What should they wear or bring? Keep it vague but helpful."
+    }`;
+
+  const fullPrompt = `User Preferences:\n${JSON.stringify(preferences)}`;
+
+  try {
+    const rawText = await callOpenRouter(systemInstruction, fullPrompt);
+    const text = stripMarkdownFence(rawText);
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('OpenRouter generateSurprise Error:', error.message);
+    throw new Error(`Failed to generate mystery surprise: ${error.message}`);
+  }
+};
+
+/**
+ * Matches user preferences to the best candidate experience using AI ranking,
+ * then generates mystery teaser content.
+ */
+const matchAndGenerateMystery = async (preferences, candidates) => {
+  const systemInstruction = `You are an intelligent experience matching and mystery curator AI.
+
+Given a user's preferences and a list of candidate experiences, you must:
+1. RANK the candidates by how well they match the user's preferences (location, budget, type, vibe)
+2. SELECT the single best match
+3. Generate a mystery teaser for the selected experience WITHOUT revealing its exact name or details
+
+You MUST return ONLY a valid JSON object. NO markdown formatting, NO backticks, NO extra text.
+
+JSON Object Schema:
+{
+  "matchedExperienceId": "The exact 'id' string of the best matching candidate",
+  "title": "A cryptic but alluring mystery title (DO NOT use the actual experience title)",
+  "teaserDescription": "A 2-3 sentence teaser that builds excitement without spoiling the actual activity",
+  "category": "The experience category",
+  "vibe": "1-2 words describing the vibe (e.g., 'Serene & Zen', 'High Energy')",
+  "preparationNotes": "What should they wear or bring? Keep it vague but helpful based on the actual experience."
+}`;
+
+  const fullPrompt = `User Preferences:\n${JSON.stringify(preferences, null, 2)}\n\nCandidate Experiences:\n${JSON.stringify(candidates, null, 2)}`;
+
+  try {
+    const rawText = await callOpenRouter(systemInstruction, fullPrompt);
+    const text = stripMarkdownFence(rawText);
+    const parsedData = JSON.parse(text);
+
+    const validIds = candidates.map((c) => c.id);
+    if (!validIds.includes(parsedData.matchedExperienceId)) {
+      parsedData.matchedExperienceId = candidates[0].id;
+    }
+
+    return parsedData;
+  } catch (error) {
+    console.error('OpenRouter matchAndGenerateMystery Error:', error.message);
+    throw new Error(`Failed to match and generate mystery: ${error.message}`);
+  }
+};
+
 module.exports = {
   enhanceText,
+  generateChain,
+  generateChainFromCandidates,
+  generateSurprise,
+  matchAndGenerateMystery,
   stripMarkdownFence,
 };

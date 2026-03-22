@@ -104,14 +104,27 @@ const generateChain = async (req, res) => {
 
     let validSelected = [];
     try {
-      const selected = await geminiService.generateChainFromCandidates({
-        prompt,
-        location: normalizedLocation,
-        date,
-        totalTime,
-        interests: safeInterests,
-        candidates,
-      });
+      let selected;
+      try {
+        selected = await openRouterService.generateChainFromCandidates({
+          prompt,
+          location: normalizedLocation,
+          date,
+          totalTime,
+          interests: safeInterests,
+          candidates,
+        });
+      } catch (orError) {
+        console.error('OpenRouter Chain Generation Failed, falling back to Gemini:', orError.message);
+        selected = await geminiService.generateChainFromCandidates({
+          prompt,
+          location: normalizedLocation,
+          date,
+          totalTime,
+          interests: safeInterests,
+          candidates,
+        });
+      }
 
       const candidateMap = new Map(candidates.map((item) => [item.id, item]));
       validSelected = Array.isArray(selected)
@@ -248,7 +261,13 @@ const generateSurprise = async (req, res) => {
       });
     }
 
-    const matchResult = await geminiService.matchAndGenerateMystery(preferences, candidates);
+    let matchResult;
+    try {
+      matchResult = await openRouterService.matchAndGenerateMystery(preferences, candidates);
+    } catch (orError) {
+      console.error('OpenRouter Mystery Generation Failed, falling back to Gemini:', orError.message);
+      matchResult = await geminiService.matchAndGenerateMystery(preferences, candidates);
+    }
 
     return res.status(200).json({
       success: true,
@@ -324,7 +343,14 @@ const matchAndBookMystery = async (req, res) => {
     let aiTeaser = null;
     try {
       const preferences = { mood: experienceType, time: time };
-      const matchResult = await geminiService.matchAndGenerateMystery(preferences, [selected]);
+      let matchResult;
+      try {
+        matchResult = await openRouterService.matchAndGenerateMystery(preferences, [selected]);
+      } catch (orError) {
+        console.error('OpenRouter Teaser Failed, falling back to Gemini:', orError.message);
+        matchResult = await geminiService.matchAndGenerateMystery(preferences, [selected]);
+      }
+      
       aiTeaser = {
         teaserDescription: matchResult.teaserDescription,
         vibe: matchResult.vibe,
