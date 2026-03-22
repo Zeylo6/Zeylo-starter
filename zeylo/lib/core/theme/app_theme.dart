@@ -131,9 +131,9 @@ class AppTheme {
         titleTextStyle: AppTypography.headlineLarge,
       ),
 
-      // Bottom Navigation Bar Theme
+      // Bottom Navigation Bar Theme (glass nav overrides this)
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.transparent,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textHint,
         type: BottomNavigationBarType.fixed,
