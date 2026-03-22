@@ -18,7 +18,7 @@ import '../widgets/category_chip_list.dart';
 import '../../../../core/widgets/role_capsule.dart';
 import '../../../messaging/presentation/providers/messaging_provider.dart';
 
-/// Home screen of the Zeylo application
+/// Home screen with full glassmorphism aesthetic
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -48,66 +48,146 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isHost = currentUserAsync.value?.role == UserRole.host;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        color: AppColors.primary,
-        edgeOffset: 80,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            // Glassmorphism top bar
-            SliverAppBar(
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              floating: true,
-              snap: true,
-              pinned: false,
-              toolbarHeight: 64,
-              flexibleSpace: ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.background.withOpacity(0.7),
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.white.withOpacity(0.4),
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF3EEFF), // soft purple tint
+              Color(0xFFF9F7FF), // near-white purple
+              Color(0xFFEDE9FE), // lavender
+              Color(0xFFF5F3FF), // lightest purple
+            ],
+            stops: [0.0, 0.3, 0.7, 1.0],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative gradient orbs for depth
+            Positioned(
+              top: -60,
+              right: -40,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primary.withOpacity(0.12),
+                      AppColors.primary.withOpacity(0.0),
+                    ],
                   ),
                 ),
               ),
-              title: const _TopBar(),
-              centerTitle: false,
             ),
-            // Main content
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppSpacing.md),
-                    // Search bar
-                    const HomeSearchBar(),
-                    const SizedBox(height: AppSpacing.xxl),
-                    // Category chips
-                    const _CategorySection(),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+            Positioned(
+              top: 300,
+              left: -80,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.gradientEnd.withOpacity(0.08),
+                      AppColors.gradientEnd.withOpacity(0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
-            // Experiences list
-            _buildExperiencesList(),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
+            Positioned(
+              bottom: 100,
+              right: -50,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.secondary.withOpacity(0.1),
+                      AppColors.secondary.withOpacity(0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Main scrollable content
+            RefreshIndicator(
+              onRefresh: _onRefresh,
+              color: AppColors.primary,
+              edgeOffset: 80,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  // Glassmorphism top bar
+                  SliverAppBar(
+                    backgroundColor: Colors.transparent,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    floating: true,
+                    snap: true,
+                    pinned: false,
+                    toolbarHeight: 68,
+                    flexibleSpace: ClipRRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.5),
+                                Colors.white.withOpacity(0.3),
+                              ],
+                            ),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.white.withOpacity(0.5),
+                                width: 0.8,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    title: const _TopBar(),
+                    centerTitle: false,
+                  ),
+                  // Greeting + Search + Categories
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: AppSpacing.md),
+                          // Search bar
+                          const HomeSearchBar(),
+                          const SizedBox(height: AppSpacing.xxl),
+                          // Category section with glass header
+                          const _CategorySection(),
+                          const SizedBox(height: AppSpacing.xl),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Experiences list
+                  _buildExperiencesList(),
+                  const SliverToBoxAdapter(
+                      child: SizedBox(height: AppSpacing.huge)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -158,48 +238,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final index = entry.key;
           final item = entry.value;
           return AnimatedSlide(
-            duration: Duration(milliseconds: 150 + index * 60),
+            duration: Duration(milliseconds: 180 + index * 70),
             curve: Curves.easeOutBack,
             offset: _fabExpanded ? Offset.zero : const Offset(0, 0.5),
             child: AnimatedOpacity(
-              duration: Duration(milliseconds: 150 + index * 60),
+              duration: Duration(milliseconds: 180 + index * 70),
               opacity: _fabExpanded ? 1.0 : 0.0,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  borderRadius: BorderRadius.circular(20),
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                     child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: item.color.withOpacity(0.85),
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            item.color.withOpacity(0.8),
+                            item.color.withOpacity(0.6),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withOpacity(0.35),
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: item.color.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            color: item.color.withOpacity(0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
-                      child: FloatingActionButton.extended(
-                        heroTag: item.heroTag,
-                        onPressed: _fabExpanded ? item.onTap : null,
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        highlightElevation: 0,
-                        icon: Icon(item.icon, color: Colors.white),
-                        label: Text(
-                          item.label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
+                      child: InkWell(
+                        onTap: _fabExpanded ? item.onTap : null,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(item.icon, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              item.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -210,33 +302,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         }),
         const SizedBox(height: AppSpacing.xs),
-        // Main toggle FAB with glow
+        // Main FAB with glow
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: (_fabExpanded ? AppColors.error : AppColors.primary)
-                    .withOpacity(0.35),
-                blurRadius: 16,
-                spreadRadius: 2,
+                    .withOpacity(0.4),
+                blurRadius: 20,
+                spreadRadius: 3,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: FloatingActionButton(
-            heroTag: 'main_fab_toggle',
-            onPressed: () => setState(() => _fabExpanded = !_fabExpanded),
-            backgroundColor:
-                _fabExpanded ? AppColors.error : AppColors.primary,
-            elevation: 0,
-            child: AnimatedRotation(
-              turns: _fabExpanded ? 0.125 : 0,
-              duration: const Duration(milliseconds: 250),
-              child: Icon(
-                _fabExpanded ? Icons.close_rounded : Icons.add_rounded,
-                color: Colors.white,
-                size: 28,
+          child: ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: FloatingActionButton(
+                heroTag: 'main_fab_toggle',
+                onPressed: () => setState(() => _fabExpanded = !_fabExpanded),
+                backgroundColor: (_fabExpanded ? AppColors.error : AppColors.primary)
+                    .withOpacity(0.9),
+                elevation: 0,
+                child: AnimatedRotation(
+                  turns: _fabExpanded ? 0.125 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  child: Icon(
+                    _fabExpanded ? Icons.close_rounded : Icons.add_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
               ),
             ),
           ),
@@ -253,33 +350,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.xxxl),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.xxl),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.xxxl),
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primary.withOpacity(0.08),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.6),
+                                Colors.white.withOpacity(0.3),
+                              ],
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.xxl),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.6),
+                              width: 1.5,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.search_off_rounded,
-                            size: 36,
-                            color: AppColors.primary.withOpacity(0.5),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.primary.withOpacity(0.15),
+                                      AppColors.gradientEnd
+                                          .withOpacity(0.1),
+                                    ],
+                                  ),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.search_off_rounded,
+                                  size: 36,
+                                  color: AppColors.primary.withOpacity(0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              Text(
+                                'No experiences found',
+                                style: AppTypography.headlineSmall,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'Try adjusting your search or filters',
+                                style: AppTypography.bodyMediumSecondary,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'No experiences found',
-                          style: AppTypography.headlineSmall,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          'Try adjusting your search or filters',
-                          style: AppTypography.bodyMediumSecondary,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -296,7 +428,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   (context, index) {
                     final experience = experiences[index];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                      padding:
+                          const EdgeInsets.only(bottom: AppSpacing.xl),
                       child: ExperienceCard(
                         heroTag: 'home_experience_${experience.id}',
                         title: experience.title,
@@ -449,18 +582,25 @@ class _TopBar extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Logo with glow effect
+        // Logo with intense glow
         Container(
-          width: 42,
-          height: 42,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
+                color: AppColors.primary.withOpacity(0.4),
+                blurRadius: 16,
+                spreadRadius: 1,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: AppColors.gradientEnd.withOpacity(0.2),
+                blurRadius: 24,
+                spreadRadius: -2,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -468,10 +608,11 @@ class _TopBar extends ConsumerWidget {
             child: Text(
               'Z',
               style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textInverse,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
                 fontFamily: 'Inter',
+                letterSpacing: -0.5,
               ),
             ),
           ),
@@ -481,39 +622,19 @@ class _TopBar extends ConsumerWidget {
           children: [
             RoleCapsule(role: role),
             const SizedBox(width: AppSpacing.sm),
-            // Glassy icon button
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.full),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.45),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send_rounded, size: 20),
-                    onPressed: () {
-                      final currentUser =
-                          fb_auth.FirebaseAuth.instance.currentUser;
-                      if (currentUser != null) {
-                        context.push('/messages', extra: {
-                          'userId': currentUser.uid,
-                          'userName': 'Messages',
-                        });
-                      }
-                    },
-                    color: AppColors.textPrimary,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
+            // Glass message button
+            _GlassIconButton(
+              icon: Icons.send_rounded,
+              onTap: () {
+                final currentUser =
+                    fb_auth.FirebaseAuth.instance.currentUser;
+                if (currentUser != null) {
+                  context.push('/messages', extra: {
+                    'userId': currentUser.uid,
+                    'userName': 'Messages',
+                  });
+                }
+              },
             ),
           ],
         ),
@@ -522,7 +643,60 @@ class _TopBar extends ConsumerWidget {
   }
 }
 
-/// Category section widget
+/// Reusable glass icon button
+class _GlassIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final double size;
+
+  const _GlassIconButton({
+    required this.icon,
+    required this.onTap,
+    this.size = 42,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size / 2),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.6),
+                  Colors.white.withOpacity(0.3),
+                ],
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withOpacity(0.7),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Category section with glass label
 class _CategorySection extends ConsumerWidget {
   const _CategorySection({super.key});
 
@@ -531,11 +705,27 @@ class _CategorySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Categories',
-          style: AppTypography.titleLarge,
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 20,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Categories',
+              style: AppTypography.titleLarge.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.lg),
         const CategoryChipList(),
       ],
     );
