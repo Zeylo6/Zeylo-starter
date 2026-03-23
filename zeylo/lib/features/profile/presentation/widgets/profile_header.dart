@@ -31,7 +31,8 @@ class ProfileHeader extends ConsumerWidget {
 
     // Watch follow status only if not current user
     final isFollowing = !isCurrentUser && currentUserId != null
-        ? ref.watch(isFollowingProvider((currentUserId, profile.id))).value ?? false
+        ? ref.watch(isFollowingProvider((currentUserId, profile.id))).value ??
+            false
         : false;
 
     return Padding(
@@ -69,7 +70,8 @@ class ProfileHeader extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.verified, color: AppColors.primary, size: 14),
+                  const Icon(Icons.verified,
+                      color: AppColors.primary, size: 14),
                   const SizedBox(width: 4),
                   const Text(
                     'Verified Host',
@@ -140,16 +142,19 @@ class ProfileHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildFollowButton(WidgetRef ref, String currentUserId, bool isFollowing) {
+  Widget _buildFollowButton(
+      WidgetRef ref, String currentUserId, bool isFollowing) {
     return SizedBox(
       height: 48,
       child: ElevatedButton(
         onPressed: () {
-          ref.read(followActionProvider((currentUserId, profile.id, !isFollowing)));
+          ref.read(
+              followActionProvider((currentUserId, profile.id, !isFollowing)));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: isFollowing ? AppColors.surface : AppColors.primary,
-          foregroundColor: isFollowing ? AppColors.textPrimary : AppColors.textInverse,
+          foregroundColor:
+              isFollowing ? AppColors.textPrimary : AppColors.textInverse,
           elevation: 0,
           side: isFollowing ? BorderSide(color: AppColors.border) : null,
           shape: RoundedRectangleBorder(
@@ -166,7 +171,8 @@ class ProfileHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildMessageButton(BuildContext context, WidgetRef ref, String currentUserId) {
+  Widget _buildMessageButton(
+      BuildContext context, WidgetRef ref, String currentUserId) {
     return SizedBox(
       height: 48,
       child: OutlinedButton.icon(

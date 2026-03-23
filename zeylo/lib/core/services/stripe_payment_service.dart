@@ -7,7 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../config/app_config.dart';
 
 class StripePaymentService {
-  static Future<String?> makePayment(double amount, String bookingId, String email, {String type = 'booking', String? mysteryId}) async {
+  static Future<String?> makePayment(
+      double amount, String bookingId, String email,
+      {String type = 'booking', String? mysteryId}) async {
     // Stripe's initPaymentSheet / presentPaymentSheet are not supported on Web.
     // Users must use the mobile app (Android / iOS) to complete payments.
     if (kIsWeb) {

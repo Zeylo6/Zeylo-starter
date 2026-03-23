@@ -127,9 +127,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, List<UserProfileEntity>>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
+  Future<Either<Failure, List<UserProfileEntity>>> getSuggestedUsers(
+      String currentUserId,
+      {int limit = 10}) async {
     try {
-      final suggestions = await _datasource.getSuggestedUsers(currentUserId, limit: limit);
+      final suggestions =
+          await _datasource.getSuggestedUsers(currentUserId, limit: limit);
       return Right(suggestions);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
@@ -137,7 +140,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, String>> uploadProfileImage(String userId, Uint8List imageBytes) async {
+  Future<Either<Failure, String>> uploadProfileImage(
+      String userId, Uint8List imageBytes) async {
     try {
       final url = await _datasource.uploadProfileImage(userId, imageBytes);
       return Right(url);
@@ -147,7 +151,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, List<UserProfileEntity>>> searchProfiles(String query) async {
+  Future<Either<Failure, List<UserProfileEntity>>> searchProfiles(
+      String query) async {
     try {
       final models = await _datasource.searchProfiles(query);
       return Right(models);
@@ -157,7 +162,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, void>> syncHostProfileToExperiences(String hostId, String name, String? photoUrl) async {
+  Future<Either<Failure, void>> syncHostProfileToExperiences(
+      String hostId, String name, String? photoUrl) async {
     try {
       await _datasource.syncHostProfileToExperiences(hostId, name, photoUrl);
       return const Right(null);

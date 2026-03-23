@@ -22,7 +22,8 @@ class SuggestedUserCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch follow status
-    final isFollowingAsync = ref.watch(isFollowingProvider((currentUserId, user.id)));
+    final isFollowingAsync =
+        ref.watch(isFollowingProvider((currentUserId, user.id)));
     final isFollowing = isFollowingAsync.value ?? false;
 
     return Container(
@@ -51,14 +52,15 @@ class SuggestedUserCard extends ConsumerWidget {
                   ? CachedNetworkImage(
                       imageUrl: user.photoUrl!,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(color: AppColors.surface),
+                      placeholder: (context, url) =>
+                          Container(color: AppColors.surface),
                       errorWidget: (context, url, error) => _buildPlaceholder(),
                     )
                   : _buildPlaceholder(),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          
+
           // Name
           Text(
             user.name,
@@ -67,7 +69,7 @@ class SuggestedUserCard extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
           ),
-          
+
           // Followers count
           Text(
             '${user.followerCount} followers',
@@ -75,20 +77,23 @@ class SuggestedUserCard extends ConsumerWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          
+
           const Spacer(),
-          
+
           // Follow Button
           SizedBox(
             width: double.infinity,
             height: 32,
             child: ElevatedButton(
               onPressed: () {
-                ref.read(followActionProvider((currentUserId, user.id, !isFollowing)));
+                ref.read(followActionProvider(
+                    (currentUserId, user.id, !isFollowing)));
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isFollowing ? AppColors.surface : AppColors.primary,
-                foregroundColor: isFollowing ? AppColors.textPrimary : AppColors.textInverse,
+                backgroundColor:
+                    isFollowing ? AppColors.surface : AppColors.primary,
+                foregroundColor:
+                    isFollowing ? AppColors.textPrimary : AppColors.textInverse,
                 padding: EdgeInsets.zero,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -99,7 +104,9 @@ class SuggestedUserCard extends ConsumerWidget {
                 isFollowing ? 'Following' : 'Follow',
                 style: AppTypography.labelMedium.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isFollowing ? AppColors.textPrimary : AppColors.textInverse,
+                  color: isFollowing
+                      ? AppColors.textPrimary
+                      : AppColors.textInverse,
                 ),
               ),
             ),
