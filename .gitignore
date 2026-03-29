@@ -48,3 +48,8 @@ zeylo/linterrors*.txt
 zeylo/run_log.txt
 zeylo/sha_output.txt
 zeylo/temp_analyze.txt
+
+# --- Reports and MD file ---
+/ZEYLO_VIVA_REPORT.md
+/Zeylo_Project_Report.md
+/Booking and payment workflow.md

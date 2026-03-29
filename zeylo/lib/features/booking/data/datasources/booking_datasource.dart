@@ -91,7 +91,7 @@ class BookingRemoteDataSource implements BookingDataSource {
           .map((doc) => BookingModel.fromFirestore(doc.data(), doc.id))
           .toList();
 
-      // Sort in memory to avoid requiring a composite index
+      // Sort in memory to avoid requiring a composite index  
       bookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return bookings;
