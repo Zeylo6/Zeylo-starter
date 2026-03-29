@@ -14,6 +14,7 @@ import 'package:zeylo/features/profile/presentation/widgets/photo_grid.dart';
 import 'package:zeylo/features/profile/presentation/widgets/profile_header.dart';
 import '../widgets/past_experience_tile.dart';
 import '../../../booking/presentation/providers/booking_provider.dart';
+import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../favorites/presentation/widgets/favorites_bottom_sheet.dart';
 
@@ -319,17 +320,8 @@ class ProfileScreen extends ConsumerWidget {
                         message: 'No past experiences yet',
                       );
                     }
-                    return Column(
-                      children: pastBookings.map<Widget>((booking) {
-                        return PastExperienceTile(
-                          experienceId: booking.experienceId,
-                          title: booking.experienceTitle,
-                          price: booking.totalPrice,
-                          date: booking.date,
-                          status: booking.status,
-                          imageUrl: booking.experienceCoverImage,
-                        );
-                      }).toList(),
+                    return _PastExperiencesSection(
+                      pastBookings: pastBookings,
                     );
                   },
                   loading: () => const Padding(
@@ -811,6 +803,99 @@ class _GlassIconButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Collapsible past experiences section that shows 3 most recent initially
+class _PastExperiencesSection extends StatefulWidget {
+  final List<BookingEntity> pastBookings;
+
+  const _PastExperiencesSection({required this.pastBookings});
+
+  @override
+  State<_PastExperiencesSection> createState() =>
+      _PastExperiencesSectionState();
+}
+
+class _PastExperiencesSectionState extends State<_PastExperiencesSection> {
+  bool _showAll = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bookings = widget.pastBookings;
+    final hasMore = bookings.length > 3;
+    final displayedBookings =
+        _showAll ? bookings : bookings.take(3).toList();
+
+    return Column(
+      children: [
+        ...displayedBookings.map<Widget>((booking) {
+          return GestureDetector(
+            onTap: () => context.push('/experience/${booking.experienceId}'),
+            child: PastExperienceTile(
+              experienceId: booking.experienceId,
+              title: booking.experienceTitle,
+              price: booking.totalPrice,
+              date: booking.date,
+              status: booking.status,
+              imageUrl: booking.experienceCoverImage,
+            ),
+          );
+        }),
+        if (hasMore)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: GestureDetector(
+              onTap: () => setState(() => _showAll = !_showAll),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withOpacity(0.08),
+                          AppColors.gradientEnd.withOpacity(0.04),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _showAll
+                              ? 'Show Less'
+                              : 'View All ${bookings.length} Experiences',
+                          style: AppTypography.labelLarge.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          _showAll
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

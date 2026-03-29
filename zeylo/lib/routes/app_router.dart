@@ -58,6 +58,7 @@ import '../features/community/presentation/screens/create_moment_screen.dart';
 import '../features/community/presentation/screens/create_post_screen.dart';
 import '../features/community/presentation/screens/comments_screen.dart';
 import '../features/community/presentation/screens/moment_viewer_screen.dart';
+import '../features/community/presentation/screens/user_posts_screen.dart';
 import '../features/community/domain/entities/moment_entity.dart';
 
 // Messaging
@@ -498,6 +499,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/create-post',
         builder: (context, state) => const CreatePostScreen(),
+      ),
+      GoRoute(
+        path: '/user-posts',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return UserPostsScreen(
+            userId: extra?['userId'] ?? '',
+            userName: extra?['userName'],
+            userAvatarUrl: extra?['userAvatarUrl'],
+          );
+        },
       ),
       GoRoute(
         path: '/post-comments/:id',
