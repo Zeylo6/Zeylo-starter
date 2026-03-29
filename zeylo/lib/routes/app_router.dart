@@ -2,6 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_typography.dart';
 
 // Auth provider
 import '../features/auth/presentation/providers/auth_provider.dart';
@@ -260,7 +263,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/admin-dashboard',
             builder: (context, state) => const AdminDashboardScreen(),
           ),
-          
+
           // Admin Experiences route
           GoRoute(
             path: '/admin/experiences',
@@ -610,6 +613,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+    final isDesktopWeb = MediaQuery.of(context).size.width >= 1100;
 
     int getSelectedIndex() {
       if (location.startsWith('/home')) return 0;
@@ -638,6 +642,82 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           context.go('/notifications');
           break;
       }
+    }
+
+    if (isDesktopWeb) {
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFF6F8FF),
+                Color(0xFFF9F7FF),
+                Color(0xFFF4F6FF),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  _DesktopSidebar(
+                    selectedIndex: getSelectedIndex(),
+                    unreadCountAsync: unreadCountAsync,
+                    onNavTap: onNavTap,
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: const Color(0xFFE6EAF5)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x140F172A),
+                            blurRadius: 32,
+                            offset: Offset(0, 14),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder: (child, animation) {
+                            final offsetAnimation = Tween<Offset>(
+                              begin: const Offset(0.02, 0),
+                              end: Offset.zero,
+                            ).animate(animation);
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: offsetAnimation,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: KeyedSubtree(
+                            key: ValueKey(location),
+                            child: widget.child,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
@@ -697,6 +777,228 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
             label: 'Notifications',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopSidebar extends StatelessWidget {
+  const _DesktopSidebar({
+    required this.selectedIndex,
+    required this.unreadCountAsync,
+    required this.onNavTap,
+  });
+
+  final int selectedIndex;
+  final AsyncValue<int> unreadCountAsync;
+  final ValueChanged<int> onNavTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final navItems = [
+      _DesktopNavItemData(
+        label: 'Home',
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home,
+      ),
+      _DesktopNavItemData(
+        label: 'Discover',
+        icon: Icons.travel_explore_outlined,
+        selectedIcon: Icons.travel_explore,
+      ),
+      _DesktopNavItemData(
+        label: 'Community',
+        icon: Icons.groups_outlined,
+        selectedIcon: Icons.groups,
+      ),
+      _DesktopNavItemData(
+        label: 'Profile',
+        icon: Icons.person_outline,
+        selectedIcon: Icons.person,
+      ),
+      _DesktopNavItemData(
+        label: 'Notifications',
+        icon: Icons.notifications_none_outlined,
+        selectedIcon: Icons.notifications,
+      ),
+    ];
+
+    return Container(
+      width: 290,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: const Color(0xCCFFFFFF),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE6EAF5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F0F172A),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.explore_rounded, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Zeylo',
+            style: AppTypography.headlineSmall.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Explore experiences, crafted for desktop.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Divider(height: 1),
+          const SizedBox(height: 18),
+          Expanded(
+            child: ListView.builder(
+              itemCount: navItems.length,
+              itemBuilder: (context, index) {
+                final item = navItems[index];
+                final unreadCount = unreadCountAsync.value ?? 0;
+                return _DesktopNavTile(
+                  label: item.label,
+                  icon: item.icon,
+                  selectedIcon: item.selectedIcon,
+                  selected: selectedIndex == index,
+                  badgeCount:
+                      item.label == 'Notifications' ? unreadCount : null,
+                  onTap: () => onNavTap(index),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopNavItemData {
+  const _DesktopNavItemData({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+  });
+
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+}
+
+class _DesktopNavTile extends StatefulWidget {
+  const _DesktopNavTile({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.selected,
+    required this.onTap,
+    this.badgeCount,
+  });
+
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final bool selected;
+  final VoidCallback onTap;
+  final int? badgeCount;
+
+  @override
+  State<_DesktopNavTile> createState() => _DesktopNavTileState();
+}
+
+class _DesktopNavTileState extends State<_DesktopNavTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.selected;
+    final hovered = _hovered && !active;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: active
+                  ? const Color(0x1A8B5CF6)
+                  : hovered
+                      ? const Color(0x0D8B5CF6)
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: active ? const Color(0x4D8B5CF6) : Colors.transparent,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  active ? widget.selectedIcon : widget.icon,
+                  color: active ? AppColors.primary : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                      color: active
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                if ((widget.badgeCount ?? 0) > 0)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${widget.badgeCount}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
