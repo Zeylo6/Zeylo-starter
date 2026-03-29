@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_typography.dart';
 
 // Auth provider
 import '../features/auth/presentation/providers/auth_provider.dart';
@@ -701,63 +704,192 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       }
     }
 
+    final selectedIndex = getSelectedIndex();
+
     return Scaffold(
       body: widget.child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: getSelectedIndex(),
-        onTap: onNavTap,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Discover',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.groups_outlined),
-            activeIcon: Icon(Icons.groups),
-            label: 'Community',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Badge(
-              label: unreadCountAsync.when(
-                data: (count) => count > 0 ? Text(count.toString()) : null,
-                loading: () => null,
-                error: (_, __) => null,
+      extendBody: true,
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.6),
+                  Colors.white.withOpacity(0.4),
+                ],
               ),
-              isLabelVisible: unreadCountAsync.when(
-                data: (count) => count > 0,
-                loading: () => false,
-                error: (_, __) => false,
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withOpacity(0.5),
+                  width: 0.8,
+                ),
               ),
-              child: const Icon(Icons.notifications_none_outlined),
             ),
-            activeIcon: Badge(
-              label: unreadCountAsync.when(
-                data: (count) => count > 0 ? Text(count.toString()) : null,
-                loading: () => null,
-                error: (_, __) => null,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _GlassNavItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'Home',
+                      isActive: selectedIndex == 0,
+                      onTap: () => onNavTap(0),
+                    ),
+                    _GlassNavItem(
+                      icon: Icons.explore_outlined,
+                      activeIcon: Icons.explore_rounded,
+                      label: 'Discover',
+                      isActive: selectedIndex == 1,
+                      onTap: () => onNavTap(1),
+                    ),
+                    _GlassNavItem(
+                      icon: Icons.groups_outlined,
+                      activeIcon: Icons.groups_rounded,
+                      label: 'Community',
+                      isActive: selectedIndex == 2,
+                      onTap: () => onNavTap(2),
+                    ),
+                    _GlassNavItem(
+                      icon: Icons.person_outline_rounded,
+                      activeIcon: Icons.person_rounded,
+                      label: 'Profile',
+                      isActive: selectedIndex == 3,
+                      onTap: () => onNavTap(3),
+                    ),
+                    _GlassNavItem(
+                      icon: Icons.notifications_none_rounded,
+                      activeIcon: Icons.notifications_rounded,
+                      label: 'Alerts',
+                      isActive: selectedIndex == 4,
+                      onTap: () => onNavTap(4),
+                      badge: unreadCountAsync.when(
+                        data: (count) => count > 0 ? count : null,
+                        loading: () => null,
+                        error: (_, __) => null,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              isLabelVisible: unreadCountAsync.when(
-                data: (count) => count > 0,
-                loading: () => false,
-                error: (_, __) => false,
-              ),
-              child: const Icon(Icons.notifications),
             ),
-            label: 'Notifications',
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Glass bottom navigation item
+class _GlassNavItem extends StatelessWidget {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+  final int? badge;
+
+  const _GlassNavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isActive ? 14 : 12,
+          vertical: 6,
+        ),
+        decoration: isActive
+            ? BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withOpacity(0.15),
+                    AppColors.gradientEnd.withOpacity(0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.2),
+                  width: 1,
+                ),
+              )
+            : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  isActive ? activeIcon : icon,
+                  size: 24,
+                  color: isActive ? AppColors.primary : AppColors.textHint,
+                ),
+                if (badge != null)
+                  Positioned(
+                    top: -4,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.error,
+                            AppColors.error.withOpacity(0.85),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.error.withOpacity(0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        badge.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? AppColors.primary : AppColors.textHint,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

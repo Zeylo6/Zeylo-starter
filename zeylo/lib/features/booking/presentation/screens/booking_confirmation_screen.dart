@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -38,50 +39,113 @@ class BookingConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: InkWell(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(
-              Icons.arrow_back,
-              color: AppColors.textInverse,
-              size: 24,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(64),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.5),
+                    Colors.white.withOpacity(0.3),
+                  ],
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withOpacity(0.5),
+                    width: 0.8,
+                  ),
+                ),
+              ),
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.arrow_back_rounded,
+                          color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  'Booking Confirmed',
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                centerTitle: false,
+              ),
             ),
           ),
         ),
-        title: Text(
-          'Booking Confirmed',
-          style: AppTypography.headlineSmall.copyWith(
-            color: AppColors.primary,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF3EEFF),
+              Color(0xFFF9F7FF),
+              Color(0xFFEDE9FE),
+              Color(0xFFF5F3FF),
+            ],
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
-        centerTitle: false,
-      ),
-      body: SingleChildScrollView(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: AppSpacing.xl),
 
-            // Success Icon
+            // Success Icon with glow
             Container(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.success.withOpacity(0.15),
+                    AppColors.success.withOpacity(0.06),
+                  ],
+                ),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.success.withOpacity(0.2),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.success.withOpacity(0.2),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.check_circle,
+                Icons.check_circle_rounded,
                 color: AppColors.success,
                 size: 48,
               ),
@@ -108,13 +172,27 @@ class BookingConfirmationScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xl),
 
-            // Booking Details Card
-            Container(
+            // Glass Booking Details Card
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.border, width: 1),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.55),
+                    Colors.white.withOpacity(0.3),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.65),
+                  width: 1.2,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,14 +216,29 @@ class BookingConfirmationScreen extends StatelessWidget {
                 ],
               ),
             ),
+            ),
+            ),
             const SizedBox(height: AppSpacing.xl),
 
-            // Next Steps
-            Container(
+            // Glass Next Steps
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withOpacity(0.1),
+                    AppColors.gradientEnd.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.15),
+                  width: 1,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,6 +270,8 @@ class BookingConfirmationScreen extends StatelessWidget {
                 ],
               ),
             ),
+            ),
+            ),
             const SizedBox(height: AppSpacing.xl),
 
             // Continue Button
@@ -192,6 +287,7 @@ class BookingConfirmationScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
           ],
         ),
+      ),
       ),
     );
   }

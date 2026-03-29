@@ -1,9 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 
-/// Stats row widget showing followers, following, and posts
+/// Glassmorphism stats row showing followers, following, and posts
 class ProfileStatsRow extends StatelessWidget {
   final int followers;
   final int following;
@@ -22,24 +23,49 @@ class ProfileStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildStatItem(
-          value: _formatNumber(followers),
-          label: 'Followers',
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.md,
+            horizontal: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.45),
+                Colors.white.withOpacity(0.2),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.55),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatItem(
+                value: _formatNumber(followers),
+                label: 'Followers',
+              ),
+              _buildGlassDivider(),
+              _buildStatItem(
+                value: _formatNumber(following),
+                label: 'Following',
+              ),
+              _buildGlassDivider(),
+              _buildStatItem(
+                value: _formatNumber(posts),
+                label: 'Posts',
+              ),
+            ],
+          ),
         ),
-        _buildDivider(),
-        _buildStatItem(
-          value: _formatNumber(following),
-          label: 'Following',
-        ),
-        _buildDivider(),
-        _buildStatItem(
-          value: _formatNumber(posts),
-          label: 'Posts',
-        ),
-      ],
+      ),
     );
   }
 
@@ -85,11 +111,21 @@ class ProfileStatsRow extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildGlassDivider() {
     return Container(
       width: 1,
       height: 24,
-      color: AppColors.border,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            AppColors.primary.withOpacity(0.15),
+            Colors.white.withOpacity(0.1),
+          ],
+        ),
+      ),
     );
   }
 

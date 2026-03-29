@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -90,47 +91,115 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
     final bookingsStream = _getStream(userId);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.background,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'My Bookings',
-              style: AppTypography.headlineMedium.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(120),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.5),
+                    Colors.white.withOpacity(0.3),
+                  ],
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withOpacity(0.5),
+                    width: 0.8,
+                  ),
+                ),
+              ),
+              child: AppBar(
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                leading: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.6),
+                                Colors.white.withOpacity(0.3),
+                              ],
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.7),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: const Icon(Icons.arrow_back_rounded,
+                              size: 20, color: AppColors.textPrimary),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'My Bookings',
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      'Track all your experiences',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                bottom: TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppColors.primary,
+                  indicatorWeight: 2.5,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  labelStyle: AppTypography.labelMedium
+                      .copyWith(fontWeight: FontWeight.w700),
+                  tabs: const [
+                    Tab(text: 'Upcoming'),
+                    Tab(text: 'Ongoing'),
+                    Tab(text: 'Past'),
+                  ],
+                ),
               ),
             ),
-            Text(
-              'Track all your experiences',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          labelStyle:
-              AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700),
-          tabs: const [
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Ongoing'),
-            Tab(text: 'Past'),
-          ],
+          ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF3EEFF),
+              Color(0xFFF9F7FF),
+              Color(0xFFEDE9FE),
+              Color(0xFFF5F3FF),
+            ],
+            stops: [0.0, 0.3, 0.7, 1.0],
+          ),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
         stream: bookingsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -201,6 +270,7 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
             ],
           );
         },
+      ),
       ),
     );
   }

@@ -1,42 +1,17 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 
-/// Social login button for Apple and Google authentication
-///
-/// Features:
-/// - Outlined style with icon support
-/// - Displays provider name (Apple or Google)
-/// - Loading state support
-/// - Full width by default
-///
-/// Example:
-/// ```dart
-/// SocialLoginButton(
-///   icon: Image.asset('assets/google_icon.png'),
-///   label: 'Login with Google',
-///   onTap: () => print('Google login'),
-/// )
-/// ```
+/// Glassmorphism social login button
 class SocialLoginButton extends StatelessWidget {
-  /// The callback triggered when button is tapped
   final VoidCallback? onTap;
-
-  /// The button label text
   final String label;
-
-  /// The icon widget to display
   final Widget icon;
-
-  /// Whether the button is in loading state
   final bool isLoading;
-
-  /// Button height (default 52)
   final double height;
-
-  /// Border radius (default 16)
   final double borderRadius;
 
   const SocialLoginButton({
@@ -56,49 +31,59 @@ class SocialLoginButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isEnabled ? onTap : null,
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isEnabled
-                    ? AppColors.primary
-                    : AppColors.primary.withOpacity(0.5),
-                width: 1.5,
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: isEnabled ? onTap : null,
               borderRadius: BorderRadius.circular(borderRadius),
-            ),
-            child: Center(
-              child: isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: icon,
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(
-                          label,
-                          style: AppTypography.labelLarge.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(isEnabled ? 0.55 : 0.35),
+                      Colors.white.withOpacity(isEnabled ? 0.3 : 0.18),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: Border.all(
+                    color: isEnabled
+                        ? AppColors.primary.withOpacity(0.25)
+                        : AppColors.primary.withOpacity(0.12),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
+                  ],
+                ),
+                child: Center(
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 24, height: 24,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(width: 24, height: 24, child: icon),
+                            const SizedBox(width: AppSpacing.md),
+                            Text(label, style: AppTypography.labelLarge.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                ),
+              ),
             ),
           ),
         ),

@@ -156,14 +156,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              AppColors.background,
-              AppColors.primaryExtraLight.withOpacity(0.3),
+              Color(0xFFF3EEFF),
+              Color(0xFFF9F7FF),
+              Color(0xFFEDE9FE),
+              Color(0xFFF5F3FF),
             ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: SafeArea(
@@ -177,22 +180,37 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 Hero(
                   tag: 'app_logo',
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      gradient: AppColors.primaryGradient,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          color: AppColors.primary.withOpacity(0.35),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: AppColors.gradientEnd.withOpacity(0.2),
+                          blurRadius: 32,
+                          spreadRadius: -4,
+                          offset: const Offset(0, 12),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.blur_on_rounded,
-                      size: 40,
-                      color: AppColors.primary,
+                    child: const Center(
+                      child: Text(
+                        'Z',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                          letterSpacing: -1,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -388,21 +406,41 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.surface : AppColors.surface.withOpacity(0.5),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isSelected
+                ? [
+                    AppColors.primary.withOpacity(0.12),
+                    AppColors.gradientEnd.withOpacity(0.06),
+                  ]
+                : [
+                    Colors.white.withOpacity(0.55),
+                    Colors.white.withOpacity(0.3),
+                  ],
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-            width: isSelected ? 2 : 1,
+            color: isSelected
+                ? AppColors.primary.withOpacity(0.4)
+                : Colors.white.withOpacity(0.65),
+            width: isSelected ? 1.8 : 1.2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.1),
-                    blurRadius: 12,
+                    color: AppColors.primary.withOpacity(0.15),
+                    blurRadius: 14,
                     offset: const Offset(0, 4),
                   )
                 ]
-              : [],
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Row(
           children: [

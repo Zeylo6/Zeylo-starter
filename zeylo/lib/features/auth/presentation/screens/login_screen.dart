@@ -194,14 +194,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              AppColors.background,
-              AppColors.primaryExtraLight.withOpacity(0.3),
+              Color(0xFFF3EEFF),
+              Color(0xFFF9F7FF),
+              Color(0xFFEDE9FE),
+              Color(0xFFF5F3FF),
             ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: SafeArea(
@@ -215,22 +218,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Hero(
                   tag: 'app_logo',
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      gradient: AppColors.primaryGradient,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          color: AppColors.primary.withOpacity(0.35),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: AppColors.gradientEnd.withOpacity(0.2),
+                          blurRadius: 32,
+                          spreadRadius: -4,
+                          offset: const Offset(0, 12),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.blur_on_rounded,
-                      size: 48,
-                      color: AppColors.primary,
+                    child: const Center(
+                      child: Text(
+                        'Z',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                          letterSpacing: -1,
+                        ),
+                      ),
                     ),
                   ),
                 ),
