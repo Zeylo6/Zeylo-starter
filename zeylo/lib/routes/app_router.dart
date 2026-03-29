@@ -718,8 +718,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.6),
-                  Colors.white.withOpacity(0.4),
+                  Colors.white.withOpacity(0.95),
+                  Colors.white.withOpacity(0.85),
                 ],
               ),
               border: Border(

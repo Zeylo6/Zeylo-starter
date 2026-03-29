@@ -236,169 +236,172 @@ class NotificationsScreen extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         child: Column(
-                          children: notifications.map((doc) {
-                            final data = doc.data() as Map<String, dynamic>;
-                            final title = data['title'] ?? 'Notification';
-                            final message = data['message'] ?? '';
-                            final isRead = data['isRead'] ?? false;
-                            final timestamp = data['createdAt'] as Timestamp?;
+                          children: [
+                            ...notifications.map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              final title = data['title'] ?? 'Notification';
+                              final message = data['message'] ?? '';
+                              final isRead = data['isRead'] ?? false;
+                              final timestamp = data['createdAt'] as Timestamp?;
 
-                            String timeAgo = '';
-                            if (timestamp != null) {
-                              timeAgo = DateFormat.yMMMd()
-                                  .add_jm()
-                                  .format(timestamp.toDate());
-                            }
+                              String timeAgo = '';
+                              if (timestamp != null) {
+                                timeAgo = DateFormat.yMMMd()
+                                    .add_jm()
+                                    .format(timestamp.toDate());
+                              }
 
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(AppRadius.xl),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: isRead
-                                            ? [
-                                                Colors.white.withOpacity(0.45),
-                                                Colors.white.withOpacity(0.25),
-                                              ]
-                                            : [
-                                                AppColors.primary.withOpacity(0.1),
-                                                Colors.white.withOpacity(0.4),
-                                              ],
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: isRead
+                                              ? [
+                                                  Colors.white.withOpacity(0.45),
+                                                  Colors.white.withOpacity(0.25),
+                                                ]
+                                              : [
+                                                  AppColors.primary.withOpacity(0.1),
+                                                  Colors.white.withOpacity(0.4),
+                                                ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(AppRadius.xl),
+                                        border: Border.all(
+                                          color: isRead
+                                              ? Colors.white.withOpacity(0.6)
+                                              : AppColors.primary.withOpacity(0.3),
+                                          width: 1.2,
+                                        ),
                                       ),
-                                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                                      border: Border.all(
-                                        color: isRead
-                                            ? Colors.white.withOpacity(0.6)
-                                            : AppColors.primary.withOpacity(0.3),
-                                        width: 1.2,
-                                      ),
-                                    ),
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                                      onTap: () {
-                                        if (data['type'] == 'review_report' &&
-                                            data['reviewId'] != null) {
-                                          _showReviewManagementSheet(
-                                              context, ref, data['reviewId'], doc.reference);
-                                        } else if (!isRead) {
-                                          doc.reference.update({'isRead': true});
-                                        }
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(AppSpacing.md),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            // Glass icon
-                                            ClipRRect(
-                                              borderRadius: BorderRadius.circular(20),
-                                              child: BackdropFilter(
-                                                filter: ImageFilter.blur(
-                                                    sigmaX: 6, sigmaY: 6),
-                                                child: Container(
-                                                  width: 42,
-                                                  height: 42,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    gradient: LinearGradient(
-                                                      colors: isRead
-                                                          ? [
-                                                              Colors.white.withOpacity(0.5),
-                                                              Colors.white.withOpacity(0.25),
-                                                            ]
-                                                          : [
-                                                              _getColorForType(data['type'])
-                                                                  .withOpacity(0.15),
-                                                              _getColorForType(data['type'])
-                                                                  .withOpacity(0.06),
-                                                            ],
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(AppRadius.xl),
+                                        onTap: () {
+                                          if (data['type'] == 'review_report' &&
+                                              data['reviewId'] != null) {
+                                            _showReviewManagementSheet(
+                                                context, ref, data['reviewId'], doc.reference);
+                                          } else if (!isRead) {
+                                            doc.reference.update({'isRead': true});
+                                          }
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(AppSpacing.md),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              // Glass icon
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(20),
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(
+                                                      sigmaX: 6, sigmaY: 6),
+                                                  child: Container(
+                                                    width: 42,
+                                                    height: 42,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      gradient: LinearGradient(
+                                                        colors: isRead
+                                                            ? [
+                                                                Colors.white.withOpacity(0.5),
+                                                                Colors.white.withOpacity(0.25),
+                                                              ]
+                                                            : [
+                                                                _getColorForType(data['type'])
+                                                                    .withOpacity(0.15),
+                                                                _getColorForType(data['type'])
+                                                                    .withOpacity(0.06),
+                                                              ],
+                                                      ),
+                                                      border: Border.all(
+                                                        color: isRead
+                                                            ? Colors.white.withOpacity(0.5)
+                                                            : _getColorForType(data['type'])
+                                                                .withOpacity(0.2),
+                                                        width: 1,
+                                                      ),
                                                     ),
-                                                    border: Border.all(
+                                                    child: Icon(
+                                                      _getIconForType(data['type']),
+                                                      size: 20,
                                                       color: isRead
-                                                          ? Colors.white.withOpacity(0.5)
-                                                          : _getColorForType(data['type'])
-                                                              .withOpacity(0.2),
-                                                      width: 1,
+                                                          ? AppColors.textSecondary
+                                                          : _getColorForType(data['type']),
                                                     ),
-                                                  ),
-                                                  child: Icon(
-                                                    _getIconForType(data['type']),
-                                                    size: 20,
-                                                    color: isRead
-                                                        ? AppColors.textSecondary
-                                                        : _getColorForType(data['type']),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(width: AppSpacing.md),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    title,
-                                                    style: AppTypography.labelLarge.copyWith(
-                                                      fontWeight: isRead
-                                                          ? FontWeight.w500
-                                                          : FontWeight.w700,
-                                                      color: isRead
-                                                          ? AppColors.textSecondary
-                                                          : AppColors.textPrimary,
+                                              const SizedBox(width: AppSpacing.md),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      title,
+                                                      style: AppTypography.labelLarge.copyWith(
+                                                        fontWeight: isRead
+                                                            ? FontWeight.w500
+                                                            : FontWeight.w700,
+                                                        color: isRead
+                                                            ? AppColors.textSecondary
+                                                            : AppColors.textPrimary,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: AppSpacing.xs),
-                                                  Text(
-                                                    message,
-                                                    style: AppTypography.bodyMedium.copyWith(
-                                                      color: isRead
-                                                          ? AppColors.textSecondary
-                                                          : AppColors.textPrimary,
+                                                    const SizedBox(height: AppSpacing.xs),
+                                                    Text(
+                                                      message,
+                                                      style: AppTypography.bodyMedium.copyWith(
+                                                        color: isRead
+                                                            ? AppColors.textSecondary
+                                                            : AppColors.textPrimary,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: AppSpacing.xs),
-                                                  Text(
-                                                    timeAgo,
-                                                    style: AppTypography.bodySmall.copyWith(
-                                                        color: AppColors.textHint),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            if (!isRead)
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                margin: const EdgeInsets.only(top: 6),
-                                                decoration: BoxDecoration(
-                                                  gradient: AppColors.primaryGradient,
-                                                  shape: BoxShape.circle,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: AppColors.primary
-                                                          .withOpacity(0.4),
-                                                      blurRadius: 6,
+                                                    const SizedBox(height: AppSpacing.xs),
+                                                    Text(
+                                                      timeAgo,
+                                                      style: AppTypography.bodySmall.copyWith(
+                                                          color: AppColors.textHint),
                                                     ),
                                                   ],
                                                 ),
                                               ),
-                                          ],
+                                              if (!isRead)
+                                                Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  margin: const EdgeInsets.only(top: 6),
+                                                  decoration: BoxDecoration(
+                                                    gradient: AppColors.primaryGradient,
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: AppColors.primary
+                                                            .withOpacity(0.4),
+                                                        blurRadius: 6,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
+                              );
+                            }).toList(),
+                            const SizedBox(height: 120.0),
+                          ],
                         ),
                       );
                     },

@@ -191,7 +191,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: _buildSpeedDial(context, isHost),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0),
+        child: _buildSpeedDial(context, isHost),
+      ),
     );
   }
 
@@ -647,12 +650,10 @@ class _TopBar extends ConsumerWidget {
 class _GlassIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final double size;
 
   const _GlassIconButton({
     required this.icon,
     required this.onTap,
-    this.size = 42,
   });
 
   @override
@@ -660,12 +661,12 @@ class _GlassIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(size / 2),
+        borderRadius: BorderRadius.circular(42.0 / 2),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            width: size,
-            height: size,
+            width: 42.0,
+            height: 42.0,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
