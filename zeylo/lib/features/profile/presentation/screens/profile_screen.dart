@@ -103,6 +103,7 @@ class ProfileScreen extends ConsumerWidget {
                   pinned: false,
                   toolbarHeight: 64,
                   automaticallyImplyLeading: false,
+                  leadingWidth: !isCurrentUser ? 56.0 : 80.0,
                   flexibleSpace: ClipRRect(
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
