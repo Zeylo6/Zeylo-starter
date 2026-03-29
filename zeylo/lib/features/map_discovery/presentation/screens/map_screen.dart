@@ -521,6 +521,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Future<void> _navigateToItem(NearbyItem item) async {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ClipRRect(
         borderRadius:

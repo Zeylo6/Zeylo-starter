@@ -58,6 +58,7 @@ import '../features/community/presentation/screens/create_moment_screen.dart';
 import '../features/community/presentation/screens/create_post_screen.dart';
 import '../features/community/presentation/screens/comments_screen.dart';
 import '../features/community/presentation/screens/moment_viewer_screen.dart';
+import '../features/community/presentation/screens/user_posts_screen.dart';
 import '../features/community/domain/entities/moment_entity.dart';
 
 // Messaging
@@ -500,6 +501,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const CreatePostScreen(),
       ),
       GoRoute(
+        path: '/user-posts',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return UserPostsScreen(
+            userId: extra?['userId'] ?? '',
+            userName: extra?['userName'],
+            userAvatarUrl: extra?['userAvatarUrl'],
+          );
+        },
+      ),
+      GoRoute(
         path: '/post-comments/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
@@ -718,8 +730,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.6),
-                  Colors.white.withOpacity(0.4),
+                  Colors.white.withOpacity(0.95),
+                  Colors.white.withOpacity(0.85),
                 ],
               ),
               border: Border(

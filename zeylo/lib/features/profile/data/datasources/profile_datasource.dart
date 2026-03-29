@@ -35,13 +35,15 @@ abstract class ProfileDatasource {
   Future<bool> isFollowing(String currentUserId, String targetUserId);
 
   /// Get suggested users to follow
-  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId, {int limit = 10});
+  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId,
+      {int limit = 10});
 
   /// Upload profile image to storage
   Future<String> uploadProfileImage(String userId, Uint8List imageBytes);
 
   /// Synchronize host profile changes to their experiences
-  Future<void> syncHostProfileToExperiences(String hostId, String name, String? photoUrl);
+  Future<void> syncHostProfileToExperiences(
+      String hostId, String name, String? photoUrl);
 
   /// Search for users prefix-matching a query in their displayName
   Future<List<UserProfileModel>> searchProfiles(String query);
@@ -110,10 +112,8 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
 
       for (final followerDoc in followersSnapshot.docs) {
         final followerId = followerDoc.id;
-        final userDoc = await _firestore
-            .collection(_usersCollection)
-            .doc(followerId)
-            .get();
+        final userDoc =
+            await _firestore.collection(_usersCollection).doc(followerId).get();
 
         if (userDoc.exists) {
           profiles.add(
@@ -143,10 +143,8 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
 
       for (final followingDoc in followingSnapshot.docs) {
         final targetId = followingDoc.id;
-        final userDoc = await _firestore
-            .collection(_usersCollection)
-            .doc(targetId)
-            .get();
+        final userDoc =
+            await _firestore.collection(_usersCollection).doc(targetId).get();
 
         if (userDoc.exists) {
           profiles.add(
@@ -182,19 +180,13 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
         .set({'followedAt': Timestamp.now()});
 
     // Update follower/following counts
-    await _firestore
-        .collection(_usersCollection)
-        .doc(currentUserId)
-        .update({
-          'followingCount': FieldValue.increment(1),
-        });
+    await _firestore.collection(_usersCollection).doc(currentUserId).update({
+      'followingCount': FieldValue.increment(1),
+    });
 
-    await _firestore
-        .collection(_usersCollection)
-        .doc(targetUserId)
-        .update({
-          'followerCount': FieldValue.increment(1),
-        });
+    await _firestore.collection(_usersCollection).doc(targetUserId).update({
+      'followerCount': FieldValue.increment(1),
+    });
   }
 
   @override
@@ -216,19 +208,13 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
         .delete();
 
     // Update follower/following counts
-    await _firestore
-        .collection(_usersCollection)
-        .doc(currentUserId)
-        .update({
-          'followingCount': FieldValue.increment(-1),
-        });
+    await _firestore.collection(_usersCollection).doc(currentUserId).update({
+      'followingCount': FieldValue.increment(-1),
+    });
 
-    await _firestore
-        .collection(_usersCollection)
-        .doc(targetUserId)
-        .update({
-          'followerCount': FieldValue.increment(-1),
-        });
+    await _firestore.collection(_usersCollection).doc(targetUserId).update({
+      'followerCount': FieldValue.increment(-1),
+    });
   }
 
   @override
@@ -248,13 +234,15 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
   }
 
   @override
-  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
+  Future<List<UserProfileModel>> getSuggestedUsers(String currentUserId,
+      {int limit = 10}) async {
     try {
       // Get users ordered by follower count
       final snapshot = await _firestore
           .collection(_usersCollection)
           .orderBy('followerCount', descending: true)
-          .limit(limit + 5) // Fetch a few extra in case we need to filter out the current user or already followed users
+          .limit(limit +
+              5) // Fetch a few extra in case we need to filter out the current user or already followed users
           .get();
 
       // Get the list of users the current user is already following
@@ -263,7 +251,7 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
           .doc(currentUserId)
           .collection(_followingCollection)
           .get();
-          
+
       final followingIds = followingSnapshot.docs.map((doc) => doc.id).toSet();
       followingIds.add(currentUserId); // Add current user to filter out
 
@@ -288,13 +276,14 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
     const uploadPreset = 'Zeylo_images';
 
     try {
-      final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
-      
+      final url =
+          Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+
       final request = http.MultipartRequest('POST', url)
         ..fields['upload_preset'] = uploadPreset
         ..files.add(http.MultipartFile.fromBytes(
-          'file', 
-          imageBytes, 
+          'file',
+          imageBytes,
           filename: 'profile_$userId.jpg',
         ));
 
@@ -307,7 +296,8 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
         return jsonMap['secure_url'];
       } else {
         debugPrint('Cloudinary Error: ${jsonMap['error']['message']}');
-        throw Exception('Cloudinary upload failed: ${jsonMap['error']['message']}');
+        throw Exception(
+            'Cloudinary upload failed: ${jsonMap['error']['message']}');
       }
     } catch (e) {
       debugPrint("Upload error: $e");
@@ -346,29 +336,31 @@ class ProfileFirestoreDatasource implements ProfileDatasource {
 
     try {
       final lowercaseQuery = query.toLowerCase();
-      
+
       // We will perform a simple where query. Note that to support a true
       // prefix search across user names regardless of casing, it's best to have
-      // a 'searchKeywords' or lowercase name array. Since we only have 'displayName' 
-      // or similar, we'll fetch a batch and filter client side if the dataset isn't huge, 
-      // OR we can rely on a basic prefix search on displayName assuming case sensitivity, 
-      // but let's just do a basic fetch and simple filter for basic implementation, 
+      // a 'searchKeywords' or lowercase name array. Since we only have 'displayName'
+      // or similar, we'll fetch a batch and filter client side if the dataset isn't huge,
+      // OR we can rely on a basic prefix search on displayName assuming case sensitivity,
+      // but let's just do a basic fetch and simple filter for basic implementation,
       // or simply rely on Firestore >= and <=. Let's do a reliable fetch-filter for now
-      // since we don't know the exact schema optimizations. 
+      // since we don't know the exact schema optimizations.
       // Assuming a relatively small user base for Zeylo right now:
       final snapshot = await _firestore.collection(_usersCollection).get();
-      
+
       final results = <UserProfileModel>[];
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final displayName = (data['displayName'] as String?)?.toLowerCase() ?? '';
+        final displayName =
+            (data['displayName'] as String?)?.toLowerCase() ?? '';
         final email = (data['email'] as String?)?.toLowerCase() ?? '';
-        
-        if (displayName.contains(lowercaseQuery) || email.contains(lowercaseQuery)) {
+
+        if (displayName.contains(lowercaseQuery) ||
+            email.contains(lowercaseQuery)) {
           results.add(UserProfileModel.fromFirestore(doc));
         }
       }
-      
+
       return results;
     } catch (e) {
       debugPrint('Search profiles error: $e');

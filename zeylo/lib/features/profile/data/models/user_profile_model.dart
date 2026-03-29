@@ -41,16 +41,21 @@ class UserProfileModel extends UserProfileEntity {
       phone: data['phone'] as String? ?? data['phoneNumber'] as String?,
       photoUrl: data['photoUrl'] as String?,
       bio: data['bio'] as String?,
-      followerCount: data['followerCount'] as int? ?? data['followersCount'] as int? ?? 0,
+      followerCount:
+          data['followerCount'] as int? ?? data['followersCount'] as int? ?? 0,
       followingCount: data['followingCount'] as int? ?? 0,
       postCount: data['postCount'] as int? ?? data['postsCount'] as int? ?? 0,
       isVerified: data['isVerified'] as bool? ?? false,
       isHostVerified: data['hostVerificationStatus'] == 'verified',
       isSuperhost: data['isSuperhost'] as bool? ?? false,
-      averageRating: (data['stats']?['averageRating'] as num?)?.toDouble() ?? (data['averageRating'] as num?)?.toDouble(),
-      ratingCount: (data['stats']?['totalReviews'] as num?)?.toInt() ?? data['ratingCount'] as int? ?? 0,
+      averageRating: (data['stats']?['averageRating'] as num?)?.toDouble() ??
+          (data['averageRating'] as num?)?.toDouble(),
+      ratingCount: (data['stats']?['totalReviews'] as num?)?.toInt() ??
+          data['ratingCount'] as int? ??
+          0,
       createdAt: parseDate(data['createdAt']),
-      updatedAt: data['updatedAt'] != null ? parseDate(data['updatedAt']) : null,
+      updatedAt:
+          data['updatedAt'] != null ? parseDate(data['updatedAt']) : null,
     );
   }
 

@@ -31,7 +31,8 @@ class ProfileHeader extends ConsumerWidget {
     final isCurrentUser = currentUserId == profile.id;
 
     final isFollowing = !isCurrentUser && currentUserId != null
-        ? ref.watch(isFollowingProvider((currentUserId, profile.id))).value ?? false
+        ? ref.watch(isFollowingProvider((currentUserId, profile.id))).value ??
+            false
         : false;
 
     return Padding(
@@ -261,9 +262,7 @@ class ProfileHeader extends ConsumerWidget {
             child: Text(
               isFollowing ? 'Following' : 'Follow',
               style: AppTypography.labelLarge.copyWith(
-                color: isFollowing
-                    ? AppColors.textPrimary
-                    : Colors.white,
+                color: isFollowing ? AppColors.textPrimary : Colors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -297,8 +296,7 @@ class ProfileHeader extends ConsumerWidget {
           child: TextButton.icon(
             onPressed: () async {
               final result = await ref.read(
-                getOrCreateConversationProvider(
-                        (currentUserId, profile.id))
+                getOrCreateConversationProvider((currentUserId, profile.id))
                     .future,
               );
               if (context.mounted) {
@@ -308,8 +306,7 @@ class ProfileHeader extends ConsumerWidget {
                 });
               }
             },
-            icon: Icon(Icons.send_rounded,
-                size: 16, color: AppColors.primary),
+            icon: Icon(Icons.send_rounded, size: 16, color: AppColors.primary),
             label: Text(
               'Message',
               style: AppTypography.labelLarge.copyWith(

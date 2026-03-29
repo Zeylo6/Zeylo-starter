@@ -1,9 +1,0 @@
-# Dependencies
-node_modules/
-
-# Environment variables
-.env
-
-# Firebase service account key (NEVER commit this!)
-service-account.json
-*-adminsdk-*.json

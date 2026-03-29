@@ -168,26 +168,29 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
           ],
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.35),
-              blurRadius: 16,
-              spreadRadius: 2,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipOval(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-            child: FloatingActionButton(
-              onPressed: () => context.push('/create-post'),
-              backgroundColor: AppColors.primary.withOpacity(0.9),
-              elevation: 0,
-              child: const Icon(Icons.add_rounded, color: Colors.white),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0),
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.35),
+                blurRadius: 16,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: FloatingActionButton(
+                onPressed: () => context.push('/create-post'),
+                backgroundColor: AppColors.primary.withOpacity(0.9),
+                elevation: 0,
+                child: const Icon(Icons.add_rounded, color: Colors.white),
+              ),
             ),
           ),
         ),

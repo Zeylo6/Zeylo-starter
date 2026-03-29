@@ -35,7 +35,8 @@ class AdminUserDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, UserProfileEntity profile) {
+  Widget _buildContent(
+      BuildContext context, WidgetRef ref, UserProfileEntity profile) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,8 +58,12 @@ class AdminUserDetailScreen extends ConsumerWidget {
         children: [
           CircleAvatar(
             radius: 40,
-            backgroundImage: profile.photoUrl != null ? NetworkImage(profile.photoUrl!) : null,
-            child: profile.photoUrl == null ? const Icon(Icons.person, size: 40) : null,
+            backgroundImage: profile.photoUrl != null
+                ? NetworkImage(profile.photoUrl!)
+                : null,
+            child: profile.photoUrl == null
+                ? const Icon(Icons.person, size: 40)
+                : null,
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
@@ -84,8 +89,10 @@ class AdminUserDetailScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _StatItem(label: 'Followers', value: profile.followerCount.toString()),
-          _StatItem(label: 'Following', value: profile.followingCount.toString()),
+          _StatItem(
+              label: 'Followers', value: profile.followerCount.toString()),
+          _StatItem(
+              label: 'Following', value: profile.followingCount.toString()),
         ],
       ),
     );
@@ -116,14 +123,16 @@ class AdminUserDetailScreen extends ConsumerWidget {
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               itemCount: posts.length,
-              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.lg),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(height: AppSpacing.lg),
               itemBuilder: (context, index) {
                 return CommunityPostCard(post: posts[index]);
               },
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error loading posts: $err')),
+          error: (err, stack) =>
+              Center(child: Text('Error loading posts: $err')),
         ),
       ],
     );
