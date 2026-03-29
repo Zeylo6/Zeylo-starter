@@ -14,20 +14,23 @@ class AppColors {
   static const Color primaryExtraLight = Color(0xFFF1F5F9); // Slate 100
   static const Color primaryDark = Color(0xFF6D28D9); // Dark Purple
   static const Color secondary = Color(0xFF7C3AED); // Secondary Purple
-  static const Color primaryAlpha30 = Color(0x4D8B5CF6); // primary with 0.3 opacity
+  static const Color primaryAlpha30 =
+      Color(0x4D8B5CF6); // primary with 0.3 opacity
 
   // Background & Surfaces (Layered Strategy)
   // Stop using pure white. Use brand-tinted backgrounds for depth.
-  static const Color background = Color(0xFFF9F7FF); // 2% Purple tint background
-  static const Color surface = Color(0xFFFFFFFF); // Pure white for topmost elevation cards
-  
+  static const Color background =
+      Color(0xFFF9F7FF); // 2% Purple tint background
+  static const Color surface =
+      Color(0xFFFFFFFF); // Pure white for topmost elevation cards
+
   // Material 3 Surface Containers (Neutralized Slate for cleaner look)
   static const Color surfaceContainerLow = Color(0xFFF8FAFC); // Slate 50
   static const Color surfaceContainer = Color(0xFFF1F5F9); // Slate 100
   static const Color surfaceContainerHigh = Color(0xFFFFFFFF); // Pure White
-  
+
   static const Color surfaceVariant = Color(0xFFF8FAFC); // Slate 50
-  static const Color card = Color(0xFFFFFFFF); 
+  static const Color card = Color(0xFFFFFFFF);
   static const Color cardDark = Color(0xFF1E293B);
 
   // Text Colors
@@ -43,6 +46,7 @@ class AppColors {
   // Semantic Colors
   static const Color success = Color(0xFF10B981); // Emerald 500
   static const Color successLight = Color(0xFFD1FAE5); // Emerald 100
+  static const Color info = Color(0xFF3B82F6); // Blue 500
   static const Color error = Color(0xFFEF4444); // Red 500
   static const Color warning = Color(0xFFF59E0B); // Amber 500
 
