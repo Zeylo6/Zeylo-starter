@@ -93,6 +93,7 @@ class ApiAiService implements AIService {
             isOvernight: map['isOvernight'] == true,
             imageUrl: map['imageUrl']?.toString() ?? '',
             category: map['category']?.toString() ?? '',
+            hostId: map['hostId']?.toString() ?? '',
           );
         }).toList();
       } else {

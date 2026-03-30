@@ -30,7 +30,10 @@ class BookingRemoteDataSource implements BookingDataSource {
   @override
   Future<BookingModel> createBooking(BookingModel booking) async {
     try {
-      final docRef = await _bookingsCollection.add(booking.toFirestore());
+      final firestoreData = booking.toFirestore();
+      print('[BookingDS] Creating booking: title="${booking.experienceTitle}" chainId=${booking.chainId} hostId=${booking.hostId}');
+      print('[BookingDS] Firestore payload chainId: ${firestoreData['chainId']}');
+      final docRef = await _bookingsCollection.add(firestoreData);
       
       // Create notification for host
       await firebaseFirestore.collection('activities').add({
