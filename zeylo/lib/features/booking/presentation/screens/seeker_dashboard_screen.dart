@@ -485,6 +485,7 @@ class _ChainBookingGroup extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Timeline dot + line
                       SizedBox(
                         width: 24,
                         child: Column(
@@ -492,12 +493,16 @@ class _ChainBookingGroup extends ConsumerWidget {
                             Container(
                               width: 12,
                               height: 12,
-                              margin: const EdgeInsets.only(top: 24),
+                              margin: const EdgeInsets.only(top: 30),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.surface,
+                                color: (booking.status == 'accepted' || booking.status == 'confirmed')
+                                    ? AppColors.success
+                                    : AppColors.surface,
                                 border: Border.all(
-                                  color: AppColors.primary,
+                                  color: (booking.status == 'accepted' || booking.status == 'confirmed')
+                                      ? AppColors.success
+                                      : AppColors.primary,
                                   width: 3,
                                 ),
                               ),
@@ -513,14 +518,122 @@ class _ChainBookingGroup extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
+                      // Compact card with thumbnail
                       Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.sm),
-                          child: _BookingCard(
-                            booking: booking,
-                            type: type,
-                            userId: userId,
-                            onRefresh: onRefresh,
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.sm),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.12),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Thumbnail image
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                child: booking.experienceCoverImage.isNotEmpty
+                                    ? Image.network(
+                                        booking.experienceCoverImage,
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                AppColors.primary.withOpacity(0.15),
+                                                AppColors.primary.withOpacity(0.05),
+                                              ],
+                                            ),
+                                          ),
+                                          child: const Icon(Icons.landscape_rounded,
+                                              color: AppColors.primary, size: 24),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              AppColors.primary.withOpacity(0.15),
+                                              AppColors.primary.withOpacity(0.05),
+                                            ],
+                                          ),
+                                        ),
+                                        child: const Icon(Icons.landscape_rounded,
+                                            color: AppColors.primary, size: 24),
+                                      ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Title + time info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      booking.experienceTitle,
+                                      style: AppTypography.titleMedium.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.access_time_rounded,
+                                            size: 12, color: AppColors.textSecondary),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          booking.startTime,
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Rs. ${booking.totalPrice.toStringAsFixed(0)}',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Status indicator
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: (booking.status == 'accepted' || booking.status == 'confirmed')
+                                      ? AppColors.success
+                                      : (booking.status == 'pending')
+                                          ? AppColors.warning
+                                          : AppColors.textHint,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
