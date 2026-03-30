@@ -55,7 +55,6 @@ const handleWebhook = async (req, res) => {
     //Extracting the sticky notes we attached earlier
     const bookingId = paymentIntent.metadata.bookingId;
     const type = paymentIntent.metadata.type || "booking";
-    d;
     if (type === "mystery") {
       const mysteryId = paymentIntent.metadata.mysteryId;
       if (mysteryId) {

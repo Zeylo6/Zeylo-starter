@@ -60,9 +60,14 @@ const sendWarningEmail = async (toEmail, userName, reason, details = '') => {
     `,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log('Warning email sent:', info.messageId);
-  return info;
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Warning email sent successfully:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Nodemailer Error sending warning email:', error);
+    throw error;
+  }
 };
 
 module.exports = { sendWarningEmail };

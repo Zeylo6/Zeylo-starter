@@ -1,6 +1,15 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err, origin) => {
+  console.error(`Caught exception: ${err}\nException origin: ${origin}`);
+});
+
 const serverless = require('serverless-http');
 
 const apiRoutes = require('./routes/api');
@@ -23,7 +32,14 @@ app.get('/', (req, res) => res.json({ status: 'ok' }));
 // ── Local dev server ──────────────────────────────────────────────────────────
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  
+  server.on('error', (error) => {
+    console.error('Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Please kill the process using it.`);
+    }
+  });
 }
 
 // ── Serverless export (Netlify) ───────────────────────────────────────────────

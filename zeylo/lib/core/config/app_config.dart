@@ -6,7 +6,7 @@ class AppConfig {
   /// For physical devices, use your machine's local IP or a tunnel (e.g., ngrok)
   static String get baseUrl {
     // Use ngrok tunnel to allow access from physical devices and emulators
-    return 'https://unreviling-hypermetropic-allen.ngrok';
+    return 'https://unreviling-hypermetropic-allen.ngrok-free.dev';
   }
 
   /// Helper to get the full API base path
