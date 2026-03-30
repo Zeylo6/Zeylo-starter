@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_typography.dart';
 
+// User Entity
+import '../features/auth/domain/entities/user_entity.dart';
+
 // Auth provider
 import '../features/auth/presentation/providers/auth_provider.dart';
 
@@ -186,6 +189,34 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         } else if (location == '/banned') {
           // If not banned but on banned screen, go home
           return '/home';
+        }
+
+        // Role-Based Access Control logic
+        if (userEntity != null && !userEntity.isBanned) {
+          // Block non-admins from admin screens
+          if (location.startsWith('/admin') && userEntity.role != UserRole.admin) {
+            return '/home';
+          }
+
+          // Block non-hosts (and non-admins) from host dashboards and earnings
+          // (Note: We allow anyone on /host-verification since seekers use it to apply)
+          final isHostOnlyRoute = location == '/host-dashboard' || 
+                                  location == '/earnings' || 
+                                  location == '/host-calendar' || 
+                                  location == '/create-experience';
+                                  
+          if (isHostOnlyRoute && 
+              userEntity.role != UserRole.host && 
+              userEntity.role != UserRole.admin) {
+            return '/home';
+          }
+
+          // Block non-businesses (and non-admins) from business registration
+          if (location == '/business-registration' && 
+              userEntity.role != UserRole.business && 
+              userEntity.role != UserRole.admin) {
+            return '/home';
+          }
         }
       }
 
