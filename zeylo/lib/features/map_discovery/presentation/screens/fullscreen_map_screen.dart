@@ -229,6 +229,7 @@ class _FullscreenMapScreenState extends ConsumerState<FullscreenMapScreen> {
   void _showItemSheet(NearbyItem item, int? routeNumber) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
@@ -479,9 +480,11 @@ class _FullscreenMapScreenState extends ConsumerState<FullscreenMapScreen> {
       ),
 
       // FABs
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // Locate me
           FloatingActionButton(
             heroTag: 'fs_locate',
@@ -521,6 +524,7 @@ class _FullscreenMapScreenState extends ConsumerState<FullscreenMapScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -29,6 +29,9 @@ class BookingRepositoryImpl implements BookingRepository {
         updatedAt: booking.updatedAt,
         seekerName: booking.seekerName,
         seekerPhotoUrl: booking.seekerPhotoUrl,
+        chainId: booking.chainId,
+        isMystery: booking.isMystery,
+        mysteryId: booking.mysteryId,
       );
       return await remoteDataSource.createBooking(bookingModel);
     } catch (e) {

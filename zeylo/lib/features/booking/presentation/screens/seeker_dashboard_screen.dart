@@ -92,7 +92,7 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: ClipRRect(
@@ -224,10 +224,18 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
           }
 
           final docs = snapshot.data?.docs ?? [];
-          final allBookings = docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return BookingModel.fromFirestore(data, doc.id);
-          }).toList();
+          print('[Dashboard] Stream received ${docs.length} booking documents');
+          final allBookings = <BookingModel>[];
+          for (final doc in docs) {
+            try {
+              final data = doc.data() as Map<String, dynamic>;
+              final model = BookingModel.fromFirestore(data, doc.id);
+              allBookings.add(model);
+            } catch (e) {
+              print('[Dashboard] ERROR parsing booking ${doc.id}: $e');
+              print('[Dashboard] Raw data: ${doc.data()}');
+            }
+          }
 
           // Sort newest first
           allBookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -235,12 +243,6 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
           // ── UPCOMING: booked but not yet started ──────────────────────────
           // Includes: pending, accepted, confirmed, mystery_pending, mystery_revealed, mystery_accepted
           final upcoming = allBookings.where((b) {
-            if (b.chainId != null) {
-              final chainBookings = allBookings.where((cb) => cb.chainId == b.chainId).toList();
-              final allAccepted = chainBookings.every((cb) => cb.status == 'accepted' || cb.status == 'confirmed');
-              if (!allAccepted) return false;
-            }
-
             return b.status == 'pending' ||
                 b.status == 'accepted' ||
                 b.status == 'confirmed' ||
@@ -248,6 +250,10 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
                 b.status == 'mystery_revealed' ||
                 b.status == 'mystery_accepted';
           }).toList();
+          print('[Dashboard] Upcoming: ${upcoming.length}, Ongoing: ${allBookings.where((b) => b.status == "ongoing").length}');
+          for (final b in upcoming) {
+            print('[Dashboard] Upcoming booking: "${b.experienceTitle}" status=${b.status} chainId=${b.chainId}');
+          }
 
           // ── ONGOING: experience is currently happening ────────────────────
           final ongoing =
@@ -325,20 +331,320 @@ class _SeekerDashboardScreenState extends ConsumerState<SeekerDashboardScreen>
       );
     }
 
+    final List<dynamic> displayItems = [];
+    final Map<String, List<BookingEntity>> chainGroups = {};
+    final Set<String> processedChainIds = {};
+
+    for (var b in bookings) {
+      if (b.chainId != null && b.chainId!.isNotEmpty) {
+        chainGroups.putIfAbsent(b.chainId!, () => []).add(b);
+      }
+    }
+
+    for (var b in bookings) {
+      if (b.chainId != null && b.chainId!.isNotEmpty) {
+        if (!processedChainIds.contains(b.chainId!)) {
+          processedChainIds.add(b.chainId!);
+          displayItems.add(chainGroups[b.chainId!]!);
+        }
+      } else {
+        displayItems.add(b);
+      }
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.md),
-      itemCount: bookings.length,
+      itemCount: displayItems.length,
       itemBuilder: (context, index) {
-        return _BookingCard(
-          booking: bookings[index],
-          type: type,
-          userId: userId,
-          onRefresh: () {
-            // Stream-based — no manual refresh needed, but keep callback
-            // for snackbar purposes
-          },
-        );
+        final item = displayItems[index];
+        if (item is List<BookingEntity>) {
+          return _ChainBookingGroup(
+            bookings: item,
+            type: type,
+            userId: userId,
+            onRefresh: () {},
+          );
+        } else if (item is BookingEntity) {
+          return _BookingCard(
+            booking: item,
+            type: type,
+            userId: userId,
+            onRefresh: () {},
+          );
+        }
+        return const SizedBox();
       },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHAIN BOOKING GROUP
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChainBookingGroup extends ConsumerWidget {
+  final List<BookingEntity> bookings;
+  final String type;
+  final String userId;
+  final VoidCallback onRefresh;
+
+  const _ChainBookingGroup({
+    required this.bookings,
+    required this.type,
+    required this.userId,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    int acceptedCount = bookings.where((b) => b.status == 'accepted' || b.status == 'confirmed' || b.status == 'ongoing' || b.status == 'completed').length;
+    String statusText = acceptedCount == bookings.length 
+        ? "All Confirmed" 
+        : "$acceptedCount/${bookings.length} Confirmed";
+
+    String displayDate = '';
+    if (bookings.isNotEmpty) {
+      displayDate = '${bookings.first.date.day}/${bookings.first.date.month}/${bookings.first.date.year}';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3EDFF),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.link_rounded, color: AppColors.primary, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Experience Chain',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      Text(
+                        displayDate,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary.withOpacity(0.8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              bottom: AppSpacing.sm,
+            ),
+            child: Column(
+              children: bookings.asMap().entries.map((entry) {
+                final int index = entry.key;
+                final BookingEntity booking = entry.value;
+                final bool isLast = index == bookings.length - 1;
+
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Timeline dot + line
+                      SizedBox(
+                        width: 24,
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              margin: const EdgeInsets.only(top: 30),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: (booking.status == 'accepted' || booking.status == 'confirmed')
+                                    ? AppColors.success
+                                    : AppColors.surface,
+                                border: Border.all(
+                                  color: (booking.status == 'accepted' || booking.status == 'confirmed')
+                                      ? AppColors.success
+                                      : AppColors.primary,
+                                  width: 3,
+                                ),
+                              ),
+                            ),
+                            if (!isLast)
+                              Expanded(
+                                child: Container(
+                                  width: 2,
+                                  color: AppColors.primary.withOpacity(0.3),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      // Compact card with thumbnail
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.sm),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.12),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Thumbnail image
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
+                                child: booking.experienceCoverImage.isNotEmpty
+                                    ? Image.network(
+                                        booking.experienceCoverImage,
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                AppColors.primary.withOpacity(0.15),
+                                                AppColors.primary.withOpacity(0.05),
+                                              ],
+                                            ),
+                                          ),
+                                          child: const Icon(Icons.landscape_rounded,
+                                              color: AppColors.primary, size: 24),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              AppColors.primary.withOpacity(0.15),
+                                              AppColors.primary.withOpacity(0.05),
+                                            ],
+                                          ),
+                                        ),
+                                        child: const Icon(Icons.landscape_rounded,
+                                            color: AppColors.primary, size: 24),
+                                      ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Title + time info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      booking.experienceTitle,
+                                      style: AppTypography.titleMedium.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.access_time_rounded,
+                                            size: 12, color: AppColors.textSecondary),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          booking.startTime,
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Rs. ${booking.totalPrice.toStringAsFixed(0)}',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Status indicator
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: (booking.status == 'accepted' || booking.status == 'confirmed')
+                                      ? AppColors.success
+                                      : (booking.status == 'pending')
+                                          ? AppColors.warning
+                                          : AppColors.textHint,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

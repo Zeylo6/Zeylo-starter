@@ -218,7 +218,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: AppColors.secondary,
         onTap: () {
           setState(() => _fabExpanded = false);
-          context.push('/chain/create', extra: {'userId': 'user_1'});
+          final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+          context.push('/chain/create', extra: {'userId': uid});
         },
       ),
       _SpeedDialItem(
@@ -228,7 +229,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: AppColors.primary,
         onTap: () {
           setState(() => _fabExpanded = false);
-          context.push('/mystery/create', extra: {'userId': 'user_1'});
+          final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+          context.push('/mystery/create', extra: {'userId': uid});
         },
       ),
     ];
